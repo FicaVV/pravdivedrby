@@ -7,6 +7,8 @@
  * Dolaďte je v aplikaci: Nastavení → Režim úprav bodů → přetáhněte značky → Zkopírovat souřadnice.
  *
  * answer: index správné možnosti (0 = A), nebo null = zatím neověřeno (hra přijme jakoukoli odpověď).
+ * foto (nepovinné): fotka místa nahoře na stanovišti, např. foto: { src: "img/racice/1.jpg", autor: "Vojta" }.
+ *   Používejte vlastní fotky nebo fotky s volnou licencí (ne snímky ze Street View, ty podmínky Googlu nedovolují ukládat).
  */
 window.PD_OBCE = window.PD_OBCE || [];
 window.PD_OBCE.push({
