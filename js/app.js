@@ -1,0 +1,549 @@
+/* Pravdivé drby – prototyp herní logiky (vanilla JS, bez build kroku). */
+(function () {
+  "use strict";
+
+  var OBEC = window.PD_OBCE[0];
+  var IN_ARTIFACT = !!window.PD_ARTIFACT;
+  var KEY = "pd:v1:" + OBEC.id;
+  var LETTERS = ["A", "B", "C", "D"];
+
+  // ---------- úložiště (guest-first, jen v telefonu) ----------
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* soukromé okno apod. */ }
+  }
+  var state = Object.assign({ idx: 0, done: {}, sim: IN_ARTIFACT, edit: false, coords: {}, rating: 0, navrhy: [], finished: false }, load() || {});
+  if (IN_ARTIFACT) state.sim = true;
+
+  // přenést ručně doladěné souřadnice
+  OBEC.body.forEach(function (b) { if (state.coords[b.id]) b.pozice = state.coords[b.id]; });
+
+  // ---------- pomocné ----------
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === "class") n.className = attrs[k];
+      else if (k === "text") n.textContent = attrs[k];
+      else if (k === "html") n.innerHTML = attrs[k];
+      else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function toast(msg, ms) {
+    var t = $("#toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, ms || 2600);
+  }
+  var R = 6371000, rad = Math.PI / 180;
+  function distance(a, b) {
+    var dLat = (b[0] - a[0]) * rad, dLng = (b[1] - a[1]) * rad;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  function bearing(a, b) {
+    var y = Math.sin((b[1] - a[1]) * rad) * Math.cos(b[0] * rad);
+    var x = Math.cos(a[0] * rad) * Math.sin(b[0] * rad) - Math.sin(a[0] * rad) * Math.cos(b[0] * rad) * Math.cos((b[1] - a[1]) * rad);
+    return (Math.atan2(y, x) / rad + 360) % 360;
+  }
+  var DIRS = ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"];
+  var DIR_WORDS = { S: "na sever", SV: "na severovýchod", V: "na východ", JV: "na jihovýchod", J: "na jih", JZ: "na jihozápad", Z: "na západ", SZ: "na severozápad" };
+  function fmtDist(m) {
+    if (m >= 1000) return (m / 1000).toFixed(1).replace(".", ",") + "<small>km</small>";
+    return Math.round(m) + "<small>m</small>";
+  }
+  function vibrate(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+  function current() { return OBEC.body[state.idx] || null; }
+  function doneCount() { return Object.keys(state.done).length; }
+
+  // ---------- úvod ----------
+  function renderHome() {
+    var card = $("#obec-card");
+    card.querySelectorAll("[data-f]").forEach(function (n) {
+      var f = n.getAttribute("data-f");
+      n.textContent = f === "pocet" ? OBEC.body.length : OBEC[f];
+    });
+    var pl = $("#home-progress"); pl.innerHTML = "";
+    OBEC.body.forEach(function (b) { pl.appendChild(el("i", { class: state.done[b.id] ? "on" : "" })); });
+    var n = doneCount();
+    $("#btn-start").textContent = state.finished ? "Přečíst dopsanou kroniku" : n ? "Pokračovat (" + n + "/" + OBEC.body.length + ")" : "Vyrazit na náves";
+    $("#btn-reset").hidden = !n;
+  }
+
+  function show(id) {
+    ["home", "play"].forEach(function (s) { $("#" + s).hidden = s !== id; });
+    if (id === "play") {
+      var first = !map; initMap();
+      setTimeout(function () { map.invalidateSize(); if (first) fitRoute(); }, 50);
+      startGeo(); update();
+    }
+  }
+
+  // ---------- mapa ----------
+  var map, meMarker, accCircle, pins = {}, routeLine, tileOk = 0, tileErr = 0, schematic = false;
+  function initMap() {
+    if (map) return;
+    map = L.map("map", { zoomControl: false, attributionControl: true }).setView(OBEC.stred, 16);
+    if (!window.PD_NO_TILES) {
+      var tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: "© přispěvatelé OpenStreetMap"
+      }).addTo(map);
+      tiles.on("tileload", function () { tileOk++; });
+      tiles.on("tileerror", function () { tileErr++; if (tileErr > 4 && !tileOk) goSchematic(); });
+    } else goSchematic();
+    routeLine = L.polyline([], { color: "#142019", weight: 3, dashArray: "6 8", opacity: .55 }).addTo(map);
+    OBEC.body.forEach(function (b, i) {
+      var m = L.marker(b.pozice, { icon: pinIcon(b, i), keyboard: true, title: b.nazev }).addTo(map);
+      m.on("click", function () { onPinClick(i); });
+      m.on("dragend", function () {
+        var p = m.getLatLng(); b.pozice = [+p.lat.toFixed(6), +p.lng.toFixed(6)];
+        state.coords[b.id] = b.pozice; save(); drawRoute(); update(); renderCoords();
+      });
+      pins[b.id] = m;
+    });
+    drawRoute();
+    map.on("click", function (e) {
+      if (!state.sim || state.edit) return;
+      setSim([e.latlng.lat, e.latlng.lng]);
+    });
+    fitRoute();
+  }
+  function fitRoute() {
+    map.fitBounds(OBEC.body.map(function (b) { return b.pozice; }), { paddingTopLeft: [24, 90], paddingBottomRight: [24, 40] });
+  }
+  function goSchematic() {
+    if (schematic) return; schematic = true;
+    $("#map").classList.add("schematic");
+    $("#map-badge").hidden = false;
+    refreshPins();
+  }
+  function drawRoute() { routeLine.setLatLngs(OBEC.body.map(function (b) { return b.pozice; })); }
+  function pinIcon(b, i) {
+    var cls = state.done[b.id] ? "done" : i === state.idx ? "current" : "future";
+    if (state.edit) cls += " draggable";
+    var size = i === state.idx && !state.done[b.id] ? 42 : 34;
+    return L.divIcon({ className: "", html: '<div class="pin ' + cls + '">' + (state.done[b.id] ? "✓" : b.id) + "</div>", iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+  }
+  function refreshPins() {
+    if (!map) return;
+    OBEC.body.forEach(function (b, i) {
+      var m = pins[b.id];
+      m.setIcon(pinIcon(b, i));
+      if (state.edit) m.dragging.enable(); else m.dragging.disable();
+      m.unbindTooltip();
+      if (state.edit || (schematic && i === state.idx)) m.bindTooltip(b.id + " " + b.nazev, { permanent: true, direction: "right", offset: [18, 0] });
+    });
+  }
+  function onPinClick(i) {
+    if (state.edit) return;
+    var b = OBEC.body[i];
+    if (state.done[b.id]) openStop(i);
+    else if (i === state.idx) toast("Sem míříš: " + b.nazev);
+    else toast(b.id + ". " + b.nazev + " – na řadu přijde později");
+  }
+
+  // ---------- poloha: GPS / simulace ----------
+  var pos = null, gpsWatch = null, gpsState = "wait", lastAuto = -1;
+  function startGeo() {
+    $("#sim-panel").hidden = !state.sim;
+    if (state.sim) {
+      stopGps();
+      if (!pos || pos.src !== "sim") {
+        var t = current() ? current().pozice : OBEC.stred;
+        setSim([t[0] - 0.0011, t[1] - 0.0012]);
+      }
+      return;
+    }
+    if (gpsWatch !== null) return;
+    if (!("geolocation" in navigator)) { gpsFail("Tenhle prohlížeč polohu neumí. Zapni simulaci v nastavení."); return; }
+    gpsState = "wait"; renderGps();
+    try {
+      gpsWatch = navigator.geolocation.watchPosition(function (p) {
+        pos = { ll: [p.coords.latitude, p.coords.longitude], acc: p.coords.accuracy, src: "gps" };
+        gpsState = p.coords.accuracy > 60 ? "weak" : "ok";
+        renderGps(); drawMe(); update();
+      }, function (err) {
+        gpsFail(err.code === 1 ? "Poloha je zakázaná. Povol ji v prohlížeči, nebo zapni simulaci." : "GPS teď nechytá. Zkus to venku, nebo použij „Jsem tady“.");
+      }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+    } catch (e) { gpsFail("Polohu se nepodařilo zjistit."); }
+  }
+  function stopGps() {
+    if (gpsWatch !== null) { try { navigator.geolocation.clearWatch(gpsWatch); } catch (e) {} gpsWatch = null; }
+  }
+  function gpsFail(msg) { gpsState = "bad"; gpsMsg = msg; renderGps(); update(); }
+  var gpsMsg = "";
+  function renderGps() {
+    var dot = $("#gps-dot"), txt = $("#gps-text");
+    dot.className = "dot";
+    if (state.sim) { dot.classList.add("sim"); txt.textContent = "Simulace: klepni do mapy, kam chceš jít"; return; }
+    if (gpsState === "ok") { dot.classList.add("ok"); txt.textContent = "GPS ±" + Math.round(pos.acc) + " m"; }
+    else if (gpsState === "weak") { dot.classList.add("bad"); txt.textContent = "Slabý signál GPS ±" + Math.round(pos.acc) + " m"; }
+    else if (gpsState === "bad") { dot.classList.add("bad"); txt.textContent = gpsMsg; }
+    else txt.textContent = "Hledám satelity…";
+  }
+  function setSim(ll) {
+    pos = { ll: ll, acc: 5, src: "sim" };
+    renderGps(); drawMe(); update();
+  }
+  function drawMe() {
+    if (!map || !pos) return;
+    var icon = L.divIcon({ className: "", html: '<div class="me' + (pos.src === "sim" ? " sim" : "") + '"></div>', iconSize: [20, 20], iconAnchor: [10, 10] });
+    if (!meMarker) {
+      meMarker = L.marker(pos.ll, { icon: icon, interactive: false, zIndexOffset: 1000 }).addTo(map);
+      accCircle = L.circle(pos.ll, { radius: pos.acc, color: "#1f5fbf", weight: 1, fillOpacity: .08 }).addTo(map);
+    } else { meMarker.setLatLng(pos.ll); meMarker.setIcon(icon); accCircle.setLatLng(pos.ll); accCircle.setRadius(pos.acc); }
+  }
+
+  // ---------- radar ----------
+  function update() {
+    var b = current();
+    if (!b) {
+      $("#target-num").textContent = "Okruh dokončen";
+      $("#target-name").textContent = "Kronika je dopsaná";
+      $("#dist-num").innerHTML = "✓"; $("#dist-lbl").textContent = "Všech " + OBEC.body.length + " stanovišť máš za sebou.";
+      $("#btn-open").hidden = false; $("#btn-open").textContent = "Závěrečná stránka";
+      $("#btn-here").hidden = true;
+      return;
+    }
+    $("#btn-here").hidden = false;
+    $("#target-num").textContent = "Stanoviště " + b.id + " z " + OBEC.body.length;
+    $("#target-name").textContent = b.nazev;
+    var heat = $("#heat").children, level = 0;
+    if (!pos) {
+      $("#dist-num").textContent = "–";
+      $("#dist-lbl").textContent = gpsState === "bad" ? "Bez polohy. Mapa ti ukáže, kam jít." : "Hledám polohu…";
+    } else {
+      var d = distance(pos.ll, b.pozice), br = bearing(pos.ll, b.pozice);
+      var dir = DIRS[Math.round(br / 45) % 8];
+      var reach = OBEC.radius + Math.min(pos.acc || 0, 40);
+      $("#dist-num").innerHTML = fmtDist(d);
+      $("#arrow").style.transform = "rotate(" + br + "deg)";
+      var lbl = d > 400 ? "Ještě kus cesty" : d > 150 ? "Přihřívá se" : d > 60 ? "Už jsi blízko" : d > reach ? "Skoro tam!" : "Jsi na místě!";
+      $("#dist-lbl").textContent = lbl + (d > reach ? ", " + DIR_WORDS[dir] : "");
+      level = d > 600 ? 1 : d > 300 ? 2 : d > 120 ? 3 : d > reach ? 4 : 5;
+      var arrived = d <= reach;
+      $("#btn-open").hidden = !arrived;
+      $("#btn-open").textContent = "Otevřít stanoviště";
+      if (arrived && lastAuto !== state.idx && $("#stop").hidden) {
+        lastAuto = state.idx; vibrate([120, 60, 120]); openStop(state.idx);
+      }
+    }
+    for (var i = 0; i < heat.length; i++) {
+      heat[i].className = i < level ? "on" + (level === 5 ? " hot" : "") : "";
+    }
+  }
+
+  // ---------- předčítání (TTS v prohlížeči) ----------
+  var ttsBtn = null;
+  var hasTTS = "speechSynthesis" in window;
+  function speak(text, btn) {
+    if (!hasTTS) return;
+    var synth = window.speechSynthesis;
+    if (synth.speaking || synth.pending) { stopSpeak(); return; }
+    var voice = synth.getVoices().filter(function (v) { return /^cs/i.test(v.lang); })[0];
+    // Chrome utíná dlouhé promluvy – posíláme po větách
+    var parts = text.match(/[^.!?…]+[.!?…“"]*\s*/g) || [text];
+    parts.forEach(function (p, i) {
+      var u = new SpeechSynthesisUtterance(p.trim());
+      u.lang = "cs-CZ"; u.rate = 0.95; if (voice) u.voice = voice;
+      if (i === parts.length - 1) u.onend = u.onerror = function () { setTtsBtn(false); };
+      synth.speak(u);
+    });
+    ttsBtn = btn; setTtsBtn(true);
+  }
+  function stopSpeak() { if (hasTTS) window.speechSynthesis.cancel(); setTtsBtn(false); }
+  function setTtsBtn(on) {
+    if (!ttsBtn) return;
+    ttsBtn.textContent = on ? "■ Zastavit" : ttsBtn.getAttribute("data-label");
+  }
+  function ttsButton(label, getText, primary) {
+    var b = el("button", { class: "btn btn-small" + (primary ? " btn-primary" : ""), "data-label": label, text: label });
+    b.addEventListener("click", function () { speak(getText(), b); });
+    if (!hasTTS) b.hidden = true;
+    return b;
+  }
+
+  // ---------- stanoviště ----------
+  function sheetHead(title, onClose, extra) {
+    return el("div", { class: "sheet-head" }, [
+      el("button", { class: "icon-btn", "aria-label": "Zavřít", onclick: onClose, html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' }),
+      el("h2", { text: title }), extra || null
+    ]);
+  }
+  function closeSheet(id) { stopSpeak(); $("#" + id).hidden = true; update(); }
+
+  function openStop(i) {
+    var b = OBEC.body[i], rec = state.done[b.id];
+    var sheet = $("#stop"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;
+    sheet.appendChild(sheetHead("Stanoviště " + b.id, function () { closeSheet("stop"); }));
+    var body = el("div", { class: "sheet-body" });
+    body.appendChild(el("div", {}, [
+      el("div", { class: "stop-num", text: "Kapitola " + b.id + " z " + OBEC.body.length }),
+      el("h2", { class: "stop-title", text: b.nazev })
+    ]));
+    body.appendChild(el("p", { class: "addr", text: b.adresa }));
+    var story = el("div", { class: "story" });
+    b.text.forEach(function (t) { story.appendChild(el("p", { text: t })); });
+    body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přečíst nahlas", function () { return b.text.join(" "); })]));
+    body.appendChild(story);
+
+    if (b.modlitba) {
+      var pr = el("div", { class: "prayer" });
+      pr.innerHTML = b.modlitba.map(esc).join("<br>") + '<span class="cut">…zbytek přepisu se tady na místě nedochoval.</span>';
+      body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return b.modlitba.concat(b.modlitbaKonec).join(" "); }, true)]));
+      body.appendChild(pr);
+    }
+    if (b.predOtazkou) body.appendChild(el("blockquote", { class: "quote", text: b.predOtazkou }));
+
+    if (b.otazka) body.appendChild(task(b, i, rec));
+    else {
+      var box = el("div", { class: "task" });
+      if (b.konec) {
+        box.appendChild(el("span", { class: "kicker", text: "Poslední kapitola" }));
+        box.appendChild(el("p", { text: "Tímhle je kronika kompletní. Zbývá ji podepsat a zapsat." }));
+        box.appendChild(el("button", { class: "btn btn-primary btn-block", text: rec ? "Otevřít závěrečnou stránku" : "Zapsat poslední kapitolu", onclick: function () { markDone(b, { ok: true }); closeSheet("stop"); openFinale(); } }));
+      } else {
+        box.appendChild(el("span", { class: "kicker", text: "Úkol" }));
+        box.appendChild(el("p", { text: b.poznamka || "Tady žádný úkol není, jen si to užij." }));
+        box.appendChild(nextButton(b, i, !!rec));
+      }
+      body.appendChild(box);
+    }
+    sheet.appendChild(body);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function task(b, i, rec) {
+    var box = el("div", { class: "task" });
+    box.appendChild(el("span", { class: "kicker", text: "Pozorovací úkol" }));
+    box.appendChild(el("h3", { text: b.otazka }));
+    var opts = el("div", { class: "options" });
+    var fb = el("div", { class: "feedback", hidden: "" });
+    var tools = el("div", { class: "task-tools" });
+    var hint = el("div", { class: "hint", hidden: "", text: "Nápověda: " + b.napoveda });
+    var next = el("div");
+    var solved = !!rec;
+
+    function finish(choice, revealed) {
+      solved = true;
+      Array.prototype.forEach.call(opts.children, function (o, k) {
+        o.disabled = true;
+        if (b.answer === null ? k === choice : k === b.answer) o.classList.add("right");
+      });
+      tools.hidden = true;
+      fb.hidden = false;
+      if (b.answer === null) { fb.className = "feedback info"; fb.textContent = "Zapsáno! Tuhle odpověď zatím ověřujeme v terénu, takže ti ji uznáváme. Zapiš si, co na místě opravdu vidíš."; }
+      else if (revealed) { fb.className = "feedback info"; fb.textContent = "Správně je " + LETTERS[b.answer] + ") " + b.moznosti[b.answer].replace(/\.$/, "") + ". Nevadí, kronika se dopisuje i tak."; }
+      else { fb.className = "feedback ok"; fb.textContent = "Přesně tak! Kapitola se zapisuje do kroniky."; }
+      if (!rec) markDone(b, { ok: !revealed, choice: choice, revealed: !!revealed });
+      next.innerHTML = ""; next.appendChild(nextButton(b, i, true));
+      vibrate(80);
+    }
+
+    b.moznosti.forEach(function (m, k) {
+      var o = el("button", { class: "opt" }, [el("span", { class: "letter", text: LETTERS[k] }), el("span", { text: m })]);
+      o.addEventListener("click", function () {
+        if (solved) return;
+        if (b.answer === null || k === b.answer) return finish(k, false);
+        o.classList.add("wrong"); o.disabled = true;
+        fb.hidden = false; fb.className = "feedback no"; fb.textContent = "Tohle nesedí. Zkus to znovu, nebo si vezmi nápovědu.";
+        vibrate(40);
+      });
+      opts.appendChild(o);
+    });
+    tools.appendChild(el("button", { class: "btn btn-small", text: "Nápověda", onclick: function () { hint.hidden = false; } }));
+    tools.appendChild(el("button", { class: "btn btn-small btn-ghost", text: "Prozradit odpověď", onclick: function () { finish(b.answer === null ? -1 : b.answer, true); } }));
+    box.appendChild(opts); box.appendChild(hint); box.appendChild(fb); box.appendChild(tools); box.appendChild(next);
+
+    if (rec) { // znovu otevřené hotové stanoviště
+      Array.prototype.forEach.call(opts.children, function (o, k) {
+        o.disabled = true;
+        if ((b.answer === null ? rec.choice : b.answer) === k) o.classList.add("right");
+      });
+      tools.hidden = true;
+      fb.hidden = false; fb.className = "feedback ok"; fb.textContent = "Tuhle kapitolu už máš v kronice.";
+      next.appendChild(nextButton(b, i, true));
+    }
+    return box;
+  }
+
+  function nextButton(b, i, done) {
+    var last = i === OBEC.body.length - 1;
+    return el("button", {
+      class: "btn btn-primary btn-block",
+      text: done ? (current() ? "Na další stanoviště" : "Závěrečná stránka") : "Pokračovat na další stanoviště",
+      onclick: function () {
+        if (!state.done[b.id]) markDone(b, { ok: true });
+        closeSheet("stop");
+        if (!current()) openFinale();
+        else { toast("Další zastávka: " + current().nazev); if (map) map.panTo(current().pozice); }
+      }
+    });
+  }
+
+  function markDone(b, rec) {
+    rec.at = Date.now();
+    state.done[b.id] = rec;
+    var nextIdx = OBEC.body.findIndex(function (x) { return !state.done[x.id]; });
+    state.idx = nextIdx === -1 ? OBEC.body.length : nextIdx;
+    if (nextIdx === -1) state.finished = true;
+    save(); refreshPins(); renderHome();
+  }
+
+  // ---------- kronika ----------
+  function openChronicle() {
+    var sheet = $("#chronicle"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;
+    sheet.appendChild(sheetHead("Neoficiální kronika", function () { closeSheet("chronicle"); }));
+    var body = el("div", { class: "sheet-body chronicle" });
+    var pl = el("div", { class: "progress-line" });
+    OBEC.body.forEach(function (b) { pl.appendChild(el("i", { class: state.done[b.id] ? "on" : "" })); });
+    body.appendChild(el("p", { text: OBEC.nazev + " · zapsáno " + doneCount() + " z " + OBEC.body.length + " kapitol" }));
+    body.appendChild(pl);
+    var all = [];
+    OBEC.body.forEach(function (b) {
+      var s = el("section");
+      if (state.done[b.id]) {
+        s.appendChild(el("h3", { text: b.id + ". " + b.nazev }));
+        b.text.forEach(function (t) { s.appendChild(el("p", { text: t })); });
+        if (b.id !== 4) all = all.concat(b.text);
+      } else {
+        s.className = "locked";
+        s.appendChild(el("h3", { text: b.id + ". ????" }));
+        var p = el("p");
+        b.text.slice(0, 2).forEach(function (t) { p.appendChild(el("span", { class: "redacted", text: t.slice(0, 140) })); p.appendChild(document.createTextNode(" ")); });
+        s.appendChild(p);
+        s.appendChild(el("p", { class: "draft-note", text: "Tahle kapitola se odkryje na stanovišti." }));
+      }
+      body.appendChild(s);
+    });
+    if (all.length) body.insertBefore(el("div", { class: "tts-row" }, [ttsButton("▶ Přečíst kroniku nahlas", function () { return all.join(" "); })]), pl.nextSibling);
+    sheet.appendChild(body);
+  }
+
+  // ---------- finále ----------
+  function openFinale() {
+    var sheet = $("#finale"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;
+    sheet.appendChild(sheetHead("Konec okruhu", function () { closeSheet("finale"); }));
+    var body = el("div", { class: "sheet-body" });
+    var good = Object.keys(state.done).filter(function (k) { return state.done[k].ok; }).length;
+    body.appendChild(el("div", { class: "finale-hero" }, [
+      el("h2", { text: "Kronika je dopsaná" }),
+      el("p", { text: "Prošli jste celý okruh " + OBEC.nazev + ". Bez nápovědy jste zvládli " + good + " z " + OBEC.body.length + " stanovišť. Teď už víte, proč jsou od roku 1960 obě obce jednou." })
+    ]));
+    body.appendChild(el("h3", { text: "A teď vážně: co je pravda" }));
+    var ul = el("ul", { class: "fact-list" });
+    OBEC.fakta.forEach(function (f) { ul.appendChild(el("li", { text: f })); });
+    body.appendChild(ul);
+    body.appendChild(el("p", { class: "draft-note", text: "Pracovní verze faktické stránky, obsah se ještě doplní." }));
+    body.appendChild(el("button", { class: "btn btn-block", text: "Přečíst celou kroniku", onclick: function () { closeSheet("finale"); openChronicle(); } }));
+
+    body.appendChild(el("h3", { text: "Jak se vám okruh líbil?" }));
+    var stars = el("div", { class: "stars", role: "group", "aria-label": "Hodnocení" });
+    for (var s = 1; s <= 5; s++) (function (n) {
+      stars.appendChild(el("button", { class: n <= state.rating ? "on" : "", "aria-label": n + " z 5", text: "★", onclick: function () {
+        state.rating = n; save();
+        Array.prototype.forEach.call(stars.children, function (c, k) { c.className = k < n ? "on" : ""; });
+        toast("Díky za hodnocení!");
+      } }));
+    })(s);
+    body.appendChild(stars);
+
+    body.appendChild(el("h3", { text: "Navrhněte další obec" }));
+    var form = el("form", { class: "form" });
+    form.innerHTML = '<label for="nv-obec">Obec</label><input id="nv-obec" required placeholder="např. Horní Dolní">' +
+      '<label for="nv-drb">Co se tam šušká?</label><textarea id="nv-drb" placeholder="Historka, kterou znáte z hospody nebo přes plot"></textarea>' +
+      '<label for="nv-mail">E-mail (nepovinný)</label><input id="nv-mail" type="email" placeholder="ozveme se, až okruh vznikne">' +
+      '<button class="btn btn-primary" type="submit">Odeslat návrh</button>' +
+      '<p class="draft-note">V prototypu se návrh uloží jen v telefonu. Odesílání na server přidáme s backendem.</p>';
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      state.navrhy.push({ obec: $("#nv-obec").value, drb: $("#nv-drb").value, mail: $("#nv-mail").value, at: Date.now() });
+      save(); form.reset(); toast("Návrh uložený. Díky!");
+    });
+    body.appendChild(form);
+    body.appendChild(el("button", { class: "btn btn-ghost", text: "Zpět na úvod", onclick: function () { closeSheet("finale"); show("home"); renderHome(); } }));
+    sheet.appendChild(body);
+  }
+
+  // ---------- nastavení ----------
+  function sw(id, checked, onChange) {
+    var w = el("label", { class: "switch" });
+    var inp = el("input", { type: "checkbox", id: id }); inp.checked = checked;
+    inp.addEventListener("change", function () { onChange(inp.checked); });
+    w.appendChild(inp); w.appendChild(el("span")); return w;
+  }
+  function renderCoords() {
+    var pre = $("#coords-out"); if (!pre) return;
+    pre.textContent = JSON.stringify(OBEC.body.map(function (b) { return { id: b.id, nazev: b.nazev, pozice: b.pozice }; }), null, 1);
+  }
+  function openSettings() {
+    var sheet = $("#settings"); sheet.innerHTML = ""; sheet.hidden = false;
+    sheet.appendChild(sheetHead("Nastavení", function () { closeSheet("settings"); }));
+    var body = el("div", { class: "sheet-body" });
+    body.appendChild(el("div", { class: "setting" }, [
+      el("div", {}, [el("strong", { text: "Simulace polohy" }), el("p", { text: IN_ARTIFACT ? "V této ukázce je zapnutá vždy, protože stránka nemá přístup k GPS." : "Pro zkoušení doma. Poloha se nastaví klepnutím do mapy nebo tlačítkem „Krok k cíli“." })]),
+      sw("set-sim", state.sim, function (v) {
+        if (IN_ARTIFACT && !v) { $("#set-sim").checked = true; toast("V ukázce GPS nejde. Vyzkoušej nainstalovanou verzi."); return; }
+        state.sim = v; save(); pos = null; startGeo(); update();
+      })
+    ]));
+    body.appendChild(el("div", { class: "setting" }, [
+      el("div", {}, [el("strong", { text: "Režim úprav bodů" }), el("p", { text: "Pro autory trasy. Značky na mapě jdou přetáhnout na správné místo. Souřadnice si pak zkopírujte níže." })]),
+      sw("set-edit", state.edit, function (v) { state.edit = v; save(); refreshPins(); if (v) { closeSheet("settings"); show("play"); toast("Přetáhni značky na správná místa"); } })
+    ]));
+    var pre = el("pre", { class: "coords", id: "coords-out" });
+    body.appendChild(el("h3", { text: "Souřadnice stanovišť" }));
+    body.appendChild(el("p", { class: "draft-note", text: "Body 1–4, 7 a 8 jsou zatím umístěné odhadem. Přesné jsou jen stadion a sochy." }));
+    body.appendChild(pre);
+    body.appendChild(el("button", { class: "btn btn-small", text: "Zkopírovat souřadnice", onclick: function () {
+      var txt = pre.textContent;
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast("Zkopírováno"); }, selectPre);
+      else selectPre();
+      function selectPre() { var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Označeno, zkopíruj ručně"); }
+    } }));
+    var confirmBox = el("div", { hidden: "" }, [
+      el("p", { text: "Opravdu smazat postup? Kronika se zase zamkne." }),
+      el("div", { class: "task-tools" }, [
+        el("button", { class: "btn btn-small", text: "Ano, smazat", onclick: resetProgress }),
+        el("button", { class: "btn btn-small btn-ghost", text: "Nechat být", onclick: function () { confirmBox.hidden = true; } })
+      ])
+    ]);
+    body.appendChild(el("h3", { text: "Postup" }));
+    body.appendChild(el("button", { class: "btn btn-small", text: "Smazat postup v tomto telefonu", onclick: function () { confirmBox.hidden = false; } }));
+    body.appendChild(confirmBox);
+    body.appendChild(el("p", { class: "draft-note", text: "Prototyp 0.1 · mapa © přispěvatelé OpenStreetMap" }));
+    sheet.appendChild(body);
+    renderCoords();
+  }
+  function resetProgress() {
+    state.idx = 0; state.done = {}; state.finished = false; lastAuto = -1; save();
+    refreshPins(); renderHome(); closeSheet("settings"); pos = null; if (!$("#play").hidden) startGeo();
+    toast("Postup smazán");
+  }
+
+  // ---------- události ----------
+  $("#btn-start").addEventListener("click", function () { show("play"); if (state.finished) openChronicle(); });
+  $("#btn-reset").addEventListener("click", function () { openSettings(); });
+  $("#btn-settings-home").addEventListener("click", openSettings);
+  $("#btn-home").addEventListener("click", function () { show("home"); renderHome(); });
+  $("#btn-chronicle").addEventListener("click", openChronicle);
+  $("#btn-settings").addEventListener("click", openSettings);
+  $("#btn-open").addEventListener("click", function () { if (current()) openStop(state.idx); else openFinale(); });
+  $("#btn-here").addEventListener("click", function () { if (current()) { lastAuto = state.idx; openStop(state.idx); } });
+  $("#sim-step").addEventListener("click", function () {
+    var b = current(); if (!b || !pos) return;
+    var d = distance(pos.ll, b.pozice), f = Math.min(1, 25 / Math.max(d, 1));
+    setSim([pos.ll[0] + (b.pozice[0] - pos.ll[0]) * f, pos.ll[1] + (b.pozice[1] - pos.ll[1]) * f]);
+  });
+  $("#sim-jump").addEventListener("click", function () {
+    var b = current(); if (!b) return;
+    setSim([b.pozice[0] + 0.00008, b.pozice[1] + 0.00005]);
+  });
+  // Pro testy: window.PD.setSim([lat,lng])
+  window.PD = { setSim: setSim, state: state, obec: OBEC };
+
+  renderHome();
+})();

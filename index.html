@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pravdivé drby</title>
+<meta name="description" content="Neoficiální kronika českých obcí – venkovní příběhová hra.">
+<meta name="theme-color" content="#f5c400">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Bricolage+Grotesque:wght@700;800&display=swap">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<!--APP-->
+<main id="home" class="screen">
+  <div class="home-inner">
+    <header class="brand">
+      <span class="stamp">Neoficiální kronika</span>
+      <h1>Pravdivé <span>drby</span></h1>
+      <p>Co se do zápisů starosty nevešlo. Projdi vesnici, najdi stopy v terénu a dopiš kroniku, jak to bylo doopravdy.</p>
+    </header>
+    <article class="obec-card" id="obec-card">
+      <span class="kicker">Okruh č. 1 · okres <span data-f="okres"></span></span>
+      <h2 data-f="nazev"></h2>
+      <p data-f="zapletka"></p>
+      <dl class="facts">
+        <div><dt>Stanoviště</dt><dd data-f="pocet"></dd></div>
+        <div><dt>Trasa</dt><dd data-f="delka"></dd></div>
+        <div><dt>Čas</dt><dd data-f="cas"></dd></div>
+      </dl>
+      <div class="progress-line" id="home-progress" aria-hidden="true"></div>
+      <div class="home-actions">
+        <button class="btn btn-primary btn-block" id="btn-start">Vyrazit na náves</button>
+        <button class="btn btn-ghost" id="btn-reset" hidden>Začít okruh znovu</button>
+      </div>
+    </article>
+    <p class="home-note">Nic se neinstaluje a nikam se nepřihlašuješ. Postup se ukládá jen v tomhle telefonu. Bez GPS si zapni simulaci polohy v nastavení.</p>
+    <button class="btn btn-small" id="btn-settings-home">Nastavení a simulace polohy</button>
+  </div>
+</main>
+
+<main id="play" class="screen" hidden>
+  <div class="topbar">
+    <button class="icon-btn" id="btn-home" aria-label="Zpět na úvod">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="target-chip"><small id="target-num"></small><strong id="target-name"></strong></div>
+    <button class="icon-btn" id="btn-chronicle" aria-label="Kronika">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 8h6M9 12h6"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-settings" aria-label="Nastavení">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
+  </div>
+  <div id="map"></div>
+  <div class="map-badge" id="map-badge" hidden>Schematická mapa bez podkladů</div>
+
+  <section class="radar" aria-live="polite">
+    <div class="radar-row">
+      <div class="compass" aria-hidden="true">
+        <span class="n">S</span>
+        <svg viewBox="0 0 40 40" id="arrow"><path d="M20 3 L30 33 L20 26 L10 33 Z" fill="currentColor"/></svg>
+      </div>
+      <div class="dist">
+        <div class="num" id="dist-num">–</div>
+        <div class="lbl" id="dist-lbl">Hledám polohu…</div>
+      </div>
+    </div>
+    <div>
+      <div class="heat" id="heat"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="heat-lbl"><span>Zima</span><span>Přihřívá</span><span>Hoří!</span></div>
+    </div>
+    <div class="sim-row" id="sim-panel" hidden>
+      <button class="btn btn-small" id="sim-step">Krok k cíli (25 m)</button>
+      <button class="btn btn-small" id="sim-jump">Skočit na místo</button>
+    </div>
+    <div class="gps-status"><span class="dot" id="gps-dot"></span><span id="gps-text">GPS se probouzí</span></div>
+    <div class="radar-actions">
+      <button class="btn btn-primary" id="btn-open" hidden>Otevřít stanoviště</button>
+      <button class="btn" id="btn-here">Jsem tady (GPS zlobí)</button>
+    </div>
+  </section>
+</main>
+
+<section id="stop" class="sheet" hidden></section>
+<section id="chronicle" class="sheet" hidden></section>
+<section id="settings" class="sheet" hidden></section>
+<section id="finale" class="sheet" hidden></section>
+<div class="toast" id="toast" role="status" hidden></div>
+<!--/APP-->
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="data/racice.js"></script>
+<script src="js/app.js"></script>
+<script>
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(function (e) { console.warn("SW", e); });
+  }
+</script>
+</body>
+</html>
