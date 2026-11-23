@@ -36,6 +36,14 @@ GPS v prohlížeči funguje jen přes HTTPS. Nejrychlejší cesty:
 
 V telefonu pak „Přidat na plochu“ a hra se chová jako aplikace, i offline.
 
+## Fotky stanovišť
+
+Každé stanoviště může mít nahoře fotku místa. Do bodu v `data/racice.js` doplňte
+`foto: { src: "img/racice/1.jpg", autor: "jméno" }` a soubor dejte do `img/racice/`.
+Bez fotky se ukáže neutrální obrázek domu. Ideální jsou vlastní fotky z trasy
+(na šířku, cca 1200 px, do 300 kB); snímky ze Street View použít nejde, podmínky Googlu
+jejich ukládání a zobrazování mimo Google mapy nedovolují.
+
 ## Doladění souřadnic
 
 Přesné souřadnice mají jen **stadion a sochy**. Ostatní body jsou umístěné odhadem.

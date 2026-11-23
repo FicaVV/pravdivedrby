@@ -14,7 +14,7 @@
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* soukromé okno apod. */ }
   }
-  var state = Object.assign({ idx: 0, done: {}, sim: IN_ARTIFACT, edit: false, coords: {}, rating: 0, navrhy: [], finished: false }, load() || {});
+  var state = Object.assign({ idx: 0, done: {}, sim: IN_ARTIFACT, edit: false, coords: {}, rating: 0, navrhy: [], finished: false, mapFull: false }, load() || {});
   if (IN_ARTIFACT) state.sim = true;
 
   // přenést ručně doladěné souřadnice
@@ -77,7 +77,8 @@
     ["home", "play"].forEach(function (s) { $("#" + s).hidden = s !== id; });
     if (id === "play") {
       var first = !map; initMap();
-      setTimeout(function () { map.invalidateSize(); if (first) fitRoute(); }, 50);
+      setMapFull(state.mapFull, true);
+      setTimeout(function () { map.invalidateSize(); if (first) fitRoute(); placeMapToggle(); }, 50);
       startGeo(); update();
     }
   }
@@ -131,6 +132,7 @@
     if (!map) return;
     OBEC.body.forEach(function (b, i) {
       var m = pins[b.id];
+      if (!m) return; // značky ještě nevznikly (schematická mapa se zapne dřív)
       m.setIcon(pinIcon(b, i));
       if (state.edit) m.dragging.enable(); else m.dragging.disable();
       m.unbindTooltip();
@@ -197,11 +199,30 @@
     } else { meMarker.setLatLng(pos.ll); meMarker.setIcon(icon); accCircle.setLatLng(pos.ll); accCircle.setRadius(pos.acc); }
   }
 
+  // ---------- mapa přes celý displej (volitelně) ----------
+  function setMapFull(on, quiet) {
+    state.mapFull = !!on; if (!quiet) save();
+    $("#play").classList.toggle("map-full", state.mapFull);
+    $("#btn-mapfull").setAttribute("aria-pressed", state.mapFull ? "true" : "false");
+    $("#mapfull-lbl").textContent = state.mapFull ? "Zmenšit" : "Celá mapa";
+    if (map) setTimeout(function () { map.invalidateSize(); placeMapToggle(); }, 30);
+    placeMapToggle();
+  }
+  // tlačítko sedí kousek nad horní hranou radaru, ať je radar velký nebo plovoucí
+  function placeMapToggle() {
+    var play = $("#play"), radar = $(".radar");
+    if (play.hidden) return;
+    var gap = play.getBoundingClientRect().bottom - radar.getBoundingClientRect().top;
+    play.style.setProperty("--toggle-bottom", Math.round(gap + 12) + "px");
+  }
+  window.addEventListener("resize", placeMapToggle);
+
   // ---------- radar ----------
   function update() {
     var b = current();
     if (!b) {
       $("#target-num").textContent = "Okruh dokončen";
+      placeMapToggle();
       $("#target-name").textContent = "Kronika je dopsaná";
       $("#dist-num").innerHTML = "✓"; $("#dist-lbl").textContent = "Všech " + OBEC.body.length + " stanovišť máš za sebou.";
       $("#btn-open").hidden = false; $("#btn-open").textContent = "Závěrečná stránka";
@@ -209,7 +230,7 @@
       return;
     }
     $("#btn-here").hidden = false;
-    $("#target-num").textContent = "Stanoviště " + b.id + " z " + OBEC.body.length;
+    $("#target-num").innerHTML = "Zápis <b>" + b.id + " / " + OBEC.body.length + "</b>";
     $("#target-name").textContent = b.nazev;
     var heat = $("#heat").children, level = 0;
     if (!pos) {
@@ -234,6 +255,7 @@
     for (var i = 0; i < heat.length; i++) {
       heat[i].className = i < level ? "on" + (level === 5 ? " hot" : "") : "";
     }
+    placeMapToggle();
   }
 
   // ---------- předčítání (TTS v prohlížeči) ----------
@@ -257,6 +279,11 @@
   function stopSpeak() { if (hasTTS) window.speechSynthesis.cancel(); setTtsBtn(false); }
   function setTtsBtn(on) {
     if (!ttsBtn) return;
+    if (ttsBtn.classList.contains("icon-btn")) {
+      ttsBtn.classList.toggle("on", on);
+      ttsBtn.setAttribute("aria-label", on ? "Zastavit předčítání" : ttsBtn.getAttribute("data-label"));
+      return;
+    }
     ttsBtn.textContent = on ? "■ Zastavit" : ttsBtn.getAttribute("data-label");
   }
   function ttsButton(label, getText, primary) {
@@ -278,16 +305,12 @@
   function openStop(i) {
     var b = OBEC.body[i], rec = state.done[b.id];
     var sheet = $("#stop"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;
-    sheet.appendChild(sheetHead("Stanoviště " + b.id, function () { closeSheet("stop"); }));
+    sheet.appendChild(stopHero(b));
     var body = el("div", { class: "sheet-body" });
-    body.appendChild(el("div", {}, [
-      el("div", { class: "stop-num", text: "Kapitola " + b.id + " z " + OBEC.body.length }),
-      el("h2", { class: "stop-title", text: b.nazev })
-    ]));
-    body.appendChild(el("p", { class: "addr", text: b.adresa }));
+    var num = el("div", { class: "stop-num" }, [el("b", { text: "Zápis " + b.id }), b.adresa || null]);
+    body.appendChild(el("div", {}, [num, el("h2", { class: "stop-title", text: b.nazev })]));
     var story = el("div", { class: "story" });
     b.text.forEach(function (t) { story.appendChild(el("p", { text: t })); });
-    body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přečíst nahlas", function () { return b.text.join(" "); })]));
     body.appendChild(story);
 
     if (b.modlitba) {
@@ -314,11 +337,32 @@
     }
     sheet.appendChild(body);
   }
+  // Fotka místa (b.foto = { src, popis, autor }), jinak neutrální obrázek.
+  function stopHero(b) {
+    var hero = el("div", { class: "stop-hero" });
+    var f = b.foto && (typeof b.foto === "string" ? { src: b.foto } : b.foto);
+    if (f && f.src) {
+      hero.appendChild(el("img", { src: f.src, alt: f.popis || b.nazev, loading: "lazy", decoding: "async" }));
+      if (f.autor) hero.appendChild(el("span", { class: "credit", text: "Foto: " + f.autor }));
+    } else {
+      hero.appendChild(el("div", { class: "ph", "aria-hidden": "true", html: '<svg viewBox="0 0 64 64" fill="none" stroke="#16130f" stroke-width="2.5" stroke-linejoin="round"><path d="M8 54h48"/><path d="M14 54V30L32 16l18 14v24"/><rect x="27" y="38" width="10" height="16"/><rect x="18" y="34" width="7" height="7"/><rect x="39" y="34" width="7" height="7"/></svg>' }));
+    }
+    var tts = el("button", { class: "icon-btn tts", "aria-label": "Přečíst nahlas", "data-label": "Přečíst nahlas",
+      html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>' });
+    tts.addEventListener("click", function () { speak(b.text.join(" "), tts); });
+    if (!hasTTS) tts.hidden = true;
+    hero.appendChild(el("div", { class: "hero-btns" }, [
+      el("button", { class: "icon-btn", "aria-label": "Zpět na mapu", onclick: function () { closeSheet("stop"); },
+        html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' }),
+      tts
+    ]));
+    return hero;
+  }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   function task(b, i, rec) {
     var box = el("div", { class: "task" });
-    box.appendChild(el("span", { class: "kicker", text: "Pozorovací úkol" }));
+    box.appendChild(el("span", { class: "kicker", text: "Úkol v terénu" }));
     box.appendChild(el("h3", { text: b.otazka }));
     var opts = el("div", { class: "options" });
     var fb = el("div", { class: "feedback", hidden: "" });
@@ -394,32 +438,45 @@
   }
 
   // ---------- kronika ----------
+  var ICO_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#16130f"/><path d="M7 12l3.5 3.5L17 9" fill="none" stroke="#f5c400" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICO_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   function openChronicle() {
     var sheet = $("#chronicle"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;
     sheet.appendChild(sheetHead("Neoficiální kronika", function () { closeSheet("chronicle"); }));
     var body = el("div", { class: "sheet-body chronicle" });
-    var pl = el("div", { class: "progress-line" });
-    OBEC.body.forEach(function (b) { pl.appendChild(el("i", { class: state.done[b.id] ? "on" : "" })); });
-    body.appendChild(el("p", { text: OBEC.nazev + " · zapsáno " + doneCount() + " z " + OBEC.body.length + " kapitol" }));
+    var nxt = current();
+    body.appendChild(el("h2", { class: "obec-title", text: OBEC.nazev }));
+    var pl = el("div", { class: "progress-line", "aria-hidden": "true" });
+    OBEC.body.forEach(function (b) { pl.appendChild(el("i", { class: state.done[b.id] ? "on" : nxt && b.id === nxt.id ? "next" : "" })); });
     body.appendChild(pl);
-    var all = [];
-    OBEC.body.forEach(function (b) {
-      var s = el("section");
+    body.appendChild(el("p", { class: "ch-meta", text: "Dopsáno " + doneCount() + " z " + OBEC.body.length + " kapitol" }));
+    var all = [], ttsSlot = el("div", { class: "tts-row" });
+    body.appendChild(ttsSlot);
+    var locked = el("div", { class: "ch-locked" });
+    OBEC.body.forEach(function (b, i) {
       if (state.done[b.id]) {
-        s.appendChild(el("h3", { text: b.id + ". " + b.nazev }));
-        b.text.forEach(function (t) { s.appendChild(el("p", { text: t })); });
+        var h = el("h3", {}, [el("span", { text: b.id + " · " + b.nazev })]);
+        h.insertAdjacentHTML("beforeend", ICO_CHECK);
+        var card = el("section", { class: "ch-card done" }, [h]);
+        b.text.forEach(function (t) { card.appendChild(el("p", { text: t })); });
         if (b.id !== 4) all = all.concat(b.text);
+        body.appendChild(card);
+      } else if (nxt && b.id === nxt.id) {
+        body.appendChild(el("section", { class: "ch-card next" }, [
+          el("div", {}, [el("small", { text: "Na řadě · odkryješ na místě" }), el("h3", { text: b.id + " · " + b.nazev })]),
+          el("button", { class: "btn btn-small", text: "Na mapě", onclick: function () {
+            closeSheet("chronicle"); if ($("#play").hidden) show("play"); if (map) map.panTo(b.pozice);
+          } })
+        ]));
       } else {
-        s.className = "locked";
-        s.appendChild(el("h3", { text: b.id + ". ????" }));
-        var p = el("p");
-        b.text.slice(0, 2).forEach(function (t) { p.appendChild(el("span", { class: "redacted", text: t.slice(0, 140) })); p.appendChild(document.createTextNode(" ")); });
-        s.appendChild(p);
-        s.appendChild(el("p", { class: "draft-note", text: "Tahle kapitola se odkryje na stanovišti." }));
+        var row = el("div", {}, [el("span", { text: b.id + " · " + b.nazev })]);
+        row.insertAdjacentHTML("afterbegin", ICO_LOCK);
+        locked.appendChild(row);
       }
-      body.appendChild(s);
     });
-    if (all.length) body.insertBefore(el("div", { class: "tts-row" }, [ttsButton("▶ Přečíst kroniku nahlas", function () { return all.join(" "); })]), pl.nextSibling);
+    if (locked.children.length) body.appendChild(locked);
+    if (all.length) ttsSlot.appendChild(ttsButton("▶ Přečíst kroniku nahlas", function () { return all.join(" "); }));
+    else ttsSlot.remove();
     sheet.appendChild(body);
   }
 
@@ -531,6 +588,7 @@
   $("#btn-home").addEventListener("click", function () { show("home"); renderHome(); });
   $("#btn-chronicle").addEventListener("click", openChronicle);
   $("#btn-settings").addEventListener("click", openSettings);
+  $("#btn-mapfull").addEventListener("click", function () { setMapFull(!state.mapFull); });
   $("#btn-open").addEventListener("click", function () { if (current()) openStop(state.idx); else openFinale(); });
   $("#btn-here").addEventListener("click", function () { if (current()) { lastAuto = state.idx; openStop(state.idx); } });
   $("#sim-step").addEventListener("click", function () {
