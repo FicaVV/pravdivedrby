@@ -1,10 +1,9 @@
 name: Namluvit příběhy
 
-# Po změně textů v data/ namluví nové odstavce hlasem Azure a nahrávky uloží do audio/.
-# Potřebuje v Settings → Secrets and variables → Actions:
-#   secret AZURE_SPEECH_KEY  (klíč ze služby Azure Speech)
-#   variable AZURE_SPEECH_REGION  (např. westeurope; když chybí, použije se westeurope)
-# Volitelně variable AZURE_VOICE (výchozí cs-CZ-AntoninNeural, ženský hlas cs-CZ-VlastaNeural).
+# Po změně textů v data/ namluví nové odstavce hlasem Google Cloud Text-to-Speech
+# a nahrávky uloží do audio/. Potřebuje v Settings → Secrets and variables → Actions:
+#   secret GOOGLE_TTS_KEY    (API klíč z Google Cloud, omezený jen na Cloud Text-to-Speech API)
+# Volitelně variable GOOGLE_TTS_VOICE (výchozí cs-CZ-Chirp3-HD-Charon).
 
 on:
   push:
@@ -12,6 +11,10 @@ on:
     paths: ["data/**", "tools/namluvit.mjs"]
   workflow_dispatch:
     inputs:
+      ukazky:
+        description: "Jen ukázky všech českých hlasů (ke stažení, nic se neuloží do webu)"
+        type: boolean
+        default: false
       znovu:
         description: "Přegenerovat všechny nahrávky (např. po změně hlasu)"
         type: boolean
@@ -28,23 +31,36 @@ concurrency:
 jobs:
   namluvit:
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_TTS_KEY: ${{ secrets.GOOGLE_TTS_KEY }}
+      GOOGLE_TTS_VOICE: ${{ vars.GOOGLE_TTS_VOICE || 'cs-CZ-Chirp3-HD-Charon' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Namluvit
-        env:
-          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
-          AZURE_SPEECH_REGION: ${{ vars.AZURE_SPEECH_REGION || 'westeurope' }}
-          AZURE_VOICE: ${{ vars.AZURE_VOICE || 'cs-CZ-AntoninNeural' }}
+      - name: Zkontrolovat klíč
+        id: klic
         run: |
-          if [ -z "$AZURE_SPEECH_KEY" ]; then
-            echo "::warning::Chybí secret AZURE_SPEECH_KEY, předčítání zůstane na hlasu telefonu."
-            exit 0
+          if [ -z "$GOOGLE_TTS_KEY" ]; then
+            echo "::warning::Chybí secret GOOGLE_TTS_KEY, předčítání zůstane na hlasu telefonu."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
-          node tools/namluvit.mjs ${{ inputs.znovu && '--znovu' || '' }}
+      - name: Ukázky hlasů
+        if: steps.klic.outputs.ok == 'true' && inputs.ukazky
+        run: node tools/namluvit.mjs --ukazky
+      - uses: actions/upload-artifact@v4
+        if: steps.klic.outputs.ok == 'true' && inputs.ukazky
+        with:
+          name: ukazky-hlasu
+          path: ukazky/
+      - name: Namluvit
+        if: steps.klic.outputs.ok == 'true' && !inputs.ukazky
+        run: node tools/namluvit.mjs ${{ inputs.znovu && '--znovu' || '' }}
       - name: Uložit nahrávky a nasadit
+        if: steps.klic.outputs.ok == 'true' && !inputs.ukazky
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

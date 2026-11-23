@@ -48,8 +48,8 @@ jejich ukládání a zobrazování mimo Google mapy nedovolují.
 
 Hra čte příběhy dvěma způsoby:
 
-1. **Namluvený vypravěč (doporučeno).** Odstavce jsou předem namluvené neuronovým hlasem Azure
-   (`cs-CZ-AntoninNeural`, ženský `cs-CZ-VlastaNeural`) a uložené jako MP3 v `audio/`.
+1. **Namluvený vypravěč (doporučeno).** Odstavce jsou předem namluvené hlasem
+   Google Cloud Text-to-Speech (výchozí `cs-CZ-Chirp3-HD-Charon`) a uložené jako MP3 v `audio/`.
    Zní stejně na všech telefonech a funguje offline (service worker nahrávky stáhne předem).
 2. **Hlas telefonu** jako záloha. Hra vybírá nejpřirozenější dostupný český hlas
    (Natural v Edge, Google na Androidu, vylepšená Zuzana na iPhonu). V Nastavení jde hlas
@@ -57,18 +57,19 @@ Hra čte příběhy dvěma způsoby:
 
 Jak zapnout namluveného vypravěče:
 
-1. V [Azure portálu](https://portal.azure.com) vytvořte prostředek **Speech service**
-   s cenovou úrovní **Free F0** (500 000 znaků měsíčně zdarma, celý okruh má asi 5 000).
-2. Z části *Keys and Endpoint* zkopírujte **Key 1** a **Location/Region** (např. `westeurope`).
-3. V repozitáři na GitHubu: *Settings → Secrets and variables → Actions*
-   - záložka *Secrets*: `AZURE_SPEECH_KEY` = klíč,
-   - záložka *Variables*: `AZURE_SPEECH_REGION` = region (když chybí, použije se `westeurope`),
-   - volitelně `AZURE_VOICE` = `cs-CZ-VlastaNeural` pro ženský hlas.
-4. *Actions → Namluvit příběhy → Run workflow.* Nahrávky se uloží do `audio/` a web se nasadí.
+1. V [Google Cloud Console](https://console.cloud.google.com) založte projekt, zapněte
+   **Cloud Text-to-Speech API** a vytvořte **API klíč** omezený jen na toto API.
+   Měsíčně je zdarma 1 milion znaků hlasů Chirp 3: HD, celý okruh má asi 5 000.
+2. V repozitáři na GitHubu: *Settings → Secrets and variables → Actions → Secrets*
+   přidejte `GOOGLE_TTS_KEY` = klíč. Volitelně na záložce *Variables* `GOOGLE_TTS_VOICE`
+   pro jiný hlas.
+3. *Actions → Namluvit příběhy → Run workflow.* Nahrávky se uloží do `audio/` a web se nasadí.
+   Se zaškrtnutým „Jen ukázky“ se místo toho první odstavec namluví všemi českými hlasy
+   a výsledek je ke stažení v detailu běhu (Artifacts → ukazky-hlasu).
 
 Po každé úpravě textů v `data/` se workflow spustí sám a namluví jen změněné odstavce.
-Ručně: `AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=westeurope node tools/namluvit.mjs`
-(`--nanecisto` jen spočítá znaky, `--znovu` přegeneruje vše, třeba po změně hlasu).
+Ručně: `GOOGLE_TTS_KEY=… node tools/namluvit.mjs` (`--nanecisto` jen spočítá znaky,
+`--hlasy` vypíše české hlasy, `--ukazky` namluví ukázky, `--znovu` přegeneruje vše).
 
 ## Doladění souřadnic
 
