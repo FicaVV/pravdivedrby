@@ -48,28 +48,33 @@ jejich ukládání a zobrazování mimo Google mapy nedovolují.
 
 Hra čte příběhy dvěma způsoby:
 
-1. **Namluvený vypravěč (doporučeno).** Odstavce jsou předem namluvené hlasem
-   Google Cloud Text-to-Speech (výchozí `cs-CZ-Chirp3-HD-Charon`) a uložené jako MP3 v `audio/`.
+1. **Namluvený vypravěč (doporučeno).** Odstavce jsou předem namluvené neuronovým hlasem
+   (Azure Speech, nebo Google Cloud Text-to-Speech) a uložené jako MP3 v `audio/`.
    Zní stejně na všech telefonech a funguje offline (service worker nahrávky stáhne předem).
 2. **Hlas telefonu** jako záloha. Hra vybírá nejpřirozenější dostupný český hlas
    (Natural v Edge, Google na Androidu, vylepšená Zuzana na iPhonu). V Nastavení jde hlas
    i rychlost změnit a vyzkoušet.
 
-Jak zapnout namluveného vypravěče:
+Jak zapnout namluveného vypravěče (stačí jedna služba):
 
-1. V [Google Cloud Console](https://console.cloud.google.com) založte projekt, zapněte
-   **Cloud Text-to-Speech API** a vytvořte **API klíč** omezený jen na toto API.
-   Měsíčně je zdarma 1 milion znaků hlasů Chirp 3: HD, celý okruh má asi 5 000.
-2. V repozitáři na GitHubu: *Settings → Secrets and variables → Actions → Secrets*
-   přidejte `GOOGLE_TTS_KEY` = klíč. Volitelně na záložce *Variables* `GOOGLE_TTS_VOICE`
-   pro jiný hlas.
-3. *Actions → Namluvit příběhy → Run workflow.* Nahrávky se uloží do `audio/` a web se nasadí.
-   Se zaškrtnutým „Jen ukázky“ se místo toho první odstavec namluví všemi českými hlasy
-   a výsledek je ke stažení v detailu běhu (Artifacts → ukazky-hlasu).
+- **Azure:** v [Azure portálu](https://portal.azure.com) vytvořte prostředek **Speech service**
+  s úrovní **Free F0** (500 000 znaků měsíčně zdarma), např. v regionu *Sweden Central*.
+  Z *Keys and Endpoint* zkopírujte **Key 1** a **Location/Region**. Na GitHubu v
+  *Settings → Secrets and variables → Actions* přidejte secret `AZURE_SPEECH_KEY` a na záložce
+  *Variables* `AZURE_SPEECH_REGION` (např. `swedencentral`). Hlas: variable `AZURE_VOICE`
+  (výchozí `cs-CZ-AntoninNeural`, ženský `cs-CZ-VlastaNeural`).
+- **Google:** v [Google Cloud Console](https://console.cloud.google.com) zapněte
+  **Cloud Text-to-Speech API**, vytvořte API klíč omezený jen na toto API a uložte ho jako
+  secret `GOOGLE_TTS_KEY`. Hlas: variable `GOOGLE_TTS_VOICE` (výchozí `cs-CZ-Chirp3-HD-Charon`).
+
+Pak *Actions → Namluvit příběhy → Run workflow.* Nahrávky se uloží do `audio/` a web se nasadí.
+Se zaškrtnutým „Jen ukázky“ se místo toho první odstavec namluví všemi českými hlasy
+a výsledek je ke stažení v detailu běhu (Artifacts → ukazky-hlasu).
 
 Po každé úpravě textů v `data/` se workflow spustí sám a namluví jen změněné odstavce.
-Ručně: `GOOGLE_TTS_KEY=… node tools/namluvit.mjs` (`--nanecisto` jen spočítá znaky,
-`--hlasy` vypíše české hlasy, `--ukazky` namluví ukázky, `--znovu` přegeneruje vše).
+Ručně: `AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=swedencentral node tools/namluvit.mjs`
+(`--nanecisto` jen spočítá znaky, `--hlasy` vypíše české hlasy, `--ukazky` namluví ukázky,
+`--znovu` přegeneruje vše).
 
 ## Doladění souřadnic
 

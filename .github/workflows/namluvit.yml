@@ -1,9 +1,11 @@
 name: Namluvit příběhy
 
-# Po změně textů v data/ namluví nové odstavce hlasem Google Cloud Text-to-Speech
-# a nahrávky uloží do audio/. Potřebuje v Settings → Secrets and variables → Actions:
-#   secret GOOGLE_TTS_KEY    (API klíč z Google Cloud, omezený jen na Cloud Text-to-Speech API)
-# Volitelně variable GOOGLE_TTS_VOICE (výchozí cs-CZ-Chirp3-HD-Charon).
+# Po změně textů v data/ namluví nové odstavce neuronovým hlasem a nahrávky uloží do audio/.
+# Potřebuje v Settings → Secrets and variables → Actions jednu z variant:
+#   Azure:  secret AZURE_SPEECH_KEY + variable AZURE_SPEECH_REGION (např. swedencentral),
+#           volitelně variable AZURE_VOICE (výchozí cs-CZ-AntoninNeural, ženský cs-CZ-VlastaNeural)
+#   Google: secret GOOGLE_TTS_KEY, volitelně variable GOOGLE_TTS_VOICE (výchozí cs-CZ-Chirp3-HD-Charon)
+# Když jsou nastavené oba klíče, použije se Azure (změníte to variable TTS_SLUZBA = google).
 
 on:
   push:
@@ -32,8 +34,12 @@ jobs:
   namluvit:
     runs-on: ubuntu-latest
     env:
+      AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+      AZURE_SPEECH_REGION: ${{ vars.AZURE_SPEECH_REGION || 'swedencentral' }}
+      AZURE_VOICE: ${{ vars.AZURE_VOICE }}
       GOOGLE_TTS_KEY: ${{ secrets.GOOGLE_TTS_KEY }}
-      GOOGLE_TTS_VOICE: ${{ vars.GOOGLE_TTS_VOICE || 'cs-CZ-Chirp3-HD-Charon' }}
+      GOOGLE_TTS_VOICE: ${{ vars.GOOGLE_TTS_VOICE }}
+      TTS_SLUZBA: ${{ vars.TTS_SLUZBA }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,8 +48,8 @@ jobs:
       - name: Zkontrolovat klíč
         id: klic
         run: |
-          if [ -z "$GOOGLE_TTS_KEY" ]; then
-            echo "::warning::Chybí secret GOOGLE_TTS_KEY, předčítání zůstane na hlasu telefonu."
+          if [ -z "$AZURE_SPEECH_KEY" ] && [ -z "$GOOGLE_TTS_KEY" ]; then
+            echo "::warning::Chybí secret AZURE_SPEECH_KEY i GOOGLE_TTS_KEY, předčítání zůstane na hlasu telefonu."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
