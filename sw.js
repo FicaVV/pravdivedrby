@@ -1,5 +1,5 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.2.0";
+const VERSION = "pd-0.2.1";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/app.js", "data/racice.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
@@ -9,7 +9,7 @@ const TILES = "pd-tiles-v1";
 const TILE_LIMIT = 1500;
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(
@@ -39,10 +39,12 @@ self.addEventListener("fetch", (e) => {
     }));
     return;
   }
-  // Vlastní soubory: nejdřív cache, jinak síť
+  // Vlastní soubory: nejdřív síť (vždy čerstvá verze), offline z cache
   if (url.origin === location.origin) {
-    e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request).then((r) => {
-      const copy = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); return r;
-    })));
+    e.respondWith(fetch(e.request, { cache: "no-cache" }).then((r) => {
+      if (r.ok) { const copy = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); }
+      return r;
+    }).catch(() => caches.match(e.request, { ignoreSearch: true })
+      .then((hit) => hit || (e.request.mode === "navigate" ? caches.match("index.html") : Response.error()))));
   }
 });
