@@ -13,7 +13,7 @@ const AUDIO_FILES = Object.values((self.PD_AUDIO && self.PD_AUDIO.files) || {});
 const TILE_LIMIT = 1500;
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
   // nahrávky stáhnout předem, ať předčítání funguje i bez signálu (chyba instalaci nezastaví)
   e.waitUntil(cacheAudio().catch(() => {}));
 });
@@ -63,10 +63,12 @@ self.addEventListener("fetch", (e) => {
     }));
     return;
   }
-  // Vlastní soubory: nejdřív cache, jinak síť
+  // Vlastní soubory: nejdřív síť (vždy čerstvá verze), offline z cache
   if (url.origin === location.origin) {
-    e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request).then((r) => {
-      const copy = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); return r;
-    })));
+    e.respondWith(fetch(e.request, { cache: "no-cache" }).then((r) => {
+      if (r.ok) { const copy = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); }
+      return r;
+    }).catch(() => caches.match(e.request, { ignoreSearch: true })
+      .then((hit) => hit || (e.request.mode === "navigate" ? caches.match("index.html") : Response.error()))));
   }
 });
