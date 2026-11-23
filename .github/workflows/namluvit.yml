@@ -1,0 +1,58 @@
+name: Namluvit příběhy
+
+# Po změně textů v data/ namluví nové odstavce hlasem Azure a nahrávky uloží do audio/.
+# Potřebuje v Settings → Secrets and variables → Actions:
+#   secret AZURE_SPEECH_KEY  (klíč ze služby Azure Speech)
+#   variable AZURE_SPEECH_REGION  (např. westeurope; když chybí, použije se westeurope)
+# Volitelně variable AZURE_VOICE (výchozí cs-CZ-AntoninNeural, ženský hlas cs-CZ-VlastaNeural).
+
+on:
+  push:
+    branches: [main]
+    paths: ["data/**", "tools/namluvit.mjs"]
+  workflow_dispatch:
+    inputs:
+      znovu:
+        description: "Přegenerovat všechny nahrávky (např. po změně hlasu)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: namluvit
+  cancel-in-progress: false
+
+jobs:
+  namluvit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Namluvit
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ vars.AZURE_SPEECH_REGION || 'westeurope' }}
+          AZURE_VOICE: ${{ vars.AZURE_VOICE || 'cs-CZ-AntoninNeural' }}
+        run: |
+          if [ -z "$AZURE_SPEECH_KEY" ]; then
+            echo "::warning::Chybí secret AZURE_SPEECH_KEY, předčítání zůstane na hlasu telefonu."
+            exit 0
+          fi
+          node tools/namluvit.mjs ${{ inputs.znovu && '--znovu' || '' }}
+      - name: Uložit nahrávky a nasadit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add -A audio
+          if git diff --cached --quiet; then echo "Beze změn."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Namluvené nahrávky příběhů"
+          git push
+          # commit z Actions sám nasazení nespustí, proto ručně
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then gh workflow run pages.yml --ref main; fi

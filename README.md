@@ -44,6 +44,32 @@ Bez fotky se ukáže neutrální obrázek domu. Ideální jsou vlastní fotky z 
 (na šířku, cca 1200 px, do 300 kB); snímky ze Street View použít nejde, podmínky Googlu
 jejich ukládání a zobrazování mimo Google mapy nedovolují.
 
+## Předčítání příběhů
+
+Hra čte příběhy dvěma způsoby:
+
+1. **Namluvený vypravěč (doporučeno).** Odstavce jsou předem namluvené neuronovým hlasem Azure
+   (`cs-CZ-AntoninNeural`, ženský `cs-CZ-VlastaNeural`) a uložené jako MP3 v `audio/`.
+   Zní stejně na všech telefonech a funguje offline (service worker nahrávky stáhne předem).
+2. **Hlas telefonu** jako záloha. Hra vybírá nejpřirozenější dostupný český hlas
+   (Natural v Edge, Google na Androidu, vylepšená Zuzana na iPhonu). V Nastavení jde hlas
+   i rychlost změnit a vyzkoušet.
+
+Jak zapnout namluveného vypravěče:
+
+1. V [Azure portálu](https://portal.azure.com) vytvořte prostředek **Speech service**
+   s cenovou úrovní **Free F0** (500 000 znaků měsíčně zdarma, celý okruh má asi 5 000).
+2. Z části *Keys and Endpoint* zkopírujte **Key 1** a **Location/Region** (např. `westeurope`).
+3. V repozitáři na GitHubu: *Settings → Secrets and variables → Actions*
+   - záložka *Secrets*: `AZURE_SPEECH_KEY` = klíč,
+   - záložka *Variables*: `AZURE_SPEECH_REGION` = region (když chybí, použije se `westeurope`),
+   - volitelně `AZURE_VOICE` = `cs-CZ-VlastaNeural` pro ženský hlas.
+4. *Actions → Namluvit příběhy → Run workflow.* Nahrávky se uloží do `audio/` a web se nasadí.
+
+Po každé úpravě textů v `data/` se workflow spustí sám a namluví jen změněné odstavce.
+Ručně: `AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=westeurope node tools/namluvit.mjs`
+(`--nanecisto` jen spočítá znaky, `--znovu` přegeneruje vše, třeba po změně hlasu).
+
 ## Doladění souřadnic
 
 Přesné souřadnice mají jen **stadion a sochy**. Ostatní body jsou umístěné odhadem.

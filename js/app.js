@@ -258,25 +258,105 @@
     placeMapToggle();
   }
 
-  // ---------- předčítání (TTS v prohlížeči) ----------
-  var ttsBtn = null;
+  // ---------- předčítání ----------
+  // 1) Namluvené MP3 (audio/audio.js, vygenerované přes tools/namluvit.mjs) – stejný přirozený hlas všude, i offline.
+  // 2) Jinak hlas prohlížeče: vybíráme nejlepší dostupný český (Natural/Google/vylepšený), ne první v seznamu.
   var hasTTS = "speechSynthesis" in window;
-  function speak(text, btn) {
-    if (!hasTTS) return;
-    var synth = window.speechSynthesis;
-    if (synth.speaking || synth.pending) { stopSpeak(); return; }
-    var voice = synth.getVoices().filter(function (v) { return /^cs/i.test(v.lang); })[0];
+  var AUDIO = window.PD_AUDIO || { files: {} };
+  var ttsBtn = null, player = null, playing = false, gen = 0;
+  var REC = "nahravka"; // hodnota state.voice pro namluveného vypravěče
+  if (state.voice === undefined) state.voice = "";
+  if (!state.rate) state.rate = 1;
+
+  // stejný hash jako v tools/namluvit.mjs (FNV-1a 32 bit nad normalizovaným textem)
+  function norm(t) { return String(t).replace(/\s+/g, " ").trim(); }
+  function textKey(t) {
+    var s = norm(t), h = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return ("0000000" + h.toString(16)).slice(-8);
+  }
+  function recordingsFor(segs) {
+    var out = [];
+    for (var i = 0; i < segs.length; i++) { var f = AUDIO.files[textKey(segs[i])]; if (!f) return null; out.push(f); }
+    return out.length ? out : null;
+  }
+  function hasRecordings() { return Object.keys(AUDIO.files || {}).length > 0; }
+
+  var voices = [];
+  function csVoices() {
+    return voices.filter(function (v) { return /^cs\b|^cs[-_]/i.test(v.lang); });
+  }
+  // čím vyšší skóre, tím přirozenější hlas
+  function voiceScore(v) {
+    var n = v.name, s = 0;
+    if (/natural|neural|online/i.test(n)) s += 50;          // Edge: „Microsoft Antonín Online (Natural)“
+    if (/premium|enhanced|vylepšen|siri/i.test(n)) s += 40; // iPhone/Mac: stažené vylepšené hlasy
+    if (/google/i.test(n)) s += 30;                         // Chrome / Android
+    if (/espeak|compact/i.test(n)) s -= 40;
+    if (!v.localService) s += 5;
+    return s;
+  }
+  function bestVoice() { return csVoices().slice().sort(function (a, b) { return voiceScore(b) - voiceScore(a); })[0] || null; }
+  function chosenVoice() {
+    if (state.voice && state.voice !== REC) {
+      var v = csVoices().filter(function (x) { return x.voiceURI === state.voice; })[0];
+      if (v) return v;
+    }
+    return bestVoice();
+  }
+  function loadVoices() { if (hasTTS) voices = window.speechSynthesis.getVoices() || []; }
+  if (hasTTS) {
+    loadVoices();
+    // Chrome hlasy načítá se zpožděním – bez tohohle první přehrání mluvilo výchozím hlasem
+    window.speechSynthesis.addEventListener && window.speechSynthesis.addEventListener("voiceschanged", function () {
+      loadVoices(); if (!$("#settings").hidden) renderVoiceSelect();
+    });
+  }
+  function canSpeak() { return hasTTS || hasRecordings(); }
+
+  // segs = pole odstavců
+  function speak(segs, btn) {
+    if (playing) { var same = btn === ttsBtn; stopSpeak(); if (same) return; }
+    ttsBtn = btn; gen++;
+    var rec = state.voice === REC || state.voice === "" ? recordingsFor(segs) : null;
+    if (rec) playFiles(rec); else if (hasTTS) speakTTS(segs.join(" "));
+    else return;
+    playing = true; setTtsBtn(true);
+  }
+  function playFiles(files) {
+    var i = 0, my = gen;
+    player = new Audio();
+    player.preload = "auto";
+    var next = function () {
+      if (!player || my !== gen) return;
+      if (i >= files.length) { done(my); return; }
+      player.src = files[i++]; player.playbackRate = state.rate;
+      var p = player.play(); if (p && p.catch) p.catch(function () { done(my); });
+    };
+    player.addEventListener("ended", next);
+    player.addEventListener("error", next);
+    next();
+  }
+  function speakTTS(text) {
+    var synth = window.speechSynthesis, voice = chosenVoice(), my = gen;
+    synth.cancel();
     // Chrome utíná dlouhé promluvy – posíláme po větách
     var parts = text.match(/[^.!?…]+[.!?…“"]*\s*/g) || [text];
     parts.forEach(function (p, i) {
       var u = new SpeechSynthesisUtterance(p.trim());
-      u.lang = "cs-CZ"; u.rate = 0.95; if (voice) u.voice = voice;
-      if (i === parts.length - 1) u.onend = u.onerror = function () { setTtsBtn(false); };
+      u.lang = voice ? voice.lang : "cs-CZ"; u.rate = state.rate * 0.95; u.pitch = 1;
+      if (voice) u.voice = voice;
+      if (i === parts.length - 1) u.onend = u.onerror = function () { done(my); };
       synth.speak(u);
     });
-    ttsBtn = btn; setTtsBtn(true);
   }
-  function stopSpeak() { if (hasTTS) window.speechSynthesis.cancel(); setTtsBtn(false); }
+  function done(my) { if (my !== gen) return; playing = false; if (player) { player.pause(); player = null; } setTtsBtn(false); }
+  function stopSpeak() {
+    gen++;
+    if (hasTTS) window.speechSynthesis.cancel();
+    if (player) { player.pause(); player.removeAttribute("src"); player = null; }
+    playing = false; setTtsBtn(false);
+  }
   function setTtsBtn(on) {
     if (!ttsBtn) return;
     if (ttsBtn.classList.contains("icon-btn")) {
@@ -286,10 +366,10 @@
     }
     ttsBtn.textContent = on ? "■ Zastavit" : ttsBtn.getAttribute("data-label");
   }
-  function ttsButton(label, getText, primary) {
+  function ttsButton(label, getSegs, primary) {
     var b = el("button", { class: "btn btn-small" + (primary ? " btn-primary" : ""), "data-label": label, text: label });
-    b.addEventListener("click", function () { speak(getText(), b); });
-    if (!hasTTS) b.hidden = true;
+    b.addEventListener("click", function () { speak(getSegs(), b); });
+    if (!canSpeak()) b.hidden = true;
     return b;
   }
 
@@ -316,7 +396,7 @@
     if (b.modlitba) {
       var pr = el("div", { class: "prayer" });
       pr.innerHTML = b.modlitba.map(esc).join("<br>") + '<span class="cut">…zbytek přepisu se tady na místě nedochoval.</span>';
-      body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return b.modlitba.concat(b.modlitbaKonec).join(" "); }, true)]));
+      body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return [b.modlitba.concat(b.modlitbaKonec).join(" ")]; }, true)]));
       body.appendChild(pr);
     }
     if (b.predOtazkou) body.appendChild(el("blockquote", { class: "quote", text: b.predOtazkou }));
@@ -349,8 +429,8 @@
     }
     var tts = el("button", { class: "icon-btn tts", "aria-label": "Přečíst nahlas", "data-label": "Přečíst nahlas",
       html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>' });
-    tts.addEventListener("click", function () { speak(b.text.join(" "), tts); });
-    if (!hasTTS) tts.hidden = true;
+    tts.addEventListener("click", function () { speak(b.text, tts); });
+    if (!canSpeak()) tts.hidden = true;
     hero.appendChild(el("div", { class: "hero-btns" }, [
       el("button", { class: "icon-btn", "aria-label": "Zpět na mapu", onclick: function () { closeSheet("stop"); },
         html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' }),
@@ -475,7 +555,7 @@
       }
     });
     if (locked.children.length) body.appendChild(locked);
-    if (all.length) ttsSlot.appendChild(ttsButton("▶ Přečíst kroniku nahlas", function () { return all.join(" "); }));
+    if (all.length) ttsSlot.appendChild(ttsButton("▶ Přečíst kroniku nahlas", function () { return all; }));
     else ttsSlot.remove();
     sheet.appendChild(body);
   }
@@ -536,10 +616,55 @@
     var pre = $("#coords-out"); if (!pre) return;
     pre.textContent = JSON.stringify(OBEC.body.map(function (b) { return { id: b.id, nazev: b.nazev, pozice: b.pozice }; }), null, 1);
   }
+  // ---------- nastavení předčítání ----------
+  var SAMPLE = "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958.";
+  function voiceSettings() {
+    var sel = el("select", { id: "set-voice", class: "select" });
+    sel.addEventListener("change", function () { state.voice = sel.value; save(); stopSpeak(); renderVoiceNote(); });
+    var rate = el("input", { type: "range", id: "set-rate", min: "0.7", max: "1.3", step: "0.05", value: String(state.rate) });
+    var rateOut = el("span", { class: "rate-out", text: fmtRate(state.rate) });
+    rate.addEventListener("input", function () { state.rate = parseFloat(rate.value) || 1; rateOut.textContent = fmtRate(state.rate); save(); });
+    var test = el("button", { class: "btn btn-small", "data-label": "▶ Vyzkoušet", text: "▶ Vyzkoušet" });
+    test.addEventListener("click", function () {
+      var first = OBEC.body[0].text[0];
+      speak(recordingsFor([first]) && (state.voice === REC || state.voice === "") ? [first] : [SAMPLE], test);
+    });
+    var box = el("div", { class: "setting setting-col" }, [
+      el("div", {}, [el("strong", { text: "Hlas předčítání" }), el("p", { id: "voice-note" })]),
+      el("label", { class: "field" }, [el("span", { text: "Hlas" }), sel]),
+      el("label", { class: "field" }, [el("span", {}, ["Rychlost ", rateOut]), rate]),
+      el("div", { class: "task-tools" }, [test])
+    ]);
+    setTimeout(function () { renderVoiceSelect(); }, 0);
+    return box;
+  }
+  function fmtRate(r) { return Math.abs(r - 1) < 0.01 ? "normální" : (r < 1 ? "pomalejší" : "rychlejší") + " (" + r.toFixed(2).replace(".", ",") + "×)"; }
+  function renderVoiceSelect() {
+    var sel = $("#set-voice"); if (!sel) return;
+    sel.innerHTML = "";
+    sel.appendChild(el("option", { value: "", text: "Automaticky (nejpřirozenější dostupný)" }));
+    if (hasRecordings()) sel.appendChild(el("option", { value: REC, text: "Namluvený vypravěč (stejný na všech telefonech)" }));
+    csVoices().slice().sort(function (a, b) { return voiceScore(b) - voiceScore(a); }).forEach(function (v) {
+      sel.appendChild(el("option", { value: v.voiceURI, text: v.name.replace(/^Microsoft |^Google /, "") + (v.localService ? "" : " · online") }));
+    });
+    sel.value = state.voice;
+    if (sel.value !== state.voice) sel.value = "";
+    renderVoiceNote();
+  }
+  function renderVoiceNote() {
+    var p = $("#voice-note"); if (!p) return;
+    var useRec = hasRecordings() && (state.voice === REC || state.voice === "");
+    var v = chosenVoice();
+    if (useRec) p.textContent = "Příběhy čte namluvený vypravěč, funguje i bez signálu. Kde nahrávka chybí, přečte ji hlas telefonu.";
+    else if (!v) p.textContent = "Telefon nemá žádný český hlas. Přidej ho v nastavení telefonu: Android → Převod textu na řeč, iPhone → Zpřístupnění → Předčítaný obsah → Hlasy → Čeština.";
+    else p.textContent = "Teď čte: " + v.name + ". " + (/iphone|ipad|mac/i.test(navigator.userAgent) ? "Na iPhonu zní nejlépe vylepšená Zuzana: Nastavení → Zpřístupnění → Předčítaný obsah → Hlasy → Čeština." : "Hlas vybírá telefon, jiné telefony mohou znít jinak.");
+  }
+
   function openSettings() {
     var sheet = $("#settings"); sheet.innerHTML = ""; sheet.hidden = false;
     sheet.appendChild(sheetHead("Nastavení", function () { closeSheet("settings"); }));
     var body = el("div", { class: "sheet-body" });
+    if (canSpeak()) body.appendChild(voiceSettings());
     body.appendChild(el("div", { class: "setting" }, [
       el("div", {}, [el("strong", { text: "Simulace polohy" }), el("p", { text: IN_ARTIFACT ? "V této ukázce je zapnutá vždy, protože stránka nemá přístup k GPS." : "Pro zkoušení doma. Poloha se nastaví klepnutím do mapy nebo tlačítkem „Krok k cíli“." })]),
       sw("set-sim", state.sim, function (v) {
