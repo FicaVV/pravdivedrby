@@ -121,10 +121,10 @@ window.PD_OBCE.push({
           ["Ještě jednou! – RA-ČI-CE!", "Ještě jednou! – RA-ČI-CE!", "RA-ČI-CE!"]
         ]
       },
-      otazka: "Poslechni si hymnu. Kdo podle ní platí rundu?",
-      moznosti: ["hostinský", "Račice", "rozhodčí"],
+      otazka: "Poslechni si hymnu. Které slovo v ní zazní nejčastěji?",
+      moznosti: ["Hej", "Račice", "Ole"],
       answer: 1,
-      napoveda: "Poslouchej refrén až do konce. Stadion odpovídá na každou otázku pořád stejně."
+      napoveda: "Zkus počítat na prstech. Co stadion odpoví pokaždé, když se předzpěvák na něco zeptá?"
     },
     {
       id: 6,
