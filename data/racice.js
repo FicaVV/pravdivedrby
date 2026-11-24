@@ -2,8 +2,11 @@
  * Obsah okruhu Račice-Pístovice.
  * Zdroj: pribeh_racice.txt (sdílená složka projektu).
  *
- * POZOR: souřadnice bodů 1–4 a 7–8 jsou PŘIBLIŽNÉ (odhad, ne geokódování).
- * Přesné souřadnice mají jen body 5 (stadion) a 6 (sochy).
+ * Souřadnice (WGS84, [lat, lng]):
+ *  - body 2, 3, 7, 8: definiční body budov z RÚIAN podle čísla popisného (přes regiony.kurzy.cz),
+ *  - body 5, 6: souřadnice z podkladů (pribeh_racice.txt),
+ *  - body 1 (hospoda) a 4 (kříž): z trasy na mapy.com, kterou připravil Vojta
+ *    (ta potvrzuje i body 2, 3, 5–8 s odchylkou do 5 m).
  * Dolaďte je v aplikaci: Nastavení → Režim úprav bodů → přetáhněte značky → Zkopírovat souřadnice.
  *
  * answer: index správné možnosti (0 = A), nebo null = zatím neověřeno (hra přijme jakoukoli odpověď).
@@ -19,15 +22,15 @@ window.PD_OBCE.push({
   delka: "2,5 km",
   cas: "cca 90 minut",
   narocnost: "rodinná",
-  stred: [49.2772, 16.8765],
+  stred: [49.2793, 16.8758],
   radius: 35, // metrů – kdy se stanoviště odemkne
   body: [
     {
       id: 1,
       nazev: "Hospoda U Pastorku",
       adresa: "Račice 37",
-      pozice: [49.27680, 16.87420],
-      priblizne: true,
+      pozice: [49.276466, 16.872248], // z Vojtovy trasy na mapy.com
+      priblizne: false,
       text: [
         "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958, tedy první zmínky o událostech, které o dva roky později vedly ke sloučení Račic a Pístovic.",
         "Koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše, která se podávala k uzené krkovici s okurkou. Někteří hosté si na nepoživatelné jídlo stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
@@ -44,8 +47,8 @@ window.PD_OBCE.push({
       id: 2,
       nazev: "Hasičská zbrojnice",
       adresa: "Račice 296",
-      pozice: [49.27750, 16.87230],
-      priblizne: true,
+      pozice: [49.277029, 16.871080], // RÚIAN, čp. 296 (sídlo SDH Račice)
+      priblizne: false,
       text: [
         "Z důvodu hygienických patálií nebylo doporučeno, aby se odpolední schůze hasičského sboru konala v hostinci. Každý na vsi ale ví, že „schůze“ je jen noblesní označení pro posezení u piva. Není tedy divu, že součástí plánu na provizorní uspořádání schůze v místní hasičárně bylo i propojení výčepu se zbrojnicí hasičskou hadicí. Díky důmyslnému chlazení přes nádrž s vodou bylo toto zařízení náčelníkem označeno za největší technické dílo v obci od zavedení rozhlasu.",
         "Kdyby začalo hořet, mohlo se hasit rovnou pivem."
@@ -60,8 +63,8 @@ window.PD_OBCE.push({
       id: 3,
       nazev: "Mateřská škola",
       adresa: "Račice 170",
-      pozice: [49.27870, 16.87380],
-      priblizne: true,
+      pozice: [49.279924, 16.873720], // RÚIAN, čp. 170 (sídlo MŠ Račice-Pístovice)
+      priblizne: false,
       text: [
         "Náčelník hasičů měl toho dne plné ruce práce. Hlídal tlak v hadici, teplotu v chladicí nádrži a dohlížel na provizorní vedení od výčepu ke zbrojnici. Právě proto zapomněl vyzvednout syna ze školky.",
         "Chlapec zrovna prožíval období vzdoru. Přehlížený a znuděný kopl do kýble, v němž se od oběda povalovala hořká bramborová kaše z hostince.",
@@ -77,8 +80,8 @@ window.PD_OBCE.push({
       id: 4,
       nazev: "Památný kříž",
       adresa: "Račice 312",
-      pozice: [49.27960, 16.87700],
-      priblizne: true,
+      pozice: [49.282868, 16.877889], // z Vojtovy trasy na mapy.com
+      priblizne: false,
       typ: "modlitba",
       text: [
         "Zastav se u kříže a pusť si nahrávku modlitby. Pozor, přepis tady na místě končí dřív než nahrávka."
@@ -145,8 +148,8 @@ window.PD_OBCE.push({
       id: 7,
       nazev: "Sokolovna",
       adresa: "Račice 44",
-      pozice: [49.27620, 16.87250],
-      priblizne: true,
+      pozice: [49.275736, 16.874337], // RÚIAN, čp. 44
+      priblizne: false,
       text: [
         "Zatímco keramička u cesty pracovala na Floriánových nohách, roznesla se po kraji mylná fáma, že obec staví sochu k 50. narozeninám slavného rodáka.",
         "V Račicích se totiž narodil olympijský vítěz Alois Hudec a cvičil v místní sokolovně. I k němu se šuškanda o nové soše dostala a zpráva ho potěšila. Při plánované cestě na Moravu pro okurky se proto rozhodl rodnou obec navštívit.",
@@ -161,8 +164,8 @@ window.PD_OBCE.push({
       id: 8,
       nazev: "Obecní úřad",
       adresa: "Račice 72",
-      pozice: [49.27735, 16.87610],
-      priblizne: true,
+      pozice: [49.275929, 16.872666], // RÚIAN, čp. 72 (oficiální adresa OÚ)
+      priblizne: false,
       text: [
         "Ostudu s chybějící sochou se na místním národním výboru pokusili odvrátit příslibem pamětní desky na stěně místní sokolovny. (Ta nakonec přibyla až v roce 1992.) Mnohem větším problémem se ale ukázala výrazně zvýšená očekávání v oblasti porodnosti. Stanování na loukách za vsí při čekání na slavného olympionika mělo totiž nečekané následky: kromě květů pampelišek tu hojně bujela i láska mezi místními. Ukázalo se, že jeden obecní rozpočet na předvoj husákových dětí stačit nebude.",
         "Rozpočtová komise ve svém odborném stanovisku konstatovala, že očekávaný přírůstek obyvatelstva přesahuje únosnou kapacitu jedné obce, zejména v oblasti školských a kojeneckých potřeb.",
