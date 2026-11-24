@@ -100,10 +100,18 @@
 <!--/APP-->
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="data/racice.js"></script>
+<script src="audio/audio.js"></script>
 <script src="js/app.js"></script>
 <script>
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js").catch(function (e) { console.warn("SW", e); });
+    var hadSW = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
+      .then(function (reg) { reg.update(); })
+      .catch(function (e) { console.warn("SW", e); });
+    // Nová verze aplikace převzala řízení: jednou obnovit, ať se načte nový vzhled
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (hadSW && !reloaded) { reloaded = true; location.reload(); }
+    });
   }
 </script>
 </body>
