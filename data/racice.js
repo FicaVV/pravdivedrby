@@ -116,15 +116,15 @@ window.PD_OBCE.push({
         popis: "Tohle zní z amplionů celé dopoledne. Vydržíš aspoň jednou celou?",
         text: [
           ["RA-ČI-CE! (tlesk, tlesk, tlesk)", "RA-ČI-CE! (tlesk, tlesk, tlesk)"],
-          ["Kdo je tady doma? – RA-ČI-CE!", "Kdo to dneska vyhraje? – RA-ČI-CE!", "Kdo dá další gól? – RA-ČI-CE!", "A kdo platí rundu?"],
+          ["Kdo je tady doma? – RA-ČI-CE!", "Kdo to dneska vyhraje? – RA-ČI-CE!", "Kdo dá další gól? – RA-ČI-CE!", "A kdo platí rundu? – RA-ČI-CE!"],
           ["Hej, hej, hej – RA-ČI-CE!", "Hej, hej, hej – RA-ČI-CE!", "Ole, ole, ole, ole – RA-ČI-CE!"],
           ["Ještě jednou! – RA-ČI-CE!", "Ještě jednou! – RA-ČI-CE!", "RA-ČI-CE!"]
         ]
       },
-      otazka: "Poslechni si hymnu. Na kterou otázku předzpěváka už stadion neodpoví „RA-ČI-CE!“?",
-      moznosti: ["Kdo to dneska vyhraje?", "A kdo platí rundu?", "Kdo dá další gól?"],
+      otazka: "Poslechni si hymnu. Kdo podle ní platí rundu?",
+      moznosti: ["hostinský", "Račice", "rozhodčí"],
       answer: 1,
-      napoveda: "Poslouchej refrén až do konce. U jedné otázky celý stadion najednou ztichne."
+      napoveda: "Poslouchej refrén až do konce. Stadion odpovídá na každou otázku pořád stejně."
     },
     {
       id: 6,
