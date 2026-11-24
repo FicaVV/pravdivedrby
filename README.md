@@ -84,6 +84,15 @@ Soubor patří do `audio/racice/` a musí být i v seznamu `SHELL` v `sw.js`, ab
 (a zvyšte tam `VERSION`). Text se ukáže až po vyřešení úkolu, protože obvykle prozrazuje odpověď.
 U stadionu takhle hraje klubová hymna „Kdo je tady doma?“.
 
+### Zvukový podklad pod předčítáním
+
+Bod s modlitbou může mít `podklad: { src: "audio/racice/….mp3", uvod: 5 }`. Po klepnutí na
+„Přehrát nahrávku modlitby“ se pustí podklad, hlas (namluvený i hlas telefonu) nastoupí po `uvod`
+sekundách a po dočtení se podklad ztlumí a zastaví. U kříže takhle zní zvony a tiché varhany
+(`audio/racice/zvony-modlitba.mp3`). Zvuk je celý syntetizovaný skriptem `node tools/zvony.mjs`
+(potřebuje ffmpeg), takže není cizí nahrávkou a nemá žádná licenční omezení. Hlasitost je zapečená
+v souboru (podklad je asi o 15 dB tišší než hlas), protože iPhone nedovolí měnit hlasitost z webu.
+
 ## Doladění souřadnic
 
 Přesné souřadnice mají jen **stadion a sochy**. Ostatní body jsou umístěné odhadem.

@@ -272,6 +272,7 @@
   var hasTTS = "speechSynthesis" in window;
   var AUDIO = window.PD_AUDIO || { files: {} };
   var ttsBtn = null, player = null, playing = false, gen = 0;
+  var bgPlayer = null; // zvukový podklad pod předčítáním (např. zvony u kříže)
   var REC = "nahravka"; // hodnota state.voice pro namluveného vypravěče
   if (state.voice === undefined) state.voice = "";
   if (!state.rate) state.rate = 1;
@@ -322,23 +323,53 @@
   }
   function canSpeak() { return hasTTS || hasRecordings(); }
 
-  // segs = pole odstavců
-  function speak(segs, btn) {
+  // segs = pole odstavců; bg = { src, uvod } – podklad, hlas nastoupí po `uvod` sekundách
+  function speak(segs, btn, bg) {
     if (playing) { var same = btn === ttsBtn; stopSpeak(); if (same) return; }
     ttsBtn = btn; gen++;
     var rec = state.voice === REC || state.voice === "" ? recordingsFor(segs) : null;
-    if (rec) playFiles(rec); else if (hasTTS) speakTTS(segs.join(" "));
-    else return;
+    if (!rec && !hasTTS) return;
+    var my = gen, delay = bg ? (bg.uvod || 0) * 1000 : 0;
+    var start = function () {
+      if (my !== gen) return;
+      if (rec) playFiles(rec, !!delay); else speakTTS(segs.join(" "));
+    };
+    if (bg) startBg(bg.src);
+    if (delay) {
+      // iPhone pustí zvuk jen z klepnutí: přehrávač/hlas „odemknout“ hned teď, hrát začnou až po úvodu
+      if (rec) {
+        var pl = player = new Audio(rec[0]); pl.preload = "auto"; pl.muted = true;
+        var pp = pl.play(); if (pp && pp.then) pp.then(function () { if (pl.muted) { pl.pause(); pl.muted = false; } }, function () { pl.muted = false; });
+      }
+      else { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; window.speechSynthesis.speak(u); }
+      setTimeout(start, delay);
+    } else start();
     playing = true; setTtsBtn(true);
   }
-  function playFiles(files) {
+  function startBg(src) {
+    stopBg(true);
+    bgPlayer = new Audio(src); bgPlayer.preload = "auto"; bgPlayer.volume = 1;
+    var p = bgPlayer.play(); if (p && p.catch) p.catch(function () {});
+  }
+  // ztlumit a zastavit podklad (na iPhonu hlasitost nejde měnit, tam se jen zastaví)
+  function stopBg(now) {
+    var a = bgPlayer; bgPlayer = null;
+    if (!a) return;
+    if (now || a.paused) { a.pause(); return; }
+    var v = 1, iv = setInterval(function () {
+      v -= 0.05;
+      if (v <= 0 || a.paused) { clearInterval(iv); a.pause(); return; }
+      try { a.volume = v; } catch (e) { /* jen pro čtení */ }
+    }, 120);
+  }
+  function playFiles(files, keep) {
     var i = 0, my = gen;
-    player = new Audio();
+    if (!keep || !player) player = new Audio();
     player.preload = "auto";
     var next = function () {
       if (!player || my !== gen) return;
       if (i >= files.length) { done(my); return; }
-      player.src = files[i++]; player.playbackRate = state.rate;
+      player.muted = false; player.src = files[i++]; player.playbackRate = state.rate;
       var p = player.play(); if (p && p.catch) p.catch(function () { done(my); });
     };
     player.addEventListener("ended", next);
@@ -358,11 +389,12 @@
       synth.speak(u);
     });
   }
-  function done(my) { if (my !== gen) return; playing = false; if (player) { player.pause(); player = null; } setTtsBtn(false); }
+  function done(my) { if (my !== gen) return; playing = false; if (player) { player.pause(); player = null; } stopBg(); setTtsBtn(false); }
   function stopSpeak() {
     gen++;
     if (hasTTS) window.speechSynthesis.cancel();
     if (player) { player.pause(); player.removeAttribute("src"); player = null; }
+    stopBg();
     playing = false; setTtsBtn(false);
   }
   function setTtsBtn(on) {
@@ -374,9 +406,9 @@
     }
     ttsBtn.textContent = on ? "■ Zastavit" : ttsBtn.getAttribute("data-label");
   }
-  function ttsButton(label, getSegs, primary) {
+  function ttsButton(label, getSegs, primary, bg) {
     var b = el("button", { class: "btn btn-small" + (primary ? " btn-primary" : ""), "data-label": label, text: label });
-    b.addEventListener("click", function () { speak(getSegs(), b); });
+    b.addEventListener("click", function () { speak(getSegs(), b, bg); });
     if (!canSpeak()) b.hidden = true;
     return b;
   }
@@ -404,7 +436,7 @@
     if (b.modlitba) {
       var pr = el("div", { class: "prayer" });
       pr.innerHTML = b.modlitba.map(esc).join("<br>") + '<span class="cut">…zbytek přepisu se tady na místě nedochoval.</span>';
-      body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return [b.modlitba.concat(b.modlitbaKonec).join(" ")]; }, true)]));
+      body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return [b.modlitba.concat(b.modlitbaKonec).join(" ")]; }, true, b.podklad)]));
       body.appendChild(pr);
     }
     if (b.hymna) body.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));

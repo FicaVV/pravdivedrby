@@ -92,6 +92,8 @@ window.PD_OBCE.push({
         "Prosíme tě o klid v myšlenkách", "a o rozvahu v činech,", "aby drobné chyby nezanechaly velké stopy.",
         "Ať si pamatujeme,", "že věci mají své místo,", "čas svůj řád", "a odpovědnost svou váhu."
       ],
+      // zvony a tiché varhany pod modlitbou (vygenerované přes tools/zvony.mjs), hlas nastoupí po úvodním vyzvánění
+      podklad: { src: "audio/racice/zvony-modlitba.mp3", uvod: 5 },
       modlitbaKonec: ["Ať nikdo nehasí, co nezapálil,", "nevaří, co sám neochutnal,", "a nestěžuje si jinde než u výčepu.", "Amen."],
       otazka: "Přepis modlitby končí dřív než nahrávka. Jak nahrávka končí?",
       moznosti: [
