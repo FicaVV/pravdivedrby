@@ -5,7 +5,8 @@
  * Souřadnice (WGS84, [lat, lng]):
  *  - body 2, 3, 7, 8: definiční body budov z RÚIAN podle čísla popisného (přes regiony.kurzy.cz),
  *  - body 5, 6: souřadnice z podkladů (pribeh_racice.txt),
- *  - body 1 (Račice 37) a 4 (Račice 312) jsou zatím jen ODHAD – čp. se nepodařilo dohledat.
+ *  - body 1 (hospoda) a 4 (kříž): z trasy na mapy.com, kterou připravil Vojta
+ *    (ta potvrzuje i body 2, 3, 5–8 s odchylkou do 5 m).
  * Dolaďte je v aplikaci: Nastavení → Režim úprav bodů → přetáhněte značky → Zkopírovat souřadnice.
  *
  * answer: index správné možnosti (0 = A), nebo null = zatím neověřeno (hra přijme jakoukoli odpověď).
@@ -21,15 +22,15 @@ window.PD_OBCE.push({
   delka: "2,5 km",
   cas: "cca 90 minut",
   narocnost: "rodinná",
-  stred: [49.2778, 16.8758],
+  stred: [49.2793, 16.8758],
   radius: 35, // metrů – kdy se stanoviště odemkne
   body: [
     {
       id: 1,
       nazev: "Hospoda U Pastorku",
       adresa: "Račice 37",
-      pozice: [49.27680, 16.87420], // TODO: odhad, čp. 37 se nepodařilo dohledat
-      priblizne: true,
+      pozice: [49.276466, 16.872248], // z Vojtovy trasy na mapy.com
+      priblizne: false,
       text: [
         "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958, tedy první zmínky o událostech, které o dva roky později vedly ke sloučení Račic a Pístovic.",
         "Koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše, která se podávala k uzené krkovici s okurkou. Někteří hosté si na nepoživatelné jídlo stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
@@ -79,8 +80,8 @@ window.PD_OBCE.push({
       id: 4,
       nazev: "Památný kříž",
       adresa: "Račice 312",
-      pozice: [49.27960, 16.87700], // TODO: odhad, čp. 312 se nepodařilo dohledat
-      priblizne: true,
+      pozice: [49.282868, 16.877889], // z Vojtovy trasy na mapy.com
+      priblizne: false,
       typ: "modlitba",
       text: [
         "Zastav se u kříže a pusť si nahrávku modlitby. Pozor, přepis tady na místě končí dřív než nahrávka."
