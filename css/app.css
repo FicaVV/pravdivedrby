@@ -280,6 +280,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .task .kicker { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--accent); }
 .task h3 { font-size: 22px; line-height: 1.2; }
 .task p { margin: 0; }
+.task .task-lead { font-size: 17px; line-height: 1.5; color: #e9e3d6; }
 .options { display: flex; flex-direction: column; gap: 10px; }
 .opt {
   display: flex; gap: 12px; align-items: center; text-align: left; width: 100%; color: var(--ink);
