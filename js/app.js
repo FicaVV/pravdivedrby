@@ -319,6 +319,7 @@
       body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return b.modlitba.concat(b.modlitbaKonec).join(" "); }, true)]));
       body.appendChild(pr);
     }
+    if (b.hymna) body.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
     if (b.predOtazkou) body.appendChild(el("blockquote", { class: "quote", text: b.predOtazkou }));
 
     if (b.otazka) body.appendChild(task(b, i, rec));
@@ -358,6 +359,26 @@
     ]));
     return hero;
   }
+  // Nahrávka u stanoviště (b.hymna = { src, nazev, popis, text: [sloky] }). Hraje offline ze sw.js cache.
+  function hymnBox(h, showText) {
+    var box = el("div", { class: "hymn" });
+    box.appendChild(el("span", { class: "kicker", text: "Klubová hymna" }));
+    if (h.nazev) box.appendChild(el("h3", { text: "„" + h.nazev + "“" }));
+    if (h.popis) box.appendChild(el("p", { text: h.popis }));
+    var a = el("audio", { controls: "", preload: "none", src: h.src });
+    a.addEventListener("play", stopSpeak);
+    box.appendChild(a);
+    if (h.text && h.text.length) {
+      var lyr = el("div", { class: "lyrics", hidden: "" });
+      h.text.forEach(function (sloka) { lyr.appendChild(el("p", { html: [].concat(sloka).map(esc).join("<br>") })); });
+      // text prozrazuje odpověď úkolu, proto se tlačítko ukáže až po vyřešení
+      var t = el("button", { class: "btn btn-small lyrics-btn", text: "Zobrazit text hymny" });
+      if (!showText) t.hidden = true;
+      t.addEventListener("click", function () { lyr.hidden = !lyr.hidden; t.textContent = lyr.hidden ? "Zobrazit text hymny" : "Skrýt text hymny"; });
+      box.appendChild(t); box.appendChild(lyr);
+    }
+    return box;
+  }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   function task(b, i, rec) {
@@ -378,6 +399,7 @@
         if (b.answer === null ? k === choice : k === b.answer) o.classList.add("right");
       });
       tools.hidden = true;
+      var lb = $("#stop .lyrics-btn"); if (lb) lb.hidden = false;
       fb.hidden = false;
       if (b.answer === null) { fb.className = "feedback info"; fb.textContent = "Zapsáno! Tuhle odpověď zatím ověřujeme v terénu, takže ti ji uznáváme. Zapiš si, co na místě opravdu vidíš."; }
       else if (revealed) { fb.className = "feedback info"; fb.textContent = "Správně je " + LETTERS[b.answer] + ") " + b.moznosti[b.answer].replace(/\.$/, "") + ". Nevadí, kronika se dopisuje i tak."; }

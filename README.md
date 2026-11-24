@@ -44,6 +44,14 @@ Bez fotky se ukáže neutrální obrázek domu. Ideální jsou vlastní fotky z 
 (na šířku, cca 1200 px, do 300 kB); snímky ze Street View použít nejde, podmínky Googlu
 jejich ukládání a zobrazování mimo Google mapy nedovolují.
 
+## Nahrávky u stanovišť
+
+Stanoviště může mít přehrávač s nahrávkou: v bodu v `data/racice.js` vyplňte
+`hymna: { src: "audio/racice/….mp3", nazev, popis, text: [[řádky sloky], …] }`.
+Soubor patří do `audio/racice/` a musí být i v seznamu `SHELL` v `sw.js`, aby hrál offline
+(a zvyšte tam `VERSION`). Text se ukáže až po vyřešení úkolu, protože obvykle prozrazuje odpověď.
+U stadionu takhle hraje klubová hymna „Kdo je tady doma?“.
+
 ## Doladění souřadnic
 
 Přesné souřadnice mají jen **stadion a sochy**. Ostatní body jsou umístěné odhadem.
@@ -53,7 +61,6 @@ na místě, s GPS) a tlačítkem **Zkopírovat souřadnice** získáte hodnoty d
 ## Co v obsahu chybí (hra s tím počítá)
 
 - Bod 2 a 3: neověřená správná odpověď. Hra zatím uzná jakoukoli volbu (`answer: null`).
-- Bod 5: úkol čeká na klubovou hymnu, stanoviště má jen příběh.
 - Bod 8: závěrečná stránka s fakty je pracovní návrh.
 - Bod 4: „nahrávku“ modlitby zatím čte syntetický hlas.
 

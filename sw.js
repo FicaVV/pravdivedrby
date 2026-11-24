@@ -1,9 +1,10 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.2.1";
+const VERSION = "pd-0.3.1";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/app.js", "data/racice.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
-  "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"
+  "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
+  "audio/racice/hymna-kdo-je-tady-doma.mp3"
 ];
 const TILES = "pd-tiles-v1";
 const TILE_LIMIT = 1500;
@@ -39,6 +40,12 @@ self.addEventListener("fetch", (e) => {
     }));
     return;
   }
+  // Audio: přehrávač (hlavně Safari) chce části souboru (Range), cache má celý soubor → vyříznout 206
+  if (url.origin === location.origin && e.request.headers.has("range")) {
+    e.respondWith(caches.match(e.request.url, { ignoreSearch: true })
+      .then((hit) => hit ? rangeResponse(hit, e.request.headers.get("range")) : fetch(e.request)));
+    return;
+  }
   // Vlastní soubory: nejdřív síť (vždy čerstvá verze), offline z cache
   if (url.origin === location.origin) {
     e.respondWith(fetch(e.request, { cache: "no-cache" }).then((r) => {
@@ -48,3 +55,20 @@ self.addEventListener("fetch", (e) => {
       .then((hit) => hit || (e.request.mode === "navigate" ? caches.match("index.html") : Response.error()))));
   }
 });
+
+async function rangeResponse(full, range) {
+  const buf = await full.arrayBuffer();
+  const m = /bytes=(\d*)-(\d*)/.exec(range) || [];
+  let start = m[1] ? +m[1] : 0, end = m[2] ? +m[2] : buf.byteLength - 1;
+  if (!m[1] && m[2]) { start = Math.max(0, buf.byteLength - +m[2]); end = buf.byteLength - 1; }
+  end = Math.min(end, buf.byteLength - 1);
+  return new Response(buf.slice(start, end + 1), {
+    status: 206,
+    headers: {
+      "Content-Type": full.headers.get("Content-Type") || "audio/mpeg",
+      "Content-Range": `bytes ${start}-${end}/${buf.byteLength}`,
+      "Content-Length": String(end - start + 1),
+      "Accept-Ranges": "bytes"
+    }
+  });
+}
