@@ -404,7 +404,6 @@
       body.appendChild(pr);
     }
     if (b.hymna) body.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
-    if (b.predOtazkou) body.appendChild(el("blockquote", { class: "quote", text: b.predOtazkou }));
 
     if (b.otazka) body.appendChild(task(b, i, rec));
     else {
@@ -468,6 +467,8 @@
   function task(b, i, rec) {
     var box = el("div", { class: "task" });
     box.appendChild(el("span", { class: "kicker", text: "Úkol v terénu" }));
+    // úvod k úkolu patří přímo k otázce, proto je ve stejném rámečku
+    if (b.predOtazkou) box.appendChild(el("p", { class: "task-lead", text: b.predOtazkou }));
     box.appendChild(el("h3", { text: b.otazka }));
     var opts = el("div", { class: "options" });
     var fb = el("div", { class: "feedback", hidden: "" });
