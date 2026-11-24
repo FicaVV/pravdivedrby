@@ -421,7 +421,7 @@
     }
     sheet.appendChild(body);
   }
-  // Fotka místa (b.foto = { src, popis, autor }), jinak neutrální obrázek.
+  // Fotka místa (b.foto = { src, popis, autor }); bez fotky se ukáže jen lišta s tlačítky.
   function stopHero(b) {
     var hero = el("div", { class: "stop-hero" });
     var f = b.foto && (typeof b.foto === "string" ? { src: b.foto } : b.foto);
@@ -429,7 +429,8 @@
       hero.appendChild(el("img", { src: f.src, alt: f.popis || b.nazev, loading: "lazy", decoding: "async" }));
       if (f.autor) hero.appendChild(el("span", { class: "credit", text: "Foto: " + f.autor }));
     } else {
-      hero.appendChild(el("div", { class: "ph", "aria-hidden": "true", html: '<svg viewBox="0 0 64 64" fill="none" stroke="#16130f" stroke-width="2.5" stroke-linejoin="round"><path d="M8 54h48"/><path d="M14 54V30L32 16l18 14v24"/><rect x="27" y="38" width="10" height="16"/><rect x="18" y="34" width="7" height="7"/><rect x="39" y="34" width="7" height="7"/></svg>' }));
+      // zatím bez fotek: nahoře jen tlačítka zpět a předčítání, žádný obrázek
+      hero.classList.add("no-photo");
     }
     var tts = el("button", { class: "icon-btn tts", "aria-label": "Přečíst nahlas", "data-label": "Přečíst nahlas",
       html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>' });
