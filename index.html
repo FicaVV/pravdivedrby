@@ -38,6 +38,13 @@
       <div class="home-actions">
         <button class="btn btn-primary btn-block" id="btn-start">Vyrazit na náves</button>
         <button class="btn btn-ghost" id="btn-reset" hidden>Začít okruh znovu</button>
+        <div class="reset-confirm" id="reset-confirm" role="alertdialog" aria-labelledby="reset-q" hidden>
+          <p id="reset-q">Smazat postup a začít znovu od prvního stanoviště? Kronika se zase zamkne.</p>
+          <div class="task-tools">
+            <button class="btn btn-small" id="reset-yes">Ano, začít znovu</button>
+            <button class="btn btn-small btn-ghost" id="reset-no">Nechat být</button>
+          </div>
+        </div>
       </div>
     </article>
     <p class="home-note">Nic se neinstaluje a nikam se nepřihlašuješ. Postup se ukládá jen v tomhle telefonu. Bez GPS si zapni simulaci polohy v nastavení.</p>
@@ -60,6 +67,7 @@
   </div>
   <div id="map"></div>
   <div class="map-badge" id="map-badge" hidden>Schematická mapa bez podkladů</div>
+  <button class="edit-bar" id="edit-bar" hidden>Režim úprav bodů · <b>Hotovo</b></button>
   <button class="map-toggle" id="btn-mapfull" aria-pressed="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ico-grow" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="ico-shrink" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
     <span id="mapfull-lbl">Celá mapa</span>

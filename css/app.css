@@ -118,7 +118,19 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .map-badge {
   position: absolute; z-index: 450; left: 12px; top: calc(env(safe-area-inset-top, 0px) + 72px);
   background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; font-size: 13px; color: var(--muted);
+  pointer-events: none; /* jen informace, nesmí krást klepnutí na značky */
 }
+.edit-bar {
+  position: absolute; z-index: 505; left: 50%; transform: translateX(-50%);
+  top: calc(env(safe-area-inset-top, 0px) + 116px);
+  min-height: 44px; padding: 0 16px; border-radius: 999px; border: var(--stroke) solid var(--ink);
+  background: var(--sky); color: #fff; font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap;
+}
+.edit-bar[hidden], .reset-confirm[hidden] { display: none; }
+.reset-confirm {
+  border: var(--stroke) solid var(--ink); border-radius: 12px; padding: 12px 14px; background: var(--surface);
+}
+.reset-confirm p { margin: 0 0 10px; }
 
 .radar {
   position: relative; z-index: 500; background: var(--bg); border-top: var(--stroke) solid var(--ink);
