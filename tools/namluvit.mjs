@@ -84,11 +84,18 @@ const ctx = { window: {} }; vm.createContext(ctx);
 for (const f of readdirSync(new URL("data/", root)).filter((f) => f.endsWith(".js")).sort()) {
   vm.runInContext(readFileSync(new URL("data/" + f, root), "utf8"), ctx, { filename: f });
 }
+const lines = (x) => [].concat(x).join(" ");
 const segs = new Set();
 for (const obec of ctx.window.PD_OBCE || []) {
   for (const b of obec.body) {
     (b.text || []).forEach((t) => segs.add(norm(t)));
-    if (b.modlitba) segs.add(norm(b.modlitba.concat(b.modlitbaKonec || []).join(" ")));
+    // stejné úseky jako prayerSegs/questionSegs v js/app.js
+    if (b.modlitba) b.modlitba.concat(b.modlitbaKonec || []).forEach((sl) => segs.add(norm(lines(sl))));
+    if (b.otazka) {
+      if (b.predOtazkou) segs.add(norm(b.predOtazkou));
+      segs.add(norm(b.otazka));
+      b.moznosti.forEach((m, k) => segs.add(norm("Možnost " + "ABCD"[k] + ". " + lines(m))));
+    }
   }
 }
 
