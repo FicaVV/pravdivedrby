@@ -86,20 +86,24 @@ window.PD_OBCE.push({
       text: [
         "Zastav se u kříže a pusť si nahrávku modlitby. Pozor, přepis tady na místě končí dřív než nahrávka."
       ],
+      // sloky modlitby (každá sloka = pole řádků); mezi slokami je při předčítání pauza
       modlitba: [
-        "Pane,", "stojíme na místě, kde se člověk zastaví,", "když neví, kudy dál.",
-        "Nehledáme viníka,", "protože každému z nás se někdy", "něco nepovedlo.",
-        "Prosíme tě o klid v myšlenkách", "a o rozvahu v činech,", "aby drobné chyby nezanechaly velké stopy.",
-        "Ať si pamatujeme,", "že věci mají své místo,", "čas svůj řád", "a odpovědnost svou váhu."
+        ["Pane,", "stojíme na místě, kde se člověk zastaví,", "když neví, kudy dál."],
+        ["Nehledáme viníka,", "protože každému z nás se někdy", "něco nepovedlo."],
+        ["Prosíme tě o klid v myšlenkách", "a o rozvahu v činech,", "aby drobné chyby nezanechaly velké stopy."],
+        ["Ať si pamatujeme,", "že věci mají své místo,", "čas svůj řád", "a odpovědnost svou váhu."]
       ],
       // zvony a tiché varhany pod modlitbou (vygenerované přes tools/zvony.mjs), hlas nastoupí po úvodním vyzvánění
       podklad: { src: "audio/racice/zvony-modlitba.mp3", uvod: 5 },
-      modlitbaKonec: ["Ať nikdo nehasí, co nezapálil,", "nevaří, co sám neochutnal,", "a nestěžuje si jinde než u výčepu.", "Amen."],
+      modlitbaKonec: [
+        ["Ať nikdo nehasí, co nezapálil,", "nevaří, co sám neochutnal,", "a nestěžuje si jinde než u výčepu."],
+        ["Amen."]
+      ],
       otazka: "Přepis modlitby končí dřív než nahrávka. Jak nahrávka končí?",
       moznosti: [
-        "Ať nás mine mlha na silnici, tužka ať se nezlomí při písemce a dopis ať dojde dřív než jeho pisatel.",
-        "Ať nikdo nehasí, co nezapálil, nevaří, co sám neochutnal, a nestěžuje si jinde než u výčepu.",
-        "Ať nám hodiny jdou správně, berní úředník ať je mírný a kominík ať přijde dřív než sníh."
+        ["Ať nás mine mlha na silnici,", "tužka ať se nezlomí při písemce", "a dopis ať dojde dřív než jeho pisatel."],
+        ["Ať nikdo nehasí, co nezapálil,", "nevaří, co sám neochutnal,", "a nestěžuje si jinde než u výčepu."],
+        ["Ať nám hodiny jdou správně,", "berní úředník ať je mírný", "a kominík ať přijde dřív než sníh."]
       ],
       answer: 1,
       napoveda: "Přepis končí slovy „svou váhu“. Nahrávka pokračuje ještě jednou slokou. Poslouchej, jestli se v ní mluví o něčem, co jsi dnes slyšel."

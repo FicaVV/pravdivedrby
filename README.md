@@ -88,10 +88,19 @@ U stadionu takhle hraje klubová hymna „Kdo je tady doma?“.
 
 Bod s modlitbou může mít `podklad: { src: "audio/racice/….mp3", uvod: 5 }`. Po klepnutí na
 „Přehrát nahrávku modlitby“ se pustí podklad, hlas (namluvený i hlas telefonu) nastoupí po `uvod`
-sekundách a po dočtení se podklad ztlumí a zastaví. U kříže takhle zní zvony a tiché varhany
-(`audio/racice/zvony-modlitba.mp3`). Zvuk je celý syntetizovaný skriptem `node tools/zvony.mjs`
-(potřebuje ffmpeg), takže není cizí nahrávkou a nemá žádná licenční omezení. Hlasitost je zapečená
-v souboru (podklad je asi o 15 dB tišší než hlas), protože iPhone nedovolí měnit hlasitost z webu.
+sekundách a po dočtení se podklad ztlumí a zastaví. U kříže takhle zní zvony, varhany a tichý sbor
+s dozvukem kostelní lodi (`audio/racice/zvony-modlitba.mp3`). Zvuk je celý syntetizovaný skriptem
+`node tools/zvony.mjs` (potřebuje ffmpeg), takže není cizí nahrávkou a nemá žádná licenční omezení.
+Hlasitost je zapečená v souboru (podklad je asi o 10 dB tišší než hlas), protože iPhone nedovolí
+měnit hlasitost z webu.
+
+Modlitba a možnosti odpovědi můžou být zapsané po slokách (pole řádků). Mezi slokami je při
+předčítání pauza, namluvený vypravěč má každou sloku jako samostatnou nahrávku.
+
+### Předčítání otázek
+
+Každý úkol má tlačítko „Přečíst otázku a možnosti“. Předčítá úvod k otázce, otázku a možnosti
+(„Možnost A. …“) s krátkou pauzou mezi nimi. Nahrávky pro ně namluví stejný workflow jako příběhy.
 
 ## Doladění souřadnic
 
