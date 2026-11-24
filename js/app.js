@@ -71,6 +71,7 @@
     var n = doneCount();
     $("#btn-start").textContent = state.finished ? "Přečíst dopsanou kroniku" : n ? "Pokračovat (" + n + "/" + OBEC.body.length + ")" : "Vyrazit na náves";
     $("#btn-reset").hidden = !n;
+    $("#reset-confirm").hidden = true;
   }
 
   function show(id) {
@@ -129,19 +130,22 @@
     return L.divIcon({ className: "", html: '<div class="pin ' + cls + '">' + (state.done[b.id] ? "✓" : b.id) + "</div>", iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
   function refreshPins() {
+    $("#edit-bar").hidden = !state.edit;
     if (!map) return;
     OBEC.body.forEach(function (b, i) {
       var m = pins[b.id];
       if (!m) return; // značky ještě nevznikly (schematická mapa se zapne dřív)
       m.setIcon(pinIcon(b, i));
+      // aktuální cíl vždy navrchu, ať ho nepřekryje sousední značka
+      m.setZIndexOffset(i === state.idx && !state.done[b.id] ? 600 : state.done[b.id] ? 300 : 0);
       if (state.edit) m.dragging.enable(); else m.dragging.disable();
       m.unbindTooltip();
       if (state.edit || (schematic && i === state.idx)) m.bindTooltip(b.id + " " + b.nazev, { permanent: true, direction: "right", offset: [18, 0] });
     });
   }
   function onPinClick(i) {
-    if (state.edit) return;
     var b = OBEC.body[i];
+    if (state.edit) { toast("Je zapnutý Režim úprav bodů, značky se teď jen přetahují. Vypneš ho nahoře tlačítkem Hotovo.", 4000); return; }
     if (state.done[b.id]) openStop(i);
     else if (i === state.idx) toast("Sem míříš: " + b.nazev);
     else toast(b.id + ". " + b.nazev + " – na řadu přijde později");
@@ -725,12 +729,19 @@
   function resetProgress() {
     state.idx = 0; state.done = {}; state.finished = false; lastAuto = -1; save();
     refreshPins(); renderHome(); closeSheet("settings"); pos = null; if (!$("#play").hidden) startGeo();
-    toast("Postup smazán");
+    toast(state.edit ? "Postup smazán. Pozor, Režim úprav bodů je pořád zapnutý." : "Postup smazán");
   }
 
   // ---------- události ----------
   $("#btn-start").addEventListener("click", function () { show("play"); if (state.finished) openChronicle(); });
-  $("#btn-reset").addEventListener("click", function () { openSettings(); });
+  $("#btn-reset").addEventListener("click", function () { $("#reset-confirm").hidden = false; $("#reset-yes").focus(); });
+  $("#reset-yes").addEventListener("click", resetProgress);
+  $("#reset-no").addEventListener("click", function () { $("#reset-confirm").hidden = true; });
+  $("#edit-bar").addEventListener("click", function () {
+    state.edit = false; save(); refreshPins();
+    var s = $("#set-edit"); if (s) s.checked = false;
+    toast("Režim úprav vypnutý, značky jdou zase otevírat");
+  });
   $("#btn-settings-home").addEventListener("click", openSettings);
   $("#btn-home").addEventListener("click", function () { show("home"); renderHome(); });
   $("#btn-chronicle").addEventListener("click", openChronicle);
@@ -751,4 +762,5 @@
   window.PD = { setSim: setSim, state: state, obec: OBEC };
 
   renderHome();
+  refreshPins();
 })();
