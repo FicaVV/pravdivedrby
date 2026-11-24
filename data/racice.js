@@ -18,7 +18,7 @@ window.PD_OBCE.push({
   id: "racice-pistovice",
   nazev: "Račice-Pístovice",
   okres: "Vyškov",
-  zapletka: "Proč se v roce 1960 sloučily Račice a Pístovice? Úředně kvůli „efektivitě správy“. Ve skutečnosti za tím stojí dnes už zapomenuté lidské příběhy z roku 1958, po kterých obě obce neměly na vybranou…",
+  zapletka: "Proč se v roce 1960 sloučily Račice a Pístovice? Úředně kvůli „efektivitě správy“. Ve skutečnosti za tím stojí zapomenuté příběhy z roku 1958, po kterých obě obce prostě neměly na vybranou…",
   delka: "2,5 km",
   cas: "cca 90 minut",
   narocnost: "rodinná",
