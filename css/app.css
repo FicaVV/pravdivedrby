@@ -253,6 +253,13 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .prayer { background: var(--surface); border: var(--stroke) solid var(--ink); border-radius: var(--r); padding: 18px; font-size: 18px; line-height: 1.55; text-align: center; }
 .prayer .cut { display: block; margin-top: 12px; color: var(--muted); font-style: italic; font-size: 15px; border-top: 2px dashed var(--line); padding-top: 10px; }
 .tts-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.hymn { background: var(--surface); border: var(--stroke) solid var(--ink); border-radius: var(--r); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.hymn .kicker { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+.hymn h3 { font-size: 22px; line-height: 1.2; margin: 0; }
+.hymn p { margin: 0; }
+.hymn audio { width: 100%; }
+.lyrics { width: 100%; border-top: 2px dashed var(--line); padding-top: 10px; font-size: 17px; line-height: 1.55; }
+.lyrics p { margin: 0 0 12px; }
 
 .task {
   background: var(--ink); color: #fff; border-radius: 26px; padding: 20px 18px;
