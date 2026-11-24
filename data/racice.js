@@ -110,8 +110,21 @@ window.PD_OBCE.push({
         "Správce stadionu to nesl těžce. Na protest nechal celé dopoledne znít klubovou hymnu ve smyčce místním rozhlasem. Obyvatelé tuto odvetnou akci nepřijali s pochopením. Hymna se brzy stala vlezlou a nekonečně otravnou. Důkazem byl neblahý stav několika amplionů po zásazích kamenů.",
         "Situaci po stížnosti nakonec vyřešili přivolaní příslušníci Státní bezpečnosti. Vtrhli do rozhlasovny na stadionu a magnetofonový pásek s hymnou zničili."
       ],
-      otazka: null, // TODO čeká na hymnu klubu
-      poznamka: "Úkol k tomuto stanovišti připravujeme (čeká na klubovou hymnu)."
+      hymna: {
+        src: "audio/racice/hymna-kdo-je-tady-doma.mp3",
+        nazev: "Kdo je tady doma?",
+        popis: "Tohle zní z amplionů celé dopoledne. Vydržíš aspoň jednou celou?",
+        text: [
+          ["RA-ČI-CE! (tlesk, tlesk, tlesk)", "RA-ČI-CE! (tlesk, tlesk, tlesk)"],
+          ["Kdo je tady doma? – RA-ČI-CE!", "Kdo to dneska vyhraje? – RA-ČI-CE!", "Kdo dá další gól? – RA-ČI-CE!", "A kdo platí rundu?"],
+          ["Hej, hej, hej – RA-ČI-CE!", "Hej, hej, hej – RA-ČI-CE!", "Ole, ole, ole, ole – RA-ČI-CE!"],
+          ["Ještě jednou! – RA-ČI-CE!", "Ještě jednou! – RA-ČI-CE!", "RA-ČI-CE!"]
+        ]
+      },
+      otazka: "Poslechni si hymnu. Na kterou otázku předzpěváka už stadion neodpoví „RA-ČI-CE!“?",
+      moznosti: ["Kdo to dneska vyhraje?", "A kdo platí rundu?", "Kdo dá další gól?"],
+      answer: 1,
+      napoveda: "Poslouchej refrén až do konce. U jedné otázky celý stadion najednou ztichne."
     },
     {
       id: 6,
