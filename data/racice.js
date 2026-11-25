@@ -28,6 +28,7 @@ window.PD_OBCE.push({
     {
       id: 1,
       nazev: "Hospoda U Pastorku",
+      ilustrace: { obrazek: "img/racice/1-koza.svg", popis: "Koza hostinského se pase u plotu za hospodou", mezi: [{ po: 2, src: "img/racice/1-cedule.svg", popis: "Cedule na klice: Dnes zavřeno" }] },
       adresa: "Račice 37",
       pozice: [49.276466, 16.872248], // z Vojtovy trasy na mapy.com
       priblizne: false,
@@ -46,6 +47,7 @@ window.PD_OBCE.push({
     {
       id: 2,
       nazev: "Hasičská zbrojnice",
+      ilustrace: { obrazek: "img/racice/2-zbrojnice.svg", popis: "Hasičská zbrojnice napojená hadicí na pivní sud", mezi: [{ po: 0, src: "img/racice/2-pullitr.svg", popis: "Půllitr napojený na hasičskou hadici" }] },
       adresa: "Račice 296",
       pozice: [49.277029, 16.871080], // RÚIAN, čp. 296 (sídlo SDH Račice)
       priblizne: false,
@@ -62,6 +64,7 @@ window.PD_OBCE.push({
     {
       id: 3,
       nazev: "Mateřská škola",
+      ilustrace: { obrazek: "img/racice/3-skolka.svg", popis: "Školka postříkaná žlutou bramborovou kaší", mezi: [{ po: 1, src: "img/racice/3-kybl.svg", popis: "Převržený kýbl s kaší" }] },
       adresa: "Račice 170",
       pozice: [49.279924, 16.873720], // RÚIAN, čp. 170 (sídlo MŠ Račice-Pístovice)
       priblizne: false,
@@ -79,6 +82,7 @@ window.PD_OBCE.push({
     {
       id: 4,
       nazev: "Památný kříž",
+      ilustrace: { obrazek: "img/racice/4-kriz.svg", popis: "Památný kříž se svíčkou", mezi: [] },
       adresa: "Račice 312",
       pozice: [49.282868, 16.877889], // z Vojtovy trasy na mapy.com
       priblizne: false,
@@ -111,6 +115,7 @@ window.PD_OBCE.push({
     {
       id: 5,
       nazev: "Fotbalový stadion",
+      ilustrace: { obrazek: "img/racice/5-stadion.svg", popis: "Koza u branky a amplion s klubovou hymnou", mezi: [{ po: 1, src: "img/racice/5-amplion.svg", popis: "Amplion zasažený kamenem" }] },
       adresa: "49°16'42.041\"N, 16°52'49.512\"E",
       pozice: [49.278345, 16.880420],
       priblizne: false,
@@ -138,6 +143,7 @@ window.PD_OBCE.push({
     {
       id: 6,
       nazev: "Sochy sv. Floriána a Vendelína",
+      ilustrace: { obrazek: "img/racice/6-florian.svg", popis: "Socha sv. Floriána v gumácích", mezi: [{ po: 0, src: "img/racice/6-moskvic.svg", popis: "Moskvič 402 ve smyku" }] },
       adresa: "49°16'32.743\"N, 16°52'35.467\"E",
       pozice: [49.275762, 16.876519],
       priblizne: false,
@@ -153,6 +159,7 @@ window.PD_OBCE.push({
     {
       id: 7,
       nazev: "Sokolovna",
+      ilustrace: { obrazek: "img/racice/7-sokolovna.svg", popis: "Sokolovna", mezi: [{ po: 2, src: "img/racice/7-stany.svg", popis: "Stany na loukách za vsí" }] },
       adresa: "Račice 44",
       pozice: [49.275736, 16.874337], // RÚIAN, čp. 44
       priblizne: false,
@@ -169,6 +176,7 @@ window.PD_OBCE.push({
     {
       id: 8,
       nazev: "Obecní úřad",
+      ilustrace: { obrazek: "img/racice/8-urad.svg", popis: "Místní národní výbor", mezi: [{ po: 0, src: "img/racice/8-kocarky.svg", popis: "Tři kočárky" }] },
       adresa: "Račice 72",
       pozice: [49.275929, 16.872666], // RÚIAN, čp. 72 (oficiální adresa OÚ)
       priblizne: false,

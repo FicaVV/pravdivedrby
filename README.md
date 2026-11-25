@@ -119,6 +119,13 @@ na místě, s GPS) a tlačítkem **Zkopírovat souřadnice** získáte hodnoty d
 `node tools/build-ukazka.mjs` vytvoří `dist/ukazka.html` (bez GPS a mapových dlaždic,
 se schematickou mapou a zapnutou simulací). Slouží pro rychlý náhled v prohlížeči.
 
+## Kresby stanovišť
+
+Stanoviště mají kresby tužkou se žlutou pastelkou (`img/racice/*.svg`). V `data/racice.js` je u bodu
+`ilustrace: { obrazek, popis, mezi: [{ po, src, popis }] }`: `obrazek` je široká kresba pod nadpisem
+a zároveň „vlepená fotka“ v kronice po dopsání kapitoly, `mezi` jsou menší kresby vložené za odstavec
+s indexem `po` (0 = za první odstavec). Nová kresba se musí přidat i do seznamu v `sw.js`, aby fungovala offline.
+
 ## Struktura
 
 ```
@@ -126,6 +133,7 @@ index.html              obrazovky (úvod, mapa s radarem, listy stanoviště/kro
 css/app.css             vzhled (světlé kontrastní téma pro čitelnost na slunci)
 js/app.js               herní logika, radar, simulace, kronika, TTS
 data/racice.js          obsah okruhu
+img/racice/             kresby stanovišť (SVG)
 sw.js, manifest.webmanifest, icons/   PWA
 vendor/leaflet/         mapová knihovna
 ```

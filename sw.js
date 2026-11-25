@@ -1,10 +1,15 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.4.4";
+const VERSION = "pd-0.4.5";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/app.js", "data/racice.js", "audio/audio.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
-  "audio/racice/hymna-kdo-je-tady-doma.mp3", "audio/racice/zvony-modlitba.mp3"
+  "audio/racice/hymna-kdo-je-tady-doma.mp3", "audio/racice/zvony-modlitba.mp3",
+  // kresby tužkou
+  "img/racice/1-cedule.svg", "img/racice/1-koza.svg", "img/racice/2-pullitr.svg", "img/racice/2-zbrojnice.svg",
+  "img/racice/3-kybl.svg", "img/racice/3-skolka.svg", "img/racice/4-kriz.svg", "img/racice/5-amplion.svg",
+  "img/racice/5-stadion.svg", "img/racice/6-florian.svg", "img/racice/6-moskvic.svg", "img/racice/7-sokolovna.svg",
+  "img/racice/7-stany.svg", "img/racice/8-kocarky.svg", "img/racice/8-urad.svg"
 ];
 const TILES = "pd-tiles-v1";
 const AUDIO = "pd-audio-v1";
