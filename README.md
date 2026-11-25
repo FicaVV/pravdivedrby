@@ -49,32 +49,50 @@ jejich ukládání a zobrazování mimo Google mapy nedovolují.
 Hra čte příběhy dvěma způsoby:
 
 1. **Namluvený vypravěč (doporučeno).** Odstavce jsou předem namluvené neuronovým hlasem
-   (Azure Speech, nebo Google Cloud Text-to-Speech) a uložené jako MP3 v `audio/`.
+   (Google Cloud Text-to-Speech, záložně Azure Speech) a uložené jako MP3 v `audio/`.
    Zní stejně na všech telefonech a funguje offline (service worker nahrávky stáhne předem).
 2. **Hlas telefonu** jako záloha. Hra vybírá nejpřirozenější dostupný český hlas
    (Natural v Edge, Google na Androidu, vylepšená Zuzana na iPhonu). V Nastavení jde hlas
    i rychlost změnit a vyzkoušet.
 
-Jak zapnout namluveného vypravěče (stačí jedna služba):
+Jak zapnout namluveného vypravěče (stačí jedna služba, při obou klíčích vyhraje Google):
 
-- **Azure:** v [Azure portálu](https://portal.azure.com) vytvořte prostředek **Speech service**
-  s úrovní **Free F0** (500 000 znaků měsíčně zdarma), např. v regionu *Sweden Central*.
-  Z *Keys and Endpoint* zkopírujte **Key 1** a **Location/Region**. Na GitHubu v
-  *Settings → Secrets and variables → Actions* přidejte secret `AZURE_SPEECH_KEY` a na záložce
-  *Variables* `AZURE_SPEECH_REGION` (např. `swedencentral`). Hlas: variable `AZURE_VOICE`
-  (výchozí `cs-CZ-AntoninNeural`, ženský `cs-CZ-VlastaNeural`).
-- **Google:** v [Google Cloud Console](https://console.cloud.google.com) zapněte
-  **Cloud Text-to-Speech API**, vytvořte API klíč omezený jen na toto API a uložte ho jako
-  secret `GOOGLE_TTS_KEY`. Hlas: variable `GOOGLE_TTS_VOICE` (výchozí `cs-CZ-Chirp3-HD-Charon`).
+- **Google (výchozí):** v [Google Cloud Console](https://console.cloud.google.com) zapněte
+  **Cloud Text-to-Speech API**, vytvořte API klíč omezený jen na toto API a na GitHubu v
+  *Settings → Secrets and variables → Actions* ho uložte jako secret `GOOGLE_TTS_API_KEY`.
+  Hlas: variable `GOOGLE_TTS_VOICE` (výchozí `cs-CZ-Chirp3-HD-Charon`).
+- **Azure (záloha):** v [Azure portálu](https://portal.azure.com) prostředek **Speech service**
+  s úrovní **Free F0**, secret `AZURE_SPEECH_KEY` a variable `AZURE_SPEECH_REGION`
+  (např. `swedencentral`). Hlas: variable `AZURE_VOICE` (výchozí `cs-CZ-AntoninNeural`).
+  Když jsou nastavené oba klíče, přepnete na Azure variable `TTS_SLUZBA` = `azure`.
 
 Pak *Actions → Namluvit příběhy → Run workflow.* Nahrávky se uloží do `audio/` a web se nasadí.
 Se zaškrtnutým „Jen ukázky“ se místo toho první odstavec namluví všemi českými hlasy
 a výsledek je ke stažení v detailu běhu (Artifacts → ukazky-hlasu).
 
-Po každé úpravě textů v `data/` se workflow spustí sám a namluví jen změněné odstavce.
-Ručně: `AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=swedencentral node tools/namluvit.mjs`
-(`--nanecisto` jen spočítá znaky, `--hlasy` vypíše české hlasy, `--ukazky` namluví ukázky,
-`--znovu` přegeneruje vše).
+Po každé úpravě textů v `data/` se workflow spustí sám a namluví jen změněné odstavce
+(stejný text stejným hlasem se nikdy nenamlouvá dvakrát). Po změně hlasu se přegeneruje vše.
+Ručně: klíč dejte do souboru `.env` (`GOOGLE_TTS_API_KEY=…`, necommituje se) a spusťte
+`node tools/namluvit.mjs` (`--nanecisto` jen spočítá znaky, `--hlasy` vypíše české hlasy,
+`--ukazky` namluví ukázky, `--znovu` přegeneruje vše, `--kvota` vypíše spotřebu).
+
+### Hlídání bezplatné kvóty Google
+
+Google dává zdarma 1 000 000 znaků měsíčně, nad to účtuje 30 USD za milion a sám strop nemá.
+Proto ho hlídá `tools/namluvit.mjs`:
+
+- Odeslané znaky (Unicode znaky včetně mezer) se počítají v `tools/tts-kvota.json` po měsících
+  `RRRR-MM` podle času v Los Angeles (tak účtuje Google). Workflow soubor commituje i po chybě.
+- Znaky se připíšou **před** každým voláním API (i za nepovedené pokusy), pod zámkem.
+- Nevejde-li se celé namlouvání pod pojistku **950 000**, nezačne vůbec a běh skončí chybou
+  „Měsíční limit namlouvání vyčerpán, obnoví se 1. dne příštího měsíce“.
+- Nad 800 000 (80 %) se v běhu objeví varování. GitHub o neúspěšném běhu pošle e-mail.
+- Přehled (použito / zbývá) je v souhrnu každého běhu workflow, lokálně `node tools/namluvit.mjs --kvota`.
+- Text delší než ~4 500 bajtů se dělí na odstavcích nebo větách a MP3 se spojí; při chybách
+  429/5xx jsou nejvýš 3 pokusy s prodlevou.
+
+Lokální běhy počítají do stejného souboru, tak změnu `tools/tts-kvota.json` po nich commitněte.
+Počítadlo je odhad z naší strany; skutečnou spotřebu ukazuje Google Cloud Console → Billing.
 
 ## Nahrávky u stanovišť
 
