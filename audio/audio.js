@@ -4,9 +4,8 @@ globalThis.PD_AUDIO = {
   "files": {
     "51426832": "audio/ce6aef17.mp3",
     "b3726daa": "audio/0681d3dd.mp3",
-    "eb496b83": "audio/d67a2306.mp3",
-    "14f8b9fb": "audio/542955cc.mp3",
-    "4168cc94": "audio/ce192b23.mp3",
+    "ff2fad99": "audio/61865916.mp3",
+    "83062aa5": "audio/cc7ec45c.mp3",
     "96b912dd": "audio/88a7ef54.mp3",
     "93225d76": "audio/45378403.mp3",
     "395dda6b": "audio/169ad88c.mp3",
