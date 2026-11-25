@@ -470,20 +470,18 @@
     }
     if (b.hymna) body.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
 
-    if (b.otazka) {
-      var ukol = task(b, i, rec);
-      // minihra před otázkou; otázka se ukáže, až je hra hotová
-      if (b.hra && b.hra.typ === "dojeni") {
-        var hraHotova = !!rec || !!(state.hry && state.hry[b.id]);
-        body.appendChild(dojeni(b, hraHotova, function () {
-          state.hry = state.hry || {}; state.hry[b.id] = true; save();
-          ukol.hidden = false;
-          setTimeout(function () { ukol.scrollIntoView({ behavior: "smooth", block: "start" }); }, 900);
-        }));
-        if (!hraHotova) ukol.hidden = true;
-      }
-      body.appendChild(ukol);
+    if (b.hra && b.hra.typ === "dojeni" && !b.otazka) {
+      // minihra místo otázky: po podojení se kapitola zapíše a ukáže se tlačítko dál
+      var dalsi = el("div");
+      body.appendChild(dojeni(b, !!rec, function () {
+        markDone(b, { ok: true });
+        dalsi.appendChild(nextButton(b, i, true));
+        setTimeout(function () { dalsi.scrollIntoView({ behavior: "smooth", block: "center" }); }, 900);
+      }));
+      if (rec) dalsi.appendChild(nextButton(b, i, true));
+      body.appendChild(dalsi);
     }
+    else if (b.otazka) body.appendChild(task(b, i, rec));
     else {
       var box = el("div", { class: "task" });
       if (b.konec) {
@@ -659,7 +657,7 @@
   function dojeni(b, hotovo, onDone) {
     var h = b.hra, need = h.klepnuti || 5, n = hotovo ? need : 0;
     var box = el("div", { class: "hra" });
-    box.appendChild(el("span", { class: "kicker", text: h.kicker || "Nejdřív pomoz koze" }));
+    box.appendChild(el("span", { class: "kicker", text: h.kicker || "Úkol" }));
     box.appendChild(el("h3", { text: h.nadpis }));
     box.appendChild(el("p", { text: h.zadani }));
     var stage = el("div", { class: "dj-stage", html: dojeniSvg() });
