@@ -35,13 +35,16 @@ window.PD_OBCE.push({
       text: [
         "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958, tedy první zmínky o událostech, které o dva roky později vedly ke sloučení Račic a Pístovic.",
         "Vše začalo docela nevinně. Bylo krásné počasí, slunce svítilo a ve vesnici byl klid. Jenom koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše. Ta se toho dne podávala k oblíbené uzené krkovici. Jídlo díky tomu bylo nepoživatelné. Někteří hosté si stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
-        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal jako vzorek na doma nabrat do ešusu čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu."
+        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal do ešusu nabrat čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu."
       ],
-      predOtazkou: "Hostinský se u vyšetřování bránil: „Za posledních 49 let si tady nikdo nikdy nestěžoval. Většinou si to všichni nechali až na doma…“",
-      otazka: "Dle čísla uvedeného na domě zjisti rok postavení budovy.",
-      moznosti: ["1899", "1909", "1919"],
-      answer: 1,
-      napoveda: "Příběh se odehrává v létě 1958, od něj odečti 49 let. Výsledek si ověř na domě, číslice je vyryta v pravé dolní části budovy."
+      // minihra místo otázky (js/app.js → dojeni)
+      hra: {
+        typ: "dojeni",
+        klepnuti: 5,
+        nadpis: "Pomoz koze od bolesti",
+        zadani: "Koze po kopřivách nateklo vemeno a bolí ji. Podoj ji do vědra: pětkrát klepni na vemeno.",
+        hotovo: "Koze se ulevilo a vědro je plné. Jenže mléko je hořké… a teď už víš, kam se to vědro nakonec dostalo."
+      },
     },
     {
       id: 2,
