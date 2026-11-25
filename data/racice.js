@@ -35,6 +35,7 @@ window.PD_OBCE.push({
       text: [
         "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958, tedy první zmínky o událostech, které o dva roky později vedly ke sloučení Račic a Pístovic.",
         "Vše začalo docela nevinně. Bylo krásné počasí, slunce svítilo a ve vesnici byl klid. Jenom koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše. Ta se toho dne podávala k oblíbené uzené krkovici s okurkou. Jídlo díky tomu bylo nepoživatelné. Někteří hosté si stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
+        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal jako vzorek na doma nabrat do ešusu čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu.",
         "Nakonec se zdálo, že vše vyřeší cedule na klice: „Dnes z technických důvodů zavřeno.“",
         "Vlak událostí se ale už rozjel a nešlo ho zastavit…"
       ],
