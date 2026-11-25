@@ -28,15 +28,14 @@ window.PD_OBCE.push({
     {
       id: 1,
       nazev: "Hospoda U Pastorku",
-      ilustrace: { obrazek: "img/racice/1-koza.svg", popis: "Koza hostinského se pase u plotu za hospodou", mezi: [{ po: 2, src: "img/racice/1-cedule.svg", popis: "Cedule na klice: Dnes zavřeno" }] },
+      ilustrace: { obrazek: "img/racice/1-koza.svg", popis: "Koza hostinského se pase u plotu za hospodou" },
       adresa: "Račice 37",
       pozice: [49.276466, 16.872248], // z Vojtovy trasy na mapy.com
       priblizne: false,
       text: [
         "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958, tedy první zmínky o událostech, které o dva roky později vedly ke sloučení Račic a Pístovic.",
-        "Koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše, která se podávala k uzené krkovici s okurkou. Někteří hosté si na nepoživatelné jídlo stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
-        "Nakonec se zdálo, že vše vyřeší cedule na klice: „Dnes z technických důvodů zavřeno.“",
-        "Vlak událostí se ale už rozjel a nešlo ho zastavit…"
+        "Vše začalo docela nevinně. Bylo krásné počasí, slunce svítilo a ve vesnici byl klid. Jenom koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše. Ta se toho dne podávala k oblíbené uzené krkovici. Jídlo díky tomu bylo nepoživatelné. Někteří hosté si stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
+        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal jako vzorek na doma nabrat do ešusu čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu."
       ],
       predOtazkou: "Hostinský se u vyšetřování bránil: „Za posledních 49 let si tady nikdo nikdy nestěžoval. Většinou si to všichni nechali až na doma…“",
       otazka: "Dle čísla uvedeného na domě zjisti rok postavení budovy.",
