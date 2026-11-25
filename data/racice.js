@@ -59,6 +59,13 @@ window.PD_OBCE.push({
         "Z důvodu hygienických patálií nebylo doporučeno, aby se odpolední schůze hasičského sboru konala v hostinci. Každý na vsi ale ví, že „schůze“ je jen noblesní označení pro posezení u piva. Není tedy divu, že součástí plánu na provizorní uspořádání schůze v místní hasičárně bylo i propojení výčepu se zbrojnicí hasičskou hadicí. Díky důmyslnému chlazení přes nádrž s vodou bylo toto zařízení náčelníkem označeno za největší technické dílo v obci od zavedení rozhlasu.",
         "Kdyby začalo hořet, mohlo se hasit rovnou pivem."
       ],
+      // minihra před otázkou (js/hry.js → haseni)
+      hra: {
+        typ: "haseni",
+        nadpis: "Uhas klubovnu pivem",
+        zadani: "Chlapi se vsadili, že vychlazená desítka hasí stejně dobře jako žízeň. Klubovna hoří! Klepej na plameny a stříkej na ně pivo z hadice.",
+        hotovo: "Uhašeno! Sud je prázdný, klubovna ohořelá a sázka nerozhodnutá. Co na to chlapi vytesali do zdi, zjistíš venku."
+      },
       predOtazkou: "U piva se rozhořel spor, zda dokáže dobře vychlazená desítka hasit oheň stejně dobře jako žízeň. Chlapi se vsadili a rozhodli se to hned ověřit. Bez jednoznačného výsledku vypálili část klubovny. Opravu si museli zaplatit sami, a tak rok obnovy vytesali do zdi zbrojnice jako připomínku, že pivo už budou používat pouze k pití.",
       otazka: "Na zdi hasičárny najdi vytesaný rok. Který to je?",
       moznosti: ["1948", "1958", "1968"],
@@ -77,6 +84,12 @@ window.PD_OBCE.push({
         "Chlapec zrovna prožíval období vzdoru. Přehlížený a znuděný kopl do kýble, v němž se od oběda povalovala hořká bramborová kaše z hostince.",
         "Kaše se rozprskla po zdech, oknech i dveřích a budova byla během chvíle celá žlutá. Místním se to vlastně docela zalíbilo, a proto je školka žlutá dodnes."
       ],
+      hra: {
+        typ: "kase",
+        nadpis: "Setři kaši z oken",
+        zadani: "Hořká kaše z kýble je na oknech i dveřích školky. Setři ji prstem, ať děti zase vidí ven.",
+        hotovo: "Okna jsou čistá a děti zase vidí na hřiště. Zdi ale zůstaly žluté a to už nikdo měnit nechtěl."
+      },
       predOtazkou: "Starostliví rodiče se rozhodli postavit za stravování svých dětí. Na oplátku začali kolektivně bojkotovat sběr hluchavek. Ti odvážnější se dokonce pod rouškou noci vydali školku označit. Velký červený protestní nápis měl znít „Na kaši záleží“. Bohužel, malíř vysoko na lešení diktát špatně slyšel. Výsledek zněl skoro stejně.",
       otazka: "Najdi na budově, co tam doopravdy stojí.",
       moznosti: ["Našim dětem", "Naší mládeži", "Naší budoucnosti"],
@@ -94,6 +107,14 @@ window.PD_OBCE.push({
       text: [
         "Zastav se u kříže a pusť si nahrávku modlitby. Pozor, přepis tady na místě končí dřív než nahrávka."
       ],
+      // nejdřív svíčka, pak se odemkne modlitba a otázka
+      hra: {
+        typ: "svicka",
+        pred: true,
+        nadpis: "Zapal svíčku",
+        zadani: "U kříže se nejdřív zapaluje svíčka. Polož prst na knot a chvíli ho podrž, než se chytí.",
+        hotovo: "Svíčka hoří. Teď si v klidu pusť modlitbu."
+      },
       // sloky modlitby (každá sloka = pole řádků); mezi slokami je při předčítání pauza
       modlitba: [
         ["Pane,", "stojíme na místě, kde se člověk zastaví,", "když neví, kudy dál."],
@@ -139,10 +160,15 @@ window.PD_OBCE.push({
           ["Ještě jednou! – RA-ČI-CE!", "Ještě jednou! – RA-ČI-CE!", "RA-ČI-CE!"]
         ]
       },
-      otazka: "Poslechni si hymnu. Které slovo v ní zazní nejčastěji?",
-      moznosti: ["Hej", "Račice", "Ole"],
-      answer: 1,
-      napoveda: "Zkus počítat na prstech. Co stadion odpoví pokaždé, když se předzpěvák na něco zeptá?"
+      // minihra místo otázky „které slovo zazní nejčastěji“ (tleskání RA-ČI-CE odpověď stejně prozradí)
+      hra: {
+        typ: "tleskani",
+        tempo: 108,       // dob za minutu
+        tlesknuti: 9,     // kolik trefených tlesknutí stačí
+        nadpis: "Tleskej s celým stadionem",
+        zadani: "Když amplion zahřmí RA-ČI-CE!, celý stadion třikrát tleskne. Klepni přesně, když se kroužek stáhne na dlaně. První kolo jen poslouchej.",
+        hotovo: "Stadion šílí a správce je dojatý. Sousedé za plotem už méně. Text hymny si teď můžeš zobrazit výš."
+      }
     },
     {
       id: 6,
@@ -155,6 +181,12 @@ window.PD_OBCE.push({
         "Nacházíme se v místě, kudy projížděla hlídka příslušníků Státní bezpečnosti při zásahu na stadionu. Při rychlé jízdě vozem Moskvič 402 najeli na nezpevněnou krajnici a následným smykem poškodili zdejší sochu sv. Floriána.",
         "Opravy Floriánovy pravé nohy se ochotně ujala amatérská keramička z Pístovic. Po několika pokusech se ale ukázalo, že vymodelovat napuchlý nárt bude nad její síly. Aby zachránila svou řemeslnou pověst, tajně Floriánovi urazila i druhou nohu. Obě původní nohy pak nahradila odlitkem z gumáků svého muže, zaměstnance místního jednotného zemědělského družstva."
       ],
+      hra: {
+        typ: "gumaky",
+        nadpis: "Obuj Floriána",
+        zadani: "Florián přišel o obě nohy. Přetáhni mu na sochu gumáky manžela keramičky (nebo na gumák jen klepni).",
+        hotovo: "Sedí jako ulité. Svatý Florián je od té doby jediný svatý v gumácích široko daleko."
+      },
       otazka: "Sv. Florián je patronem všech hasičů. Čím je patronem druhá socha, sv. Vendelín?",
       moznosti: ["horníků", "pastýřů a dobytka", "hostinských"],
       answer: 1,
@@ -172,6 +204,13 @@ window.PD_OBCE.push({
         "V Račicích se totiž narodil olympijský vítěz Alois Hudec a cvičil v místní sokolovně. I k němu se šuškanda o nové soše dostala a zpráva ho potěšila. Při plánované cestě na Moravu pro okurky se proto rozhodl rodnou obec navštívit.",
         "Říkalo se, že má ramena jako Bivoj, který podle pověsti chytil divokého kance za uši, hodil si ho na záda a odnesl na Vyšehrad. To je ale jiný příběh. Mladí muži i ženy se sjížděli z širokého okolí, aby slavného olympionika spatřili. Několik dní s nadějí stanovali na okolních loukách."
       ],
+      hra: {
+        typ: "kruhy",
+        sekund: 6,
+        nadpis: "Udrž kříž na kruzích",
+        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Udrž ho šest vteřin v klidu: když se rozhoupe na jednu stranu, klepni na tutéž stranu a postrč ho zpátky.",
+        hotovo: "Šest vteřin bez hnutí! Rozhodčí by dali desítku a louky za vsí by se plnily stany."
+      },
       otazka: "Dle informací na budově zjisti, kde Alois Hudec zvítězil na olympiádě.",
       moznosti: ["Paříž", "Berlín", "Los Angeles"],
       answer: 1,
@@ -189,6 +228,12 @@ window.PD_OBCE.push({
         "Rozpočtová komise ve svém odborném stanovisku konstatovala, že očekávaný přírůstek obyvatelstva přesahuje únosnou kapacitu jedné obce, zejména v oblasti školských a kojeneckých potřeb.",
         "Úřady tentokrát jednaly s neobvyklou svižností. Okresní národní výbor neprodleně odsouhlasil návrh na sloučení obcí Račice a Pístovice za účelem společného a hospodárného zajištění péče o nastupující generaci. Od roku 1960 jsou obě obce jednou."
       ],
+      hra: {
+        typ: "vynos",
+        nadpis: "Orazítkuj a podepiš výnos",
+        zadani: "Výnos o sloučení obcí je ve třech vyhotoveních. Každé orazítkuj klepnutím na M. P. a originál nakonec podepiš prstem na čáru.",
+        hotovo: "Úředně potvrzeno a podepsáno. Od roku 1960 jsou Račice a Pístovice jedna obec."
+      },
       otazka: null,
       konec: true
     }

@@ -461,27 +461,33 @@
     });
     body.appendChild(story);
 
+    // Minihra (b.hra): dojení je tady v app.js, ostatní v js/hry.js (window.PD_HRY).
+    // Bez otázky hra úkol nahrazuje. S otázkou (nebo na konci trasy) se zbytek odemkne až po dohrání.
+    // hra.pred = true: hra jde ještě před nahrávku (kříž: nejdřív zapálit svíčku, pak modlitba).
+    var hra = b.hra && (b.hra.typ === "dojeni" ? dojeni : window.PD_HRY && window.PD_HRY[b.hra.typ]);
+    var hraJeUkol = !!hra && !b.otazka && !b.konec, pred = !!hra && !!b.hra.pred;
+    var poHre = el("div", { class: "po-hre" }), dalsi = el("div");
+    if (hra && !rec && (pred || !hraJeUkol)) poHre.hidden = true;
+    function odemkni() {
+      if (hraJeUkol) { markDone(b, { ok: true }); dalsi.appendChild(nextButton(b, i, true)); }
+      poHre.hidden = false;
+      setTimeout(function () { (hraJeUkol ? dalsi : poHre).scrollIntoView({ behavior: "smooth", block: hraJeUkol ? "center" : "start" }); }, 900);
+    }
+    if (pred) body.appendChild(hra(b, !!rec, odemkni));
+    var media = pred ? poHre : body;
     if (b.modlitba) {
       var pr = el("div", { class: "prayer" });
       pr.innerHTML = b.modlitba.map(function (sl) { return "<p>" + [].concat(sl).map(esc).join("<br>") + "</p>"; }).join("") +
         '<span class="cut">…zbytek přepisu se tady na místě nedochoval.</span>';
-      body.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return prayerSegs(b); }, true, { bg: b.podklad, gap: 1.4 })]));
-      body.appendChild(pr);
+      media.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return prayerSegs(b); }, true, { bg: b.podklad, gap: 1.4 })]));
+      media.appendChild(pr);
     }
-    if (b.hymna) body.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
+    if (b.hymna) media.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
+    if (hra && !pred) body.appendChild(hra(b, !!rec, odemkni));
+    body.appendChild(poHre);
 
-    if (b.hra && b.hra.typ === "dojeni" && !b.otazka) {
-      // minihra místo otázky: po podojení se kapitola zapíše a ukáže se tlačítko dál
-      var dalsi = el("div");
-      body.appendChild(dojeni(b, !!rec, function () {
-        markDone(b, { ok: true });
-        dalsi.appendChild(nextButton(b, i, true));
-        setTimeout(function () { dalsi.scrollIntoView({ behavior: "smooth", block: "center" }); }, 900);
-      }));
-      if (rec) dalsi.appendChild(nextButton(b, i, true));
-      body.appendChild(dalsi);
-    }
-    else if (b.otazka) body.appendChild(task(b, i, rec));
+    if (hraJeUkol) { if (rec) dalsi.appendChild(nextButton(b, i, true)); poHre.appendChild(dalsi); }
+    else if (b.otazka) poHre.appendChild(task(b, i, rec));
     else {
       var box = el("div", { class: "task" });
       if (b.konec) {
@@ -493,7 +499,7 @@
         box.appendChild(el("p", { text: b.poznamka || "Tady žádný úkol není, jen si to užij." }));
         box.appendChild(nextButton(b, i, !!rec));
       }
-      body.appendChild(box);
+      poHre.appendChild(box);
     }
     sheet.appendChild(body);
   }

@@ -15,12 +15,16 @@ const out = `<title>Pravdivé drby</title>
 <style>
 ${r("vendor/leaflet/leaflet.css")}
 ${r("css/app.css")}
+${r("css/hry.css")}
 </style>
 ${markup}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>window.PD_ARTIFACT = true; window.PD_NO_TILES = true; window.PD_IMG = ${JSON.stringify(img)};</script>
 <script>
 ${r("data/racice.js")}
+</script>
+<script>
+${r("js/hry.js")}
 </script>
 <script>
 ${r("js/app.js")}
