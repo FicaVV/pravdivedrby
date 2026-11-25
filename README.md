@@ -94,6 +94,13 @@ Proto ho hlídá `tools/namluvit.mjs`:
 Lokální běhy počítají do stejného souboru, tak změnu `tools/tts-kvota.json` po nich commitněte.
 Počítadlo je odhad z naší strany; skutečnou spotřebu ukazuje Google Cloud Console → Billing.
 
+## Minihra u hospody (dojení kozy)
+
+Bod může mít místo otázky `hra: { typ: "dojeni", klepnuti, nadpis, zadani, hotovo, meceni: [mp3…] }`.
+Koza je `img/racice/1-dojeni-koza.svg`, vemeno, vědro a mléko kreslí a animuje `js/app.js`.
+Při každém klepnutí koza zamečí: náhodně jedna z nahrávek v `meceni`, pokaždé trochu jinou výškou.
+Nahrávky kozy jsou CC0 od uživatele Kinoton z Freesound, přehled licencí je v `audio/racice/LICENSE.md`.
+
 ## Nahrávky u stanovišť
 
 Stanoviště může mít přehrávač s nahrávkou: v bodu v `data/racice.js` vyplňte

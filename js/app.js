@@ -616,7 +616,7 @@
 
   // Zamečení: skutečné nahrávky kozy (b.hra.meceni = ["audio/racice/koza-1.mp3", …]).
   // Každé zatáhnutí vybere jinou nahrávku a trochu jinou výšku, ať osm zamečení nezní stejně.
-  var djAudio = null, djBuf = {}, djLast = -1;
+  var djAudio = null, djBuf = {}, djLast = -1, djPrev = null;
   function djCtx() {
     try { djAudio = djAudio || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { djAudio = null; }
     if (djAudio && djAudio.state === "suspended") djAudio.resume();
@@ -639,10 +639,13 @@
     var k = Math.floor(Math.random() * ready.length);
     if (ready.length > 1 && k === djLast) k = (k + 1) % ready.length;
     djLast = k;
+    // předchozí zamečení rychle ztlumit, ať se při rychlém klepání nepřekřikují
+    if (djPrev) { try { djPrev.gain.setTargetAtTime(0, c.currentTime, 0.04); djPrev.src.stop(c.currentTime + 0.2); } catch (e) {} }
     var s = c.createBufferSource(); s.buffer = djBuf[ready[k]];
     s.playbackRate.value = 0.92 + Math.random() * 0.2;
     var g = c.createGain(); g.gain.value = 0.9;
     s.connect(g); g.connect(c.destination); s.start();
+    djPrev = { src: s, gain: g.gain };
   }
 
   // onDone se zavolá po posledním podojení (ne při znovuotevření hotového stanoviště)
