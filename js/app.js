@@ -452,8 +452,13 @@
     var body = el("div", { class: "sheet-body" });
     var num = el("div", { class: "stop-num" }, [el("b", { text: "Zápis " + b.id }), b.adresa || null]);
     body.appendChild(el("div", {}, [num, el("h2", { class: "stop-title", text: b.nazev })]));
+    var ilu = b.ilustrace || {};
+    if (ilu.obrazek) body.appendChild(kresba(ilu.obrazek, ilu.popis, "ilu ilu-hlavni"));
     var story = el("div", { class: "story" });
-    b.text.forEach(function (t) { story.appendChild(el("p", { text: t })); });
+    b.text.forEach(function (t, i) {
+      story.appendChild(el("p", { text: t }));
+      (ilu.mezi || []).forEach(function (m) { if (m.po === i) story.appendChild(kresba(m.src, m.popis, "ilu ilu-mezi")); });
+    });
     body.appendChild(story);
 
     if (b.modlitba) {
@@ -480,6 +485,11 @@
       body.appendChild(box);
     }
     sheet.appendChild(body);
+  }
+  // Kresba tužkou (img/<obec>/*.svg). V jednosouborové ukázce jsou kresby vložené jako data URI v PD_IMG.
+  function kresba(src, popis, cls) {
+    var url = (window.PD_IMG && window.PD_IMG[src]) || src;
+    return el("figure", { class: cls }, [el("img", { src: url, alt: popis || "", loading: "lazy", decoding: "async" })]);
   }
   // Fotka místa (b.foto = { src, popis, autor }); bez fotky se ukáže jen lišta s tlačítky.
   function stopHero(b) {
@@ -628,6 +638,12 @@
         var h = el("h3", {}, [el("span", { text: b.id + " · " + b.nazev })]);
         h.insertAdjacentHTML("beforeend", ICO_CHECK);
         var card = el("section", { class: "ch-card done" }, [h]);
+        // odměna: kresba stanoviště „vlepená“ do kroniky jako fotka s popiskem
+        if (b.ilustrace && b.ilustrace.obrazek) {
+          var pol = kresba(b.ilustrace.obrazek, b.ilustrace.popis, "ch-foto");
+          if (b.ilustrace.popis) pol.appendChild(el("figcaption", { text: b.ilustrace.popis }));
+          card.appendChild(pol);
+        }
         b.text.forEach(function (t) { card.appendChild(el("p", { text: t })); });
         if (b.id !== 4) all = all.concat(b.text);
         body.appendChild(card);
