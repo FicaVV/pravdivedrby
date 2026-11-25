@@ -1,6 +1,6 @@
 {
   "popis": "Znaky odeslané do Google TTS za měsíc (RRRR-MM, čas America/Los_Angeles). Zapisuje tools/namluvit.mjs.",
   "mesice": {
-    "2026-11": 7597
+    "2026-11": 7795
   }
 }
