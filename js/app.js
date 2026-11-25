@@ -727,7 +727,7 @@
     var tools = el("div", { class: "task-tools" });
     var hint = el("div", { class: "hint", hidden: "", text: "Nápověda: " + b.napoveda });
     var next = el("div");
-    var solved = !!rec;
+    var solved = !!rec, hintUsed = false, wrong = 0;
 
     function finish(choice, revealed) {
       solved = true;
@@ -741,7 +741,7 @@
       if (b.answer === null) { fb.className = "feedback info"; fb.textContent = "Zapsáno! Tuhle odpověď zatím ověřujeme v terénu, takže ti ji uznáváme. Zapiš si, co na místě opravdu vidíš."; }
       else if (revealed) { fb.className = "feedback info"; fb.textContent = "Správně je " + LETTERS[b.answer] + ") " + lines(b.moznosti[b.answer]).replace(/\.$/, "") + ". Nevadí, kronika se dopisuje i tak."; }
       else { fb.className = "feedback ok"; fb.textContent = "Přesně tak! Kapitola se zapisuje do kroniky."; }
-      if (!rec) markDone(b, { ok: !revealed, choice: choice, revealed: !!revealed });
+      if (!rec) markDone(b, { ok: !revealed, choice: choice, revealed: !!revealed, hint: hintUsed, wrong: wrong });
       next.innerHTML = ""; next.appendChild(nextButton(b, i, true));
       vibrate(80);
     }
@@ -752,13 +752,13 @@
       o.addEventListener("click", function () {
         if (solved) return;
         if (b.answer === null || k === b.answer) return finish(k, false);
-        o.classList.add("wrong"); o.disabled = true;
+        o.classList.add("wrong"); o.disabled = true; wrong++;
         fb.hidden = false; fb.className = "feedback no"; fb.textContent = "Tohle nesedí. Zkus to znovu, nebo si vezmi nápovědu.";
         vibrate(40);
       });
       opts.appendChild(o);
     });
-    tools.appendChild(el("button", { class: "btn btn-small", text: "Nápověda", onclick: function () { hint.hidden = false; } }));
+    tools.appendChild(el("button", { class: "btn btn-small", text: "Nápověda", onclick: function () { hint.hidden = false; hintUsed = true; } }));
     tools.appendChild(el("button", { class: "btn btn-small btn-ghost", text: "Prozradit odpověď", onclick: function () { finish(b.answer === null ? -1 : b.answer, true); } }));
     box.appendChild(opts); box.appendChild(hint); box.appendChild(fb); box.appendChild(tools); box.appendChild(next);
 
@@ -795,6 +795,18 @@
     state.idx = nextIdx === -1 ? OBEC.body.length : nextIdx;
     if (nextIdx === -1) state.finished = true;
     save(); refreshPins(); renderHome();
+    stat("stanoviste", { stanoviste: b.id, poradi: doneCount(), napoveda: !!rec.hint, prozrazeno: !!rec.revealed, chyby: rec.wrong || 0, minut: minutesPlayed() });
+    if (state.finished) stat("konec", { minut: minutesPlayed(), bezNapovedy: Object.keys(state.done).filter(function (k) { return state.done[k].ok; }).length, stanovist: OBEC.body.length });
+  }
+
+  // ---------- anonymní statistiky (js/odesilani.js; bez něj se nic neodesílá) ----------
+  var SEND = IN_ARTIFACT ? null : window.PD_SEND || null;
+  function stat(nazev, data) { if (SEND) SEND.udalost(OBEC.id, nazev, data); }
+  function minutesPlayed() { return state.startedAt ? Math.max(0, Math.round((Date.now() - state.startedAt) / 60000)) : null; }
+  function startRun() {
+    if (state.startedAt || state.finished || doneCount()) return;
+    state.startedAt = Date.now(); save();
+    stat("start", {});
   }
 
   // ---------- kronika ----------
@@ -869,6 +881,7 @@
       stars.appendChild(el("button", { class: n <= state.rating ? "on" : "", "aria-label": n + " z 5", text: "★", onclick: function () {
         state.rating = n; save();
         Array.prototype.forEach.call(stars.children, function (c, k) { c.className = k < n ? "on" : ""; });
+        if (SEND) SEND.hodnoceni(OBEC.id, n);
         toast("Díky za hodnocení!");
       } }));
     })(s);
@@ -880,11 +893,13 @@
       '<label for="nv-drb">Co se tam šušká?</label><textarea id="nv-drb" placeholder="Historka, kterou znáte z hospody nebo přes plot"></textarea>' +
       '<label for="nv-mail">E-mail (nepovinný)</label><input id="nv-mail" type="email" placeholder="ozveme se, až okruh vznikne">' +
       '<button class="btn btn-primary" type="submit">Odeslat návrh</button>' +
-      '<p class="draft-note">V prototypu se návrh uloží jen v telefonu. Odesílání na server přidáme s backendem.</p>';
+      '<p class="draft-note">' + (SEND ? "Návrh dorazí k autorům hry. Bez signálu počká v telefonu a odešle se sám, jakmile budete online. E-mail použijeme jen k tomu, abychom se ozvali." : "V ukázce se návrh uloží jen v tomto prohlížeči.") + '</p>';
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      state.navrhy.push({ obec: $("#nv-obec").value, drb: $("#nv-drb").value, mail: $("#nv-mail").value, at: Date.now() });
-      save(); form.reset(); toast("Návrh uložený. Díky!");
+      var nv = { obec: $("#nv-obec").value, drb: $("#nv-drb").value, mail: $("#nv-mail").value, at: Date.now() };
+      state.navrhy.push(nv); save(); form.reset();
+      if (SEND) { SEND.navrh(OBEC.id, nv); toast(navigator.onLine === false ? "Návrh počká v telefonu a odešle se, až chytíte signál. Díky!" : "Návrh odeslaný. Díky!"); }
+      else toast("Návrh uložený. Díky!");
     });
     body.appendChild(form);
     body.appendChild(el("button", { class: "btn btn-ghost", text: "Zpět na úvod", onclick: function () { closeSheet("finale"); show("home"); renderHome(); } }));
@@ -979,6 +994,10 @@
         el("button", { class: "btn btn-small btn-ghost", text: "Nechat být", onclick: function () { confirmBox.hidden = true; } })
       ])
     ]);
+    if (SEND) body.appendChild(el("div", { class: "setting" }, [
+      el("div", {}, [el("strong", { text: "Anonymní statistiky" }), el("p", { text: "Pomáhají nám zjistit, kde se hráči zasekávají a kolik jich dojde do konce. Posíláme jen, které stanoviště je hotové, jestli padla nápověda a kolik minut hra trvá. Žádné jméno, poloha ani identifikátor telefonu, žádné cookies." })]),
+      sw("set-stats", SEND.statistiky(), function (v) { SEND.statistiky(v); toast(v ? "Statistiky zapnuté, díky!" : "Statistiky vypnuté"); })
+    ]));
     body.appendChild(el("h3", { text: "Postup" }));
     body.appendChild(el("button", { class: "btn btn-small", text: "Smazat postup v tomto telefonu", onclick: function () { confirmBox.hidden = false; } }));
     body.appendChild(confirmBox);
@@ -987,13 +1006,13 @@
     renderCoords();
   }
   function resetProgress() {
-    state.idx = 0; state.done = {}; state.finished = false; lastAuto = -1; save();
+    state.idx = 0; state.done = {}; state.finished = false; state.startedAt = 0; lastAuto = -1; save();
     refreshPins(); renderHome(); closeSheet("settings"); pos = null; if (!$("#play").hidden) startGeo();
     toast(state.edit ? "Postup smazán. Pozor, Režim úprav bodů je pořád zapnutý." : "Postup smazán");
   }
 
   // ---------- události ----------
-  $("#btn-start").addEventListener("click", function () { show("play"); if (state.finished) openChronicle(); });
+  $("#btn-start").addEventListener("click", function () { startRun(); show("play"); if (state.finished) openChronicle(); });
   $("#btn-reset").addEventListener("click", function () { $("#reset-confirm").hidden = false; $("#reset-yes").focus(); });
   $("#reset-yes").addEventListener("click", resetProgress);
   $("#reset-no").addEventListener("click", function () { $("#reset-confirm").hidden = true; });

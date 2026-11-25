@@ -1,7 +1,7 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.4.8";
+const VERSION = "pd-0.4.9";
 const SHELL = [
-  "./", "index.html", "css/app.css", "js/app.js", "data/racice.js", "audio/audio.js",
+  "./", "index.html", "css/app.css", "js/config.js", "js/odesilani.js", "js/app.js", "data/racice.js", "audio/audio.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
   "audio/racice/hymna-kdo-je-tady-doma.mp3", "audio/racice/zvony-modlitba.mp3",

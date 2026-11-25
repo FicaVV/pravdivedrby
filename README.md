@@ -2,7 +2,8 @@
 
 Mobilní webová hra: mapa s GPS radarem, 8 stanovišť s příběhem, pozorovací úkoly
 s nápovědou a „prozradit“, postupně odkrývaná kronika, předčítání nahlas,
-závěrečná stránka s hodnocením a návrhem další obce. Postup se ukládá jen v telefonu.
+závěrečná stránka s hodnocením a návrhem další obce. Postup se ukládá jen v telefonu,
+hodnocení, návrhy a anonymní statistiky se odesílají do Google tabulky (viz níže).
 
 ## Technologie a proč
 
@@ -127,6 +128,44 @@ předčítání pauza, namluvený vypravěč má každou sloku jako samostatnou 
 Každý úkol má tlačítko „Přečíst otázku a možnosti“. Předčítá úvod k otázce, otázku a možnosti
 („Možnost A. …“) s krátkou pauzou mezi nimi. Nahrávky pro ně namluví stejný workflow jako příběhy.
 
+## Hodnocení, návrhy a statistiky
+
+Hodnocení hvězdičkami, návrhy dalších obcí a anonymní statistiky hry se posílají do **Google tabulky**
+přes Google Apps Script (`server/apps-script.gs`). Je to zdarma, bez vlastního serveru a data máte
+ve svém Google Disku. Bez signálu se všechno uloží do fronty v telefonu a odešle se samo,
+jakmile je připojení (`js/odesilani.js`).
+
+**Co se měří (a co ne).** Rozehraná hra, každé hotové stanoviště (číslo, jestli padla nápověda nebo
+prozrazení, počet špatných pokusů, minuty od startu) a dohraná hra (celková doba). Každá položka nese
+jen den, žádný čas, jméno, polohu ani identifikátor telefonu, takže jednotlivé hráče nejde spojit
+ani rozpoznat. Žádné cookies, Apps Script IP adresu hráče nevidí. Statistiky jdou v Nastavení vypnout
+(a při zapnutém Global Privacy Control jsou vypnuté rovnou). Jediný osobní údaj je nepovinný e-mail
+v návrhu obce, ten hráč vyplní sám.
+
+### Zapnutí (jednou, asi 5 minut)
+
+1. Založte novou Google tabulku (sheets.new), třeba „Pravdivé drby – data“.
+2. V ní **Rozšíření → Apps Script**, smažte ukázkový kód a vložte celý `server/apps-script.gs`. Uložte.
+3. Nahoře vyberte funkci `pripravit` a klikněte **Spustit**. Google se zeptá na oprávnění
+   (k tabulce a k posílání e-mailu o novém návrhu), povolte. Vzniknou listy Souhrn, Statistiky,
+   Hodnocení a Návrhy obcí.
+4. **Nasadit → Nové nasazení**, typ **Webová aplikace**, „Spustit jako: Já“,
+   „Kdo má přístup: Kdokoli“. Zkopírujte adresu končící `/exec`.
+5. V GitHubu: repozitář → **Settings → Secrets and variables → Actions → New repository secret**,
+   název `PD_ENDPOINT`, hodnota = adresa z bodu 4.
+6. Spusťte znovu nasazení (Actions → Nasazení na GitHub Pages → Run workflow) nebo pushněte do `main`.
+
+Adresa se při nasazení vepíše do `js/config.js`. Ve zveřejněné hře je vidět (jinak to u webové
+aplikace nejde), tajemství jen drží adresu mimo repozitář. Skript přijímá jen známé typy položek,
+ořezává délky a hodnoty začínající `=` zapisuje jako text, aby nešly podstrčit vzorce.
+Při úpravě skriptu stačí **Nasadit → Spravovat nasazení → upravit → Nová verze**, adresa zůstane.
+
+Bez `PD_ENDPOINT` hra funguje dál, jen nic neodesílá a položky čekají ve frontě v telefonu.
+
+**Souhrn** v tabulce ukazuje počet rozehraných a dohraných her, podíl dohraných, průměrnou délku,
+průměrné hodnocení a pro každé stanoviště, kolik hráčů k němu došlo a kolikrát potřebovali nápovědu.
+Hodnocení se odesílá pár vteřin po klepnutí, takže překlepnutí se nepočítá dvakrát.
+
 ## Doladění souřadnic
 
 Přesné souřadnice mají jen **stadion a sochy**. Ostatní body jsou umístěné odhadem.
@@ -157,6 +196,9 @@ s indexem `po` (0 = za první odstavec). Nová kresba se musí přidat i do sezn
 index.html              obrazovky (úvod, mapa s radarem, listy stanoviště/kroniky/nastavení)
 css/app.css             vzhled (světlé kontrastní téma pro čitelnost na slunci)
 js/app.js               herní logika, radar, simulace, kronika, TTS
+js/odesilani.js         odesílání hodnocení, návrhů a statistik s frontou pro offline
+js/config.js            adresa pro odesílání (při nasazení ji doplní workflow)
+server/apps-script.gs   příjem dat do Google tabulky
 data/racice.js          obsah okruhu
 img/racice/             kresby stanovišť (SVG)
 sw.js, manifest.webmanifest, icons/   PWA
