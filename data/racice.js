@@ -40,9 +40,11 @@ window.PD_OBCE.push({
       // minihra místo otázky (js/app.js → dojeni)
       hra: {
         typ: "dojeni",
-        klepnuti: 5,
+        klepnuti: 8,
+        // skutečné zamečení: „Single Goat Bleating 2x“ od Kinoton, Freesound, CC0 (viz audio/racice/LICENSE.md)
+        meceni: ["audio/racice/koza-1.mp3", "audio/racice/koza-2.mp3"],
         nadpis: "Pomoz koze od bolesti",
-        zadani: "Koze po kopřivách nateklo vemeno a bolí ji. Podoj ji do vědra: pětkrát klepni na vemeno.",
+        zadani: "Koze po kopřivách nateklo vemeno a bolí ji. Podoj ji do vědra: osmkrát klepni na vemeno.",
         hotovo: "Koze se ulevilo a vědro je plné. Jenže mléko je hořké… a teď už víš, kam se to vědro nakonec dostalo."
       },
     },

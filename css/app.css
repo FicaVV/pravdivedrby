@@ -371,17 +371,20 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .dj-pain { animation: dj-throb .9s ease-in-out infinite; transform-origin: 112px 78px; }
 .dj-stream { opacity: 0; }
 .dj-stream.go { animation: dj-squirt .45s ease-out; }
-.dj-mee { opacity: 0; transform: scale(.4); transform-origin: 160px 120px; transition: opacity .3s, transform .4s cubic-bezier(.3, 1.6, .5, 1); }
-.mee .dj-mee { opacity: 1; transform: none; }
+.dj-mee { opacity: 0; transform: scale(.4); transform-origin: 28px 44px; transition: opacity .3s, transform .4s cubic-bezier(.3, 1.6, .5, 1); }
+.dj-mee.pop { animation: dj-mee .9s ease-out; }
+.mee .dj-mee { opacity: 1; transform: none; animation: none; }
+.dj-splash { opacity: 0; }
+.dj-splash.go { animation: dj-splash .5s ease-out .12s; }
 /* klepací plocha přes vemeno (aspoň 44 px i na úzkém displeji) */
 .dj-tap {
-  position: absolute; left: 38%; top: 36%; width: 34%; height: 40%; min-width: 64px; min-height: 64px;
+  position: absolute; left: 52%; top: 52%; width: 32%; height: 40%; min-width: 64px; min-height: 64px;
   border: 0; border-radius: 50%; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
 .dj-tap:focus-visible { outline: 3px solid var(--sky); }
 .dj-tap:disabled { cursor: default; }
 .dj-tip {
-  position: absolute; left: 50%; top: 6%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  position: absolute; left: 74%; top: 8%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
   background: var(--ink); color: var(--accent); font-weight: 700; font-size: 15px; padding: 6px 12px; border-radius: 999px;
   animation: dj-pulse 1.4s ease-in-out infinite;
 }
@@ -391,11 +394,13 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .dj-count:empty { display: none; }
 .dj-count { text-align: center; color: var(--muted); font-size: 15px !important; }
 @keyframes dj-squirt { 0% { opacity: 0; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes dj-mee { 0% { opacity: 0; transform: scale(.4); } 20% { opacity: 1; transform: scale(1.08); } 35% { transform: none; } 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes dj-splash { 0% { opacity: 0; transform: translateY(1px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-3px); } }
 @keyframes dj-bump { 40% { transform: scale(.985); } }
 @keyframes dj-throb { 50% { transform: scale(1.06); } }
 @keyframes dj-pulse { 50% { transform: translateX(-50%) scale(1.06); } }
 @media (prefers-reduced-motion: reduce) {
-  .dj-stage.bump, .dj-pain, .dj-tip { animation: none; }
+  .dj-stage.bump, .dj-pain, .dj-tip, .dj-splash.go { animation: none; }
   .dj-udder, .dj-milk, .dj-mee { transition: none; }
 }
 

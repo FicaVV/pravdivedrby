@@ -547,115 +547,107 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   // ---------- minihra: dojení kozy (b.hra = { typ: "dojeni", ... }) ----------
-  // Kresba je vložená přímo tady (tužka + žlutá jako ostatní kresby), ať jde animovat a funguje offline.
+  // Koza je kresba img/racice/1-dojeni-koza.svg (strakatá, tužka + žlutá, bez vemene).
+  // Vemeno, vědro, mléko a bublina se kreslí tady, ať jdou animovat; vše funguje offline.
+  // Vemeno je kreslené v „místních“ souřadnicích (vrch 112,62) a do kresby se zmenší přes UDDER.
+  var UDDER = { x: 136, y: 97, s: 0.5 };    // kde vemeno visí na koze a jak je velké
+  var BUCKET = { x: 136, y: 141, s: 0.55 }; // střed dna vědra na trávě
+  function djUdderTip(scale, left) {         // špička struku v souřadnicích kresby
+    return { x: UDDER.x + ((left ? 101.5 : 122.5) - 112) * UDDER.s, y: UDDER.y + (42 * scale + 1) * UDDER.s };
+  }
+  function djRimY() { return BUCKET.y - 26 * BUCKET.s; }
   function dojeniSvg() {
     var P = "dj-", ink = "#2f2c28";
     function line(d, w, extra) {
       return '<path d="' + d + '" fill="none" stroke="' + ink + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" filter="url(#' + P + 'w1)"' + (extra || "") + '/>' +
         '<path d="' + d + '" fill="none" stroke="' + ink + '" stroke-width="' + (w * 0.6).toFixed(2) + '" opacity=".35" stroke-linecap="round" stroke-linejoin="round" filter="url(#' + P + 'w2)"/>';
     }
-    function shape(d, fill, w) {
-      return '<path d="' + d + '" fill="' + fill + '" stroke="none"/>' + line(d, w || 1.5);
-    }
-    var body = "M-6 8 C30 2 80 4 120 6 C150 7 180 6 206 10 V58 C190 60 176 58 168 62 C150 70 132 66 112 66 C92 66 74 70 56 64 C44 60 26 62 -6 60 Z";
-    var frontLeg = "M30 60 C29 80 30 104 28 128 L27 140 L38 140 L39 128 C41 106 42 84 44 62";
-    var hindLeg = "M160 62 C168 78 170 92 164 104 C160 112 160 122 161 132 L160 140 L171 140 L171 132 C172 120 174 110 178 100 C184 86 184 72 182 58";
+    var src = "img/racice/1-dojeni-koza.svg", url = (window.PD_IMG && window.PD_IMG[src]) || src;
     var udder = "M88 62 C86 72 88 84 96 90 C104 95 120 95 128 90 C136 84 138 72 136 62 Z";
     var teatL = "M98 89 C97 95 98 101 101 104 C104 104 106 101 106 94";
     var teatR = "M118 94 C118 101 120 104 123 104 C126 101 127 95 126 89";
     var bucket = "M80 120 L144 120 L138 146 L86 146 Z";
-    return '<svg class="dj-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Koza s nateklým vemenem a prázdné vědro pod ní">' +
+    function at(o) { return 'transform="translate(' + o.x + ' ' + o.y + ') scale(' + o.s + ') translate(-112 ' + (o === UDDER ? -62 : -146) + ')"'; }
+    function stream(cls) {
+      return '<g class="dj-stream ' + cls + '"><path stroke="' + ink + '" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".5"/>' +
+        '<path stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></g>';
+    }
+    return '<svg class="dj-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Strakatá koza s nateklým vemenem a vědro pod ní">' +
       '<defs>' +
       '<filter id="' + P + 'w1"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="1.4"/></filter>' +
       '<filter id="' + P + 'w2"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="1.8"/></filter>' +
-      '<filter id="' + P + 'paper"><feTurbulence baseFrequency=".8" numOctaves="3" seed="8"/><feColorMatrix values="0 0 0 0 .4  0 0 0 0 .38  0 0 0 0 .33  0 0 0 .07 0"/></filter>' +
       '<pattern id="' + P + 'x" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><path d="M0 0 V4" stroke="#55514a" stroke-width=".6"/></pattern>' +
-      '<pattern id="' + P + 'x2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(-42)"><path d="M0 0 V4" stroke="#55514a" stroke-width=".55"/></pattern>' +
-      '<pattern id="' + P + 'yel" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><path d="M0 0 V3" stroke="#f0b800" stroke-width="1.5"/></pattern>' +
       '<pattern id="' + P + 'red" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><path d="M0 0 V3" stroke="#c2341e" stroke-width=".9"/></pattern>' +
       '<clipPath id="' + P + 'in"><path d="M82 121 L142 121 L136.6 144.5 L87.4 144.5 Z"/></clipPath>' +
       '</defs>' +
-      '<rect width="200" height="150" fill="#f7f4ec"/><rect width="200" height="150" filter="url(#' + P + 'paper)"/>' +
-      // plot v pozadí a tráva
-      '<g opacity=".45">' + line("M0 76 H200 M0 92 H200 M8 70 V140 M62 70 V140 M150 70 V140 M194 70 V140", 0.6) + '</g>' +
-      '<path d="M0 134 C50 128 150 128 200 134 V150 H0Z" fill="url(#' + P + 'yel)" opacity=".55" filter="url(#' + P + 'w2)"/>' +
-      line("M4 140 L8 132 L11 140 M186 141 L190 133 L193 141 M56 141 L59 134 L62 141", 0.8) +
-      // nohy a tělo (strakatá koza: šrafované skvrny)
-      shape(frontLeg + " Z", "#fbf9f3", 1.5) + shape(hindLeg + " Z", "#fbf9f3", 1.5) +
-      '<path d="M163 64 C170 80 170 94 165 106 L175 104 C182 88 182 72 180 60Z" fill="url(#' + P + 'x)" opacity=".7"/>' +
-      shape(body, "#fbf9f3", 1.6) +
-      '<path d="M10 14 C30 10 52 14 58 28 C60 44 40 54 20 50 C8 46 4 30 10 14Z" fill="url(#' + P + 'x)" opacity=".8" filter="url(#' + P + 'w2)"/>' +
-      '<path d="M10 14 C30 10 52 14 58 28 C60 44 40 54 20 50 C8 46 4 30 10 14Z" fill="url(#' + P + 'x2)" opacity=".6" filter="url(#' + P + 'w2)"/>' +
-      '<path d="M140 10 C160 8 176 14 180 26 C182 40 168 48 152 44 C138 40 132 22 140 10Z" fill="url(#' + P + 'x)" opacity=".8" filter="url(#' + P + 'w2)"/>' +
-      line("M70 22 C74 34 72 46 66 56 M150 52 C156 56 164 58 170 58", 0.7) +
-      // vemeno (nateklé, při dojení splaskne)
-      '<g class="dj-udder" style="transform-origin:112px 62px">' +
-        '<path class="dj-teat" d="' + teatL + ' Z" fill="#f6e2da"/>' + line(teatL, 1.4) +
-        '<path class="dj-teat" d="' + teatR + ' Z" fill="#f6e2da"/>' + line(teatR, 1.4) +
-        '<path d="' + udder + '" fill="#f6e2da"/>' +
-        '<path class="dj-sore" d="' + udder + '" fill="url(#' + P + 'red)" opacity=".55"/>' +
-        line(udder.replace(/ Z$/, ""), 1.6) +
-        line("M112 70 C111 78 112 84 113 90", 0.6) +
-      '</g>' +
-      // bolest: cikcak čárky kolem vemene
-      '<g class="dj-pain" fill="none" stroke="#c2341e" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M76 70 L71 68 L74 74 L68 73"/><path d="M148 70 L153 68 L150 74 L156 73"/><path d="M82 86 L76 88"/><path d="M142 86 L148 88"/>' +
+      '<image href="' + url + '" width="200" height="150"/>' +
+      // vemeno (nateklé, při dojení splaskne) a čárky bolesti kolem něj
+      '<g ' + at(UDDER) + '>' +
+        '<g class="dj-pain" fill="none" stroke="#c2341e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M74 70 L68 67 L72 75 L64 74"/><path d="M150 70 L156 67 L152 75 L160 74"/><path d="M80 88 L72 91"/><path d="M144 88 L152 91"/>' +
+        '</g>' +
+        '<g class="dj-udder" style="transform-origin:112px 62px">' +
+          '<path d="' + teatL + ' Z" fill="#f6e2da"/>' + line(teatL, 2.4) +
+          '<path d="' + teatR + ' Z" fill="#f6e2da"/>' + line(teatR, 2.4) +
+          '<path d="' + udder + '" fill="#f6e2da"/>' +
+          '<path class="dj-sore" d="' + udder + '" fill="url(#' + P + 'red)" opacity=".55"/>' +
+          line(udder.replace(/ Z$/, ""), 2.6) + line("M112 70 C111 78 112 84 113 90", 1) +
+        '</g>' +
       '</g>' +
       // vědro s mlékem
-            '<path d="' + bucket + '" fill="#e9e5db"/>' +
-      '<g clip-path="url(#' + P + 'in)"><g class="dj-milk" style="transform:translateY(26px)">' +
-        '<rect x="70" y="120" width="84" height="32" fill="#fffdf7"/>' +
-        '<path d="M80 120.5 C96 118.5 128 118.5 144 120.5" fill="none" stroke="' + ink + '" stroke-width=".8" opacity=".6"/>' +
-      '</g></g>' +
-      '<path d="M86 146 L138 146 L140 138 L84 138 Z" fill="url(#' + P + 'x)" opacity=".45"/>' +
-      line(bucket.replace(/ Z$/, "") + " Z", 1.6) + line("M82 128 L142 128 M84 138 L140 138", 0.8) +
-      line("M80 120 C96 123 128 123 144 120", 0.9) +
-'' +
-      // proud mléka (střídavě z levého a pravého struku)
-      '<g class="dj-stream dj-l"><path d="M101.5 113 L102 121" stroke="' + ink + '" stroke-width="3.6" stroke-linecap="round" fill="none" opacity=".55"/><path d="M101.5 113 L102 121" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/></g>' +
-      '<g class="dj-stream dj-r"><path d="M122.5 113 L122 121" stroke="' + ink + '" stroke-width="3.6" stroke-linecap="round" fill="none" opacity=".55"/><path d="M122.5 113 L122 121" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/></g>' +
-      // ucho vědra sklopené dopředu
-      '<path d="M81 124 C84 141 140 141 143 124" fill="none" stroke="' + ink + '" stroke-width="1.2" filter="url(#' + P + 'w1)"/>' +
-      // spokojené zamečení
-      '<g class="dj-mee"><path d="M150 108 C150 100 186 100 186 108 C186 116 172 116 166 116 L160 122 L161 116 C154 116 150 114 150 108Z" fill="#fff" stroke="' + ink + '" stroke-width="1.2" filter="url(#' + P + 'w1)"/>' +
-        '<text x="168" y="111" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="9" fill="' + ink + '">Méé!</text></g>' +
+      '<g ' + at(BUCKET) + '>' +
+        '<path d="' + bucket + '" fill="#e9e5db"/>' +
+        '<g clip-path="url(#' + P + 'in)"><g class="dj-milk" style="transform:translateY(26px)">' +
+          '<rect x="70" y="120" width="84" height="32" fill="#fffdf7"/>' +
+          '<path d="M80 120.5 C96 118.5 128 118.5 144 120.5" fill="none" stroke="' + ink + '" stroke-width="1.2" opacity=".6"/>' +
+        '</g></g>' +
+        '<path d="M86 146 L138 146 L140 138 L84 138 Z" fill="url(#' + P + 'x)" opacity=".45"/>' +
+        line(bucket, 2.6) + line("M82 128 L142 128 M84 138 L140 138", 1.3) + line("M80 120 C96 123 128 123 144 120", 1.4) +
+        '<path d="M81 124 C84 141 140 141 143 124" fill="none" stroke="' + ink + '" stroke-width="1.8" filter="url(#' + P + 'w1)"/>' +
+      '</g>' +
+      // proud mléka (střídavě z levého a pravého struku) a kapky nad vědrem
+      stream("dj-l") + stream("dj-r") +
+      '<g class="dj-splash" fill="#fff" stroke="' + ink + '" stroke-width=".5"><circle r="1.1"/><circle r=".9"/><circle r=".8"/></g>' +
+      // zamečení u hlavy
+      '<g class="dj-mee"><path d="M6 30 C6 20 46 20 46 30 C46 39 34 39 30 39 L32 47 L23 39 C14 39 6 38 6 30Z" fill="#fff" stroke="' + ink + '" stroke-width="1.2" filter="url(#' + P + 'w1)"/>' +
+        '<text x="26" y="33.5" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="10" fill="' + ink + '">Méé!</text></g>' +
       '</svg>';
   }
 
-  // krátké „čvrk“ mléka do vědra a na konci zamečení, syntetizované (bez souboru, funguje offline)
-  var djAudio = null;
+  // Zamečení: skutečné nahrávky kozy (b.hra.meceni = ["audio/racice/koza-1.mp3", …]).
+  // Každé zatáhnutí vybere jinou nahrávku a trochu jinou výšku, ať osm zamečení nezní stejně.
+  var djAudio = null, djBuf = {}, djLast = -1;
   function djCtx() {
     try { djAudio = djAudio || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { djAudio = null; }
     if (djAudio && djAudio.state === "suspended") djAudio.resume();
     return djAudio;
   }
-  function djSquirt(level) {
+  function djLoad(files) {
     var c = djCtx(); if (!c) return;
-    var t = c.currentTime, len = 0.32, buf = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = buf.getChannelData(0);
-    for (var k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
-    var src = c.createBufferSource(); src.buffer = buf;
-    var bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 6;
-    // čím plnější vědro, tím vyšší tón
-    bp.frequency.setValueAtTime(1800 + level * 250, t); bp.frequency.exponentialRampToValueAtTime(700 + level * 200, t + len);
-    var g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + len);
-    src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t); src.stop(t + len);
+    (files || []).forEach(function (f) {
+      if (djBuf[f]) return;
+      djBuf[f] = "loading";
+      fetch(f).then(function (r) { return r.arrayBuffer(); })
+        .then(function (a) { return new Promise(function (ok, ko) { c.decodeAudioData(a, ok, ko); }); })
+        .then(function (buf) { djBuf[f] = buf; }, function () { delete djBuf[f]; });
+    });
   }
-  function djBleat() {
-    var c = djCtx(); if (!c) return;
-    var t = c.currentTime, len = 0.9;
-    var o = c.createOscillator(); o.type = "sawtooth";
-    o.frequency.setValueAtTime(420, t); o.frequency.linearRampToValueAtTime(470, t + 0.25); o.frequency.linearRampToValueAtTime(380, t + len);
-    var lfo = c.createOscillator(); lfo.frequency.value = 28; var lg = c.createGain(); lg.gain.value = 0.45;
-    var am = c.createGain(); am.gain.value = 0.55; lfo.connect(lg); lg.connect(am.gain);
-    var f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1100; f.Q.value = 1.4;
-    var g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.06); g.gain.setValueAtTime(0.35, t + len - 0.25); g.gain.exponentialRampToValueAtTime(0.001, t + len);
-    o.connect(am); am.connect(f); f.connect(g); g.connect(c.destination);
-    o.start(t); lfo.start(t); o.stop(t + len); lfo.stop(t + len);
+  function djBleat(files) {
+    var c = djCtx(); if (!c || !files || !files.length) return;
+    var ready = files.filter(function (f) { return djBuf[f] && djBuf[f] !== "loading"; });
+    if (!ready.length) return;
+    var k = Math.floor(Math.random() * ready.length);
+    if (ready.length > 1 && k === djLast) k = (k + 1) % ready.length;
+    djLast = k;
+    var s = c.createBufferSource(); s.buffer = djBuf[ready[k]];
+    s.playbackRate.value = 0.92 + Math.random() * 0.2;
+    var g = c.createGain(); g.gain.value = 0.9;
+    s.connect(g); g.connect(c.destination); s.start();
   }
 
   // onDone se zavolá po posledním podojení (ne při znovuotevření hotového stanoviště)
   function dojeni(b, hotovo, onDone) {
-    var h = b.hra, need = h.klepnuti || 5, n = hotovo ? need : 0;
+    var h = b.hra, need = h.klepnuti || 8, n = hotovo ? need : 0;
     var box = el("div", { class: "hra" });
     box.appendChild(el("span", { class: "kicker", text: h.kicker || "Úkol" }));
     box.appendChild(el("h3", { text: h.nadpis }));
@@ -673,36 +665,49 @@
     box.appendChild(live);
     var fb = el("div", { class: "feedback ok", hidden: "", text: h.hotovo });
     box.appendChild(fb);
-    var svg = stage.querySelector("svg");
+    var svg = stage.querySelector("svg"), mee = svg.querySelector(".dj-mee");
 
+    function scaleAt(m) { return 1.25 - 0.25 * m / need; }
     function paint() {
       var p = n / need;
       svg.querySelector(".dj-milk").style.transform = "translateY(" + (26 - 22 * p).toFixed(1) + "px)";
-      svg.querySelector(".dj-udder").style.transform = "scale(" + (1.22 - 0.22 * p).toFixed(3) + ")";
+      svg.querySelector(".dj-udder").style.transform = "scale(" + scaleAt(n).toFixed(3) + ")";
       svg.querySelector(".dj-sore").style.opacity = (0.55 * (1 - p)).toFixed(2);
       svg.querySelector(".dj-pain").style.opacity = n >= need ? 0 : (1 - 0.8 * p).toFixed(2);
       Array.prototype.forEach.call(dots.children, function (d, k) { d.className = k < n ? "on" : ""; });
       live.textContent = n >= need ? "" : n ? "Podojeno " + n + " z " + need + "." : "";
       if (n >= need) { box.classList.add("done"); tap.disabled = true; tip.hidden = true; fb.hidden = false; }
     }
+    function squirt(left) {
+      var s = svg.querySelector(left ? ".dj-l" : ".dj-r"), t = djUdderTip(scaleAt(n - 1), left), rim = djRimY() + 2;
+      var d = "M" + t.x.toFixed(1) + " " + t.y.toFixed(1) + " L" + (t.x + (left ? 0.6 : -0.6)).toFixed(1) + " " + Math.max(rim, t.y + 4).toFixed(1);
+      Array.prototype.forEach.call(s.querySelectorAll("path"), function (pa) { pa.setAttribute("d", d); });
+      s.classList.remove("go"); void s.getBBox(); s.classList.add("go");
+      var sp = svg.querySelector(".dj-splash");
+      Array.prototype.forEach.call(sp.children, function (c, k) { c.setAttribute("cx", (t.x - 3 + k * 3).toFixed(1)); c.setAttribute("cy", (rim - 1 - (k % 2) * 2).toFixed(1)); });
+      sp.classList.remove("go"); void sp.getBBox(); sp.classList.add("go");
+    }
+    function bleat() {
+      mee.classList.remove("pop"); void mee.getBBox(); mee.classList.add("pop");
+      djBleat(h.meceni);
+    }
     tap.addEventListener("click", function () {
       if (n >= need) return;
+      djLoad(h.meceni);
       n++;
-      var s = svg.querySelector(n % 2 ? ".dj-l" : ".dj-r");
-      // proud začíná u špičky struku (vemeno se zmenšuje) a končí ve vědru
-      var tipY = (62 + 42 * (1.22 - 0.22 * (n - 1) / need) + 1).toFixed(1), x = n % 2 ? 101.5 : 122.5;
-      Array.prototype.forEach.call(s.querySelectorAll("path"), function (pa) { pa.setAttribute("d", "M" + x + " " + tipY + " L" + (x + (n % 2 ? 0.8 : -0.8)) + " 124"); });
-      s.classList.remove("go"); void s.getBBox(); s.classList.add("go");
+      squirt(n % 2 === 1);
       stage.classList.remove("bump"); void stage.offsetWidth; stage.classList.add("bump");
       tip.hidden = true;
-      djSquirt(n); vibrate(n >= need ? [30, 60, 30, 60, 90] : 25);
+      vibrate(n >= need ? [30, 60, 30, 60, 90] : 25);
+      bleat();
       paint();
       if (n >= need) {
-        setTimeout(function () { svg.classList.add("mee"); djBleat(); }, 450);
+        setTimeout(function () { svg.classList.add("mee"); }, 450);
         if (onDone) setTimeout(onDone, 900);
       }
     });
     if (hotovo) svg.classList.add("mee");
+    else djLoad(h.meceni);
     paint();
     return box;
   }
