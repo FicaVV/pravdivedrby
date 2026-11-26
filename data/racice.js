@@ -64,9 +64,9 @@ window.PD_OBCE.push({
       // minihra (js/hry.js → haseni), syčení hadice: audio/racice/hadice.mp3
       hra: {
         typ: "haseni",
-        nadpis: "Uhas klubovnu pivem",
-        zadani: "Chlapi se vsadili, že vychlazená desítka hasí stejně dobře jako žízeň. Klubovna hoří! Klepej na plameny a stříkej na ně pivo z hadice. Pozor: neuhašený plamen přeskočí na vedlejší okno a piva v sudu moc není.",
-        hotovo: "Uhašeno! Sud je prázdný, klubovna ohořelá a sázka nerozhodnutá. Rok opravy chlapi vytesali do zdi, tak se po něm venku rozhlédni.",
+        nadpis: "Uhas hasičárnu pivem",
+        zadani: "Hasičárna hoří! Klepej na plameny a stříkej na ně pivo z hadice. Pozor: neuhašený plamen přeskočí na vedlejší okno a piva v sudu moc není.",
+        hotovo: "Uhašeno! Sud je prázdný, hasičárna ohořelá a sázka nerozhodnutá. Opravu si chlapi zaplatili ze svého a rok opravy vytesali do zdi, aby nezapomněli, že pivo je jen k pití. Rozhlédni se po něm venku.",
         zvuk: "audio/racice/hadice.mp3"
       }
     },

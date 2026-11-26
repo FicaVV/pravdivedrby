@@ -203,7 +203,7 @@
   }
 
   // =====================================================================
-  // 2) Hasičárna: uhas klubovnu pivem
+  // 2) Hasičárna: uhas hasičárnu pivem
   // =====================================================================
   HRY.haseni = function (b, hotovo, onDone) {
     var P = "hs-";
