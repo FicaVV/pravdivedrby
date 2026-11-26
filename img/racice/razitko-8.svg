@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<defs>
+<filter id="rz8-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="1" seed="56"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.2 1.55"/><feComposite in="SourceGraphic" operator="in"/></filter>
+<filter id="rz8-wob"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="8"/><feDisplacementMap in="SourceGraphic" scale="1.6"/></filter>
+<pattern id="rz8-yel" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(54)"><path d="M0 0 V3" stroke="#f0b800" stroke-width="1.7"/></pattern>
+<path id="rz8-a" d="M20 60 A40 40 0 0 1 100 60"/>
+<path id="rz8-b" d="M24 64 A36 36 0 0 0 96 64"/>
+</defs>
+<g transform="rotate(7 60 60)">
+<circle cx="60" cy="60" r="53" fill="url(#rz8-yel)" opacity=".75" filter="url(#rz8-wob)"/>
+<g filter="url(#rz8-ink)">
+<circle cx="60" cy="60" r="56" fill="none" stroke="#2f2c28" stroke-width="3.6"/>
+<circle cx="60" cy="60" r="49" fill="none" stroke="#2f2c28" stroke-width="1.6"/>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="12" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz8-a" startOffset="50%" text-anchor="middle">ZAPSÁNO · 8</textPath></text>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz8-b" startOffset="50%" text-anchor="middle">NEOFICIÁLNĚ</textPath></text>
+<g transform="translate(27 33) scale(.55)" fill="none" stroke="#2f2c28" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 82 H112"/><path d="M18 70 H62 L58 78 H22Z" fill="none"/><path d="M30 70 V58 H50 V70"/><rect x="34" y="40" width="12" height="18" rx="5" fill="#f5c400"/><path d="M66 66 C66 80 102 80 102 66Z" fill="none"/><path d="M66 66 C66 54 80 50 86 56"/><path d="M70 78 C72 84 80 84 84 80 M88 80 C92 84 100 84 100 78"/><circle cx="80" cy="62" r="4" fill="none"/><path d="M76 24 C76 20 82 19 82 24 C82 19 88 20 88 24 C88 28 82 32 82 32 C82 32 76 28 76 24Z" fill="#f5c400"/></g>
+</g>
+</g>
+</svg>

@@ -58,6 +58,8 @@
   function vibrate(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
   function current() { return OBEC.body[state.idx] || null; }
   function doneCount() { return Object.keys(state.done).length; }
+  // osobní kronika: razítka, „Kde je koza?“, rodinné fotky, pohlednice (js/kronika.js)
+  var K = window.PDK.init({ OBEC: OBEC, state: state, save: save, el: el, toast: toast, vibrate: vibrate });
 
   // ---------- úvod ----------
   function renderHome() {
@@ -453,7 +455,11 @@
     var num = el("div", { class: "stop-num" }, [el("b", { text: "Zápis " + b.id }), b.adresa || null]);
     body.appendChild(el("div", {}, [num, el("h2", { class: "stop-title", text: b.nazev })]));
     var ilu = b.ilustrace || {};
-    if (ilu.obrazek) body.appendChild(kresba(ilu.obrazek, ilu.popis, "ilu ilu-hlavni"));
+    if (ilu.obrazek) {
+      var kozaInfo = b.koza ? K.kozaRadek(b) : null;
+      body.appendChild(K.kresba(b, true, "ilu ilu-hlavni", function () { if (kozaInfo) kozaInfo.paint(); }));
+      if (kozaInfo) body.appendChild(kozaInfo.el);
+    }
     var story = el("div", { class: "story" });
     b.text.forEach(function (t, i) {
       story.appendChild(el("p", { text: t }));
@@ -469,6 +475,8 @@
       body.appendChild(pr);
     }
     if (b.hymna) body.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
+
+    body.appendChild(K.fotoBlok(b));
 
     if (b.hra && b.hra.typ === "dojeni" && !b.otazka) {
       // minihra místo otázky: po podojení se kapitola zapíše a ukáže se tlačítko dál
@@ -789,12 +797,14 @@
   }
 
   function markDone(b, rec) {
+    var nova = !state.done[b.id];
     rec.at = Date.now();
     state.done[b.id] = rec;
     var nextIdx = OBEC.body.findIndex(function (x) { return !state.done[x.id]; });
     state.idx = nextIdx === -1 ? OBEC.body.length : nextIdx;
     if (nextIdx === -1) state.finished = true;
     save(); refreshPins(); renderHome();
+    if (nova) K.bouchni(b);
   }
 
   // ---------- kronika ----------
@@ -810,19 +820,25 @@
     OBEC.body.forEach(function (b) { pl.appendChild(el("i", { class: state.done[b.id] ? "on" : nxt && b.id === nxt.id ? "next" : "" })); });
     body.appendChild(pl);
     body.appendChild(el("p", { class: "ch-meta", text: "Dopsáno " + doneCount() + " z " + OBEC.body.length + " kapitol" }));
+    body.appendChild(K.razitkaRada());
+    body.appendChild(K.kozyRadek());
     var all = [], ttsSlot = el("div", { class: "tts-row" });
     body.appendChild(ttsSlot);
     var locked = el("div", { class: "ch-locked" });
     OBEC.body.forEach(function (b, i) {
       if (state.done[b.id]) {
         var h = el("h3", {}, [el("span", { text: b.id + " · " + b.nazev })]);
-        h.insertAdjacentHTML("beforeend", ICO_CHECK);
+        if (b.razitko) h.appendChild(K.razitko(b, "ch-razitko"));
+        else h.insertAdjacentHTML("beforeend", ICO_CHECK);
         var card = el("section", { class: "ch-card done" }, [h]);
-        // odměna: kresba stanoviště „vlepená“ do kroniky jako fotka s popiskem
+        // odměna: kresba stanoviště „vlepená“ do kroniky jako fotka s popiskem, vedle ní rodinná fotka
         if (b.ilustrace && b.ilustrace.obrazek) {
-          var pol = kresba(b.ilustrace.obrazek, b.ilustrace.popis, "ch-foto");
+          var fotky = el("div", { class: "ch-fotky" });
+          var pol = K.kresba(b, false, "ch-foto");
           if (b.ilustrace.popis) pol.appendChild(el("figcaption", { text: b.ilustrace.popis }));
-          card.appendChild(pol);
+          fotky.appendChild(pol);
+          K.fotoDoKroniky(b, fotky);
+          card.appendChild(fotky);
         }
         b.text.forEach(function (t) { card.appendChild(el("p", { text: t })); });
         if (b.id !== 4) all = all.concat(b.text);
@@ -856,6 +872,7 @@
       el("h2", { text: "Kronika je dopsaná" }),
       el("p", { text: "Prošli jste celý okruh " + OBEC.nazev + ". Bez nápovědy jste zvládli " + good + " z " + OBEC.body.length + " stanovišť. Teď už víte, proč jsou od roku 1960 obě obce jednou." })
     ]));
+    body.appendChild(K.pohledniceSekce());
     body.appendChild(el("h3", { text: "A teď vážně: co je pravda" }));
     var ul = el("ul", { class: "fact-list" });
     OBEC.fakta.forEach(function (f) { ul.appendChild(el("li", { text: f })); });
@@ -973,7 +990,7 @@
       function selectPre() { var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Označeno, zkopíruj ručně"); }
     } }));
     var confirmBox = el("div", { hidden: "" }, [
-      el("p", { text: "Opravdu smazat postup? Kronika se zase zamkne." }),
+      el("p", { text: "Opravdu smazat postup? Kronika se zase zamkne a smažou se i vaše fotky v ní." }),
       el("div", { class: "task-tools" }, [
         el("button", { class: "btn btn-small", text: "Ano, smazat", onclick: resetProgress }),
         el("button", { class: "btn btn-small btn-ghost", text: "Nechat být", onclick: function () { confirmBox.hidden = true; } })
@@ -987,7 +1004,7 @@
     renderCoords();
   }
   function resetProgress() {
-    state.idx = 0; state.done = {}; state.finished = false; lastAuto = -1; save();
+    state.idx = 0; state.done = {}; state.finished = false; lastAuto = -1; K.smazat(); save();
     refreshPins(); renderHome(); closeSheet("settings"); pos = null; if (!$("#play").hidden) startGeo();
     toast(state.edit ? "Postup smazán. Pozor, Režim úprav bodů je pořád zapnutý." : "Postup smazán");
   }

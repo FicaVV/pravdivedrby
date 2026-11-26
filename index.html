@@ -82,7 +82,7 @@
         <button class="btn btn-primary btn-block" id="btn-start">Vyrazit na náves</button>
         <button class="btn btn-ghost" id="btn-reset" hidden>Začít okruh znovu</button>
         <div class="reset-confirm" id="reset-confirm" role="alertdialog" aria-labelledby="reset-q" hidden>
-          <p id="reset-q">Smazat postup a začít znovu od prvního stanoviště? Kronika se zase zamkne.</p>
+          <p id="reset-q">Smazat postup a začít znovu od prvního stanoviště? Kronika se zase zamkne a smažou se i vaše fotky v ní.</p>
           <div class="task-tools">
             <button class="btn btn-small" id="reset-yes">Ano, začít znovu</button>
             <button class="btn btn-small btn-ghost" id="reset-no">Nechat být</button>
@@ -156,6 +156,8 @@
 <!--/APP-->
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="data/racice.js"></script>
+<script src="data/racice-kronika.js"></script>
+<script src="js/kronika.js"></script>
 <script src="audio/audio.js"></script>
 <script src="js/app.js"></script>
 <script>
