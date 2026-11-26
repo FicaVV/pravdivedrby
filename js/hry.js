@@ -29,9 +29,11 @@
   function f1(n) { return (Math.round(n * 10) / 10).toString(); }
   function restart(node, cls) { node.classList.remove(cls); void (node.getBBox ? node.getBBox() : node.offsetWidth); node.classList.add(cls); }
   // souřadnice prstu v jednotkách kresby (viewBox 200 × 150, scéna má poměr 4:3)
+  // (hra může mít přiblížený viewBox, pak se přepočítá podle něj)
   function pt(svg, e) {
-    var r = svg.getBoundingClientRect();
-    return { x: (e.clientX - r.left) / r.width * 200, y: (e.clientY - r.top) / r.height * 150 };
+    var r = svg.getBoundingClientRect(), v = svg.viewBox && svg.viewBox.baseVal;
+    if (!v || !v.width) v = { x: 0, y: 0, width: 200, height: 150 };
+    return { x: v.x + (e.clientX - r.left) / r.width * v.width, y: v.y + (e.clientY - r.top) / r.height * v.height };
   }
   // jednoduchý opakovatelný náhodný generátor (ať kaše vypadá pokaždé stejně)
   function rng(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
@@ -193,9 +195,11 @@
     return api;
   }
   // tlačítko přes část kresby (x, y = střed v jednotkách kresby; w, h v procentech scény)
-  function hotspot(x, y, w, h, label) {
+  // vb = viewBox hry [x, y, šířka, výška], když je přiblížená
+  function hotspot(x, y, w, h, label, vb) {
+    vb = vb || [0, 0, 200, 150];
     return E("button", { class: "hr-hot", "aria-label": label,
-      style: "left:" + f1(x / 2) + "%;top:" + f1(y / 1.5) + "%;width:" + w + "%;height:" + h + "%" });
+      style: "left:" + f1((x - vb[0]) / vb[2] * 100) + "%;top:" + f1((y - vb[1]) / vb[3] * 100) + "%;width:" + w + "%;height:" + h + "%" });
   }
 
   // =====================================================================
@@ -209,7 +213,8 @@
     var flame = "M-6 0 C-9 -6 -4 -9 -3.5 -14 C-1 -10 1.5 -11 1 -17 C5 -12 9 -7 6 0 Z";
     var core = "M-3 0 C-4.5 -3 -1.5 -5 -0.5 -8.5 C1 -5.5 4 -3.5 3 0 Z";
     var NOZ = { x: 150, y: 95 };
-    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hořící hasičská zbrojnice a sud piva s hadicí">' +
+    var VB = [20, 40, 150, 112.5]; // přiblížení na zbrojnici, ať se na telefonu líp trefuje
+    var svg = '<svg viewBox="' + VB.join(" ") + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hořící hasičská zbrojnice a sud piva s hadicí">' +
       defs(P) + backdrop("img/racice/2-zbrojnice.svg") +
       // proudnice napojená na sud
       ln(P, "M168 108 C166 100 160 97 154 96.5", 2.4) +
@@ -241,10 +246,10 @@
     // ukazatel piva v sudu (vpravo nahoře)
     var gauge = document.createElementNS("http://www.w3.org/2000/svg", "g");
     gauge.setAttribute("class", "hs-gauge");
-    gauge.innerHTML = '<rect x="178" y="10" width="12" height="44" rx="2" fill="#fffdf7"/>' +
-      '<rect class="hs-level" x="178" y="10" width="12" height="44" rx="2" fill="#f5c400"/>' +
-      ln(P, "M178 10 H190 V54 H178 Z", 1.2) +
-      '<text x="184" y="62" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="6" fill="' + INK + '">PIVO</text>';
+    gauge.innerHTML = '<rect x="154" y="44" width="10" height="34" rx="2" fill="#fffdf7"/>' +
+      '<rect class="hs-level" x="154" y="44" width="10" height="34" rx="2" fill="#f5c400"/>' +
+      ln(P, "M154 44 H164 V78 H154 Z", 1.1) +
+      '<text x="159" y="85" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5.4" fill="' + INK + '">PIVO</text>';
     g.svg.appendChild(gauge);
     var level = gauge.querySelector(".hs-level");
     function burning() { return hp.filter(function (x) { return x > 0; }).length; }
@@ -256,7 +261,7 @@
         btns[k].disabled = g.finished || hp[k] === 0;
       });
       var r = beerLeft / BEER;
-      level.setAttribute("y", f1(10 + 44 * (1 - r))); level.setAttribute("height", f1(44 * r));
+      level.setAttribute("y", f1(44 + 34 * (1 - r))); level.setAttribute("height", f1(34 * r));
       gauge.classList.toggle("low", beerLeft <= 3);
     }
     function sprayTo(tx, ty) {
@@ -310,7 +315,7 @@
       paint();
     }
     var btns = F.map(function (p, k) {
-      var btn = hotspot(p[0], p[1] - 10, 15, 19, "Uhasit plamen " + (k + 1));
+      var btn = hotspot(p[0], p[1] - 10, 18, 22, "Uhasit plamen " + (k + 1), VB);
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
         if (g.finished || hp[k] === 0) return;
@@ -544,7 +549,8 @@
   HRY.svicka = function (b, hotovo, onDone) {
     var P = "sv-";
     var flame = "M0 0 C-4 -3 -4 -9 0 -18 C4 -9 4 -3 0 0 Z", core = "M0 -1 C-1.8 -3 -1.8 -6 0 -10 C1.8 -6 1.8 -3 0 -1 Z";
-    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Svíčka ve skleničce u paty památného kříže">' +
+    // přiblížení na svíčku a krabičku sirek (kříž je vlevo jen kousek vidět)
+    var svg = '<svg viewBox="84 60 116 87" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Svíčka ve skleničce u paty památného kříže">' +
       defs(P, '<radialGradient id="' + P + 'glow"><stop offset="0" stop-color="#ffd84a" stop-opacity=".75"/><stop offset=".5" stop-color="#ffd84a" stop-opacity=".25"/><stop offset="1" stop-color="#ffd84a" stop-opacity="0"/></radialGradient>') +
       paper(P) +
       // kopec a obloha jako na kresbě kříže
@@ -574,9 +580,9 @@
         ln(P, "M153 116 L157 118 M160 116 L164 118 M167 116 L171 118 M174 116 L178 118 M181 116 L185 118", 0.6, ' opacity=".6"', "#fff") +
         '<g class="sv-left"></g></g>' +
       // vítr: čárky zleva
-      '<g class="sv-wind" fill="none" stroke="' + INK + '" stroke-width="1.2" stroke-linecap="round">' +
+      '<g transform="translate(30 32)"><g class="sv-wind" fill="none" stroke="' + INK + '" stroke-width="1.2" stroke-linecap="round">' +
         '<path d="M60 40 C80 36 96 44 116 38"/><path d="M70 58 C92 54 104 62 126 56"/><path d="M56 76 C74 72 86 80 104 74"/>' +
-        '<path d="M110 30 C114 26 118 30 115 33" /></g>' +
+        '<path d="M110 30 C114 26 118 30 115 33" /></g></g>' +
       // sirka v ruce: hlavička je v počátku, dřívko vede dolů doprava k prstu
       '<g class="sv-match" transform="translate(-50 -50)"><g class="sv-stick">' +
         '<path d="M0 0 L22 18" stroke="#d8b98a" stroke-width="3.2" stroke-linecap="round"/>' + ln(P, "M0 0 L22 18", 0.6) +
@@ -584,7 +590,7 @@
         '<circle class="sv-head" cx="0" cy="0" r="2.6" fill="#c2341e"/></g>' +
         '<g class="sv-mf" transform="translate(-1 -2) rotate(-38)"><path d="' + flame + '" transform="scale(.55)" fill="#ffe9a0" stroke="' + INK + '" stroke-width="1.6"/></g></g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, tip: "Vezmi sirku a škrtni o krabičku", label: "Svíčka u kříže a krabička sirek" });
+    var g = shell(b, hotovo, { svg: svg, tipTop: true, tip: "Vezmi sirku a škrtni o krabičku", label: "Svíčka u kříže a krabička sirek" });
     g.onDone(onDone);
     if (!hotovo) loadSample(b.hra.zvuk);
     // Sirku vezmeš prstem, škrtneš švihem přes hnědé škrtátko a hořící doneseš ke knotu.
@@ -679,10 +685,10 @@
   // Švihnutí prstem hodí kámen: směr a síla podle švihu, letí po oblouku. Z amplionů hraje hymna
   // (b.hra.zvuk), každý zásah ji ztiší a rozladí, po posledním amplionu je ticho.
   HRY.amplion = function (b, hotovo, onDone) {
-    var P = "am-", GRAV = 250, K = 3.6, VMAX = 330, HAND = { x: 100, y: 132 }, HITR = 12;
+    var P = "am-", GRAV = 250, K = 3.6, VMAX = 330, HAND = { x: 100, y: 132 }, HITR = 17, HS = 1.35; // HS = zvětšení trychtýřů
     // x, y = vršek sloupu, d = kam míří trychtýř (1 doprava, -1 doleva)
     var AMP = [{ x: 28, y: 56, d: 1 }, { x: 122, y: 42, d: -1 }, { x: 178, y: 66, d: -1 }];
-    AMP.forEach(function (a) { a.cx = a.x + a.d * 15; a.cy = a.y; });
+    AMP.forEach(function (a) { a.cx = a.x + a.d * 15 * HS; a.cy = a.y; });
     var horn = "M0 -2.6 L18 -9.5 C24 -9.5 26.5 -5 26.5 0 C26.5 5 24 9.5 18 9.5 L0 2.6 Z";
     var mouth = "M18 -9.5 C14.5 -9.5 13.5 -5 13.5 0 C13.5 5 14.5 9.5 18 9.5";
     var note = "M0 0 C0 -2 3.4 -2 3.4 0 C3.4 2 0 2 0 0 Z M3.2 -.2 V-8 L6.6 -6.4";
@@ -693,11 +699,11 @@
       AMP.map(function (a, k) {
         return '<g class="am-amp" data-k="' + k + '">' +
           shape(P, "M" + (a.x - 1.6) + " " + a.y + " H" + (a.x + 1.6) + " V140 H" + (a.x - 1.6) + " Z", "#e9e5db", 1.3) +
-          '<g transform="translate(' + a.x + ' ' + a.y + ') scale(' + a.d + ' 1)"><g class="am-horn">' +
+          '<g transform="translate(' + a.x + ' ' + a.y + ') scale(' + (a.d * HS) + ' ' + HS + ')"><g class="am-horn">' +
             shape(P, horn, "#f9f7f1", 1.5) + ln(P, mouth, 1.2) +
             '<g class="am-dent">' + ln(P, "M20 -6 L16.5 -1.5 L20.5 1 L17 5.5", 1.1) + ln(P, "M7 -5 L10 -3.4 M8 3.6 L11 4.6", 0.8) + '</g>' +
           '</g></g>' +
-          '<g class="am-notes" transform="translate(' + (a.x + a.d * 34) + ' ' + (a.y - 8) + ')">' +
+          '<g class="am-notes" transform="translate(' + (a.x + a.d * 42) + ' ' + (a.y - 10) + ')">' +
             '<path class="am-note" d="' + note + '" fill="none" stroke="' + INK + '" stroke-width="1.1" stroke-linecap="round"/>' +
             '<path class="am-note" d="' + note + '" transform="translate(' + (a.d * 6) + ' 6)" fill="none" stroke="' + INK + '" stroke-width="1.1" stroke-linecap="round"/>' +
           '</g>' +
@@ -867,117 +873,111 @@
   };
 
   // =====================================================================
-  // 6) Sochy: slep Floriána z odlitků
+  // 6) Sochy: slep sádrový gumák z rozbitých kusů
   // =====================================================================
-  // Keramička odlila Floriána znovu po kusech. Kusy se táhnou prstem na obrys sochy, klepnutí kus otočí o 90°.
-  // Mezi kusy jsou tři zmetky (nateklý gumák, dámská holínka, děravý trup), ty na sochu nepasují.
+  // Keramičce praskla forma a odlitek vysoké gumové boty se rozpadl na 9 kusů (rozstříhaný obrázek).
+  // Kusy se táhnou prstem na obrys boty; neotáčejí se. Kus zapadne, jen když je u svého místa.
   HRY.gumaky = function (b, hotovo, onDone) {
-    var P = "gm-", NS = "http://www.w3.org/2000/svg", SNAP = 14;
-    var boot = "M-5.5 -9.5 H5.5 L5.8 4 C8.6 5 9 9 6 9.8 H-6 C-9 9 -8.6 5 -5.8 4 Z";
-    var CAST = "#f1eee6";
-    function bootArt(d, fill) {
-      return '<g transform="scale(1.15)"><path d="' + d + '" fill="' + (fill || CAST) + '"/><path d="' + d + '" fill="url(#' + P + 'xx)" opacity=".3"/>' +
-        '<path d="M-5.6 -6.5 H5.6 V-4 H-5.6 Z" fill="#f5c400"/>' + ln(P, d, 1.3) + ln(P, "M-5.6 -6.5 H5.6 M-5.6 -4 H5.6", 0.7) + '</g>';
+    var P = "gm-", NS = "http://www.w3.org/2000/svg", SNAP = 9, TS = 0.62; // TS = zmenšení kusů v hromádce
+    // mřížka řezů přes botu: sloupce a řádky (okraje s rezervou), prázdné buňky (nad špičkou) se vynechají
+    var XS = [94, 128, 158, 194], YS = [6, 40, 74, 108, 148];
+    var CELLS = [[0, 0], [1, 0], [0, 1], [1, 1], [0, 2], [1, 2], [0, 3], [1, 3], [2, 3]];
+    var bootOut = "M103 15 C103 9 149 9 149 15 L147 100 C147 106 151 110 158 112 C174 116 187 123 188 134 L188 141 C188 144 186 146 183 146 L107 146 C104 146 102 144 102 141 L101 118 Z";
+    var art =
+      '<path d="' + bootOut + '" fill="#e9e5db"/>' +
+      '<path d="M134 16 L132 100 C132 108 140 116 152 119 C168 123 182 128 186 136 L186 141 H150 C140 138 132 128 128 112 L126 16 Z" fill="url(#' + P + 'xx)" opacity=".35"/>' +
+      // horní lem, žlutý pruh, poutko
+      '<path d="M103 15 C103 21 149 21 149 15 L149 24 C149 29 103 29 103 24 Z" fill="#f5c400"/>' +
+      ln(P, "M103 15 C103 21 149 21 149 15 M103 24 C103 29 149 29 149 24", 1.1) +
+      ln(P, "M103 15 C103 9 149 9 149 15", 1.2) + '<path d="M106 13.5 C112 11 140 11 146 13.5" fill="none" stroke="#8a847a" stroke-width=".8"/>' +
+      ln(P, "M110 30 V40 M110 40 C112 43 115 43 117 40 V30", 0.9) +
+      // výztuha kotníku a nártu
+      ln(P, "M102 100 C112 96 132 96 146 101", 0.9) + ln(P, "M146 101 C150 108 156 112 166 114", 0.9, ' opacity=".7"') +
+      ln(P, "M114 58 L113 90", 0.7, ' opacity=".5"', "#fff") + ln(P, "M120 40 L119 92", 0.6, ' opacity=".35"', "#fff") +
+      // podrážka s dezénem a podpatkem
+      '<path d="M102 134 H188 V141 C188 144 186 146 183 146 H107 C104 146 102 144 102 141 Z" fill="#3a3632"/>' +
+      ln(P, "M108 140 H112 M118 140 H122 M128 140 H132 M140 140 H144 M152 140 H156 M164 140 H168 M176 140 H180", 1, "", "#8a847a") +
+      ln(P, "M132 134 V146", 1, "", "#16130f") +
+      ln(P, bootOut, 1.6);
+    // vlnitý řez (v rozích přesně na mřížce, ať na sebe kusy navazují)
+    function wave(a0, a1, base, k, vert) {
+      var pts = [], n = 8;
+      for (var i = 0; i <= n; i++) {
+        var t = i / n, a = a0 + (a1 - a0) * t, o = 2.2 * Math.sin(Math.PI * t) * Math.sin(a * 0.33 + k * 1.7);
+        pts.push(vert ? [base + o, a] : [a, base + o]);
+      }
+      return pts;
     }
-    var torso = "M-11 -12 H11 L9 12 H-9 Z";
-    // kusy: x, y = cíl na soše (u zmetku kus, za který se vydává), hx/hy = polovina velikosti pro chycení prstem
-    var PCS = [
-      { id: "prapor", x: 124, y: 50, hx: 11, hy: 42, z: 0, home: [164, 84], rot: 90,
-        d: shape(P, "M-1.5 -36 H1.5 V46 H-1.5 Z", "#d6d1c6", 1.2) + shape(P, "M1.5 -36 L20 -32 L17 -26 L20 -20 L1.5 -22 Z", "#f5c400", 1.2) +
-           ln(P, "M6 -34 L5 -22 M11 -33 L10 -21.5", 0.6), out: "M-1.5 -36 H1.5 V46 H-1.5 Z M1.5 -36 L20 -32 L17 -26 L20 -20 L1.5 -22 Z" },
-      { id: "levy", x: 94, y: 92, hx: 8, hy: 12, z: 1, home: [44, 108], rot: 180, d: bootArt(boot), out: boot, sc: 1.15 },
-      { id: "pravy", x: 106, y: 92, hx: 8, hy: 12, z: 1, home: [150, 24], rot: 90, d: bootArt(boot), out: boot, sc: 1.15 },
-      { id: "tunika", x: 100, y: 72, hx: 16, hy: 9, z: 2, home: [164, 54], rot: 180,
-        d: shape(P, "M-12 -8 H12 L16 8 H-16 Z", CAST, 1.3) + ln(P, "M-4 -8 L-5.5 8 M4 -8 L5.5 8 M-11 -2 H11", 0.7), out: "M-12 -8 H12 L16 8 H-16 Z" },
-      { id: "trup", x: 100, y: 52, hx: 12, hy: 13, z: 3, home: [52, 26], rot: 0,
-        d: shape(P, torso, CAST, 1.4) + ln(P, "M-4 -12 C-2 -8 2 -8 4 -12 M-9 8 H9", 0.8), out: torso },
-      { id: "hlava", x: 100, y: 31, hx: 9, hy: 11, z: 4, home: [22, 24], rot: 180,
-        d: shape(P, "M0 -4 C5 -4 7 0 7 4 C7 8 4 11 0 11 C-4 11 -7 8 -7 4 C-7 0 -5 -4 0 -4 Z", CAST, 1.3) +
-           shape(P, "M-8 -1 C-8 -10 8 -10 8 -1 Z", "#d6d1c6", 1.3) + ln(P, "M4 -8 C7 -14 12 -13 11 -9", 1.1) +
-           ln(P, "M-3 3 V4 M3 3 V4 M-2 7.5 C-1 8.5 1 8.5 2 7.5", 0.8), out: "M0 -4 C5 -4 7 0 7 4 C7 8 4 11 0 11 C-4 11 -7 8 -7 4 C-7 0 -5 -4 0 -4 Z M-8 -1 C-8 -10 8 -10 8 -1 Z" },
-      { id: "ruka", x: 82, y: 56, hx: 10, hy: 13, z: 5, home: [54, 68], rot: 90,
-        d: ln(P, "M8 -12 C5 -6 2 -2 -2 1", 3) + shape(P, "M-8 2 H4 L3 12 H-7 Z", "#e9e5db", 1.2) + ln(P, "M-8 2 C-8 -4 4 -4 4 2", 0.9),
-        out: "M8 -12 C5 -6 2 -2 -2 1 M-8 2 H4 L3 12 H-7 Z" },
-      // zmetky
-      { id: "natekly", jako: ["levy", "pravy"], hx: 9, hy: 12, z: 6, home: [18, 104], rot: 0,
-        d: bootArt("M-5.5 -9.5 H5.5 L5.8 1 C13 -1 15 9 9 10 H-6 C-9 9 -8.6 5 -5.8 4 Z") + ln(P, "M11 -2 L13 -5 M14 1 L17 0", 0.9, "", "#c2341e"),
-        why: "Nateklý nárt! Kvůli takovému to celé začalo. Tenhle do šrotu." },
-      { id: "holinka", jako: ["levy", "pravy"], hx: 8, hy: 12, z: 6, home: [180, 26], rot: 0,
-        d: '<g transform="scale(1.15)">' + shape(P, "M-4.5 -10 H4.5 L4.5 3 C7.5 4 9.5 8 8.5 9.8 H0 L-1 7 H-3 L-3.5 9.8 H-5 L-4.5 3 Z", "#f6dcc9", 1.2) +
-           '<circle cx="0" cy="-3" r="1.8" fill="#c2341e"/><circle cx="-2.2" cy="-4.5" r="1.1" fill="#f5c400"/><circle cx="2.2" cy="-4.5" r="1.1" fill="#f5c400"/><circle cx="0" cy="-0.8" r="1.1" fill="#f5c400"/></g>',
-        why: "Dámská holínka s kytičkou? Florián je svatý, ne švihák." },
-      { id: "deravy", jako: ["trup"], hx: 12, hy: 13, z: 6, home: [22, 64], rot: 0,
-        d: shape(P, torso, CAST, 1.4) + ln(P, "M-4 -12 C-2 -8 2 -8 4 -12 M-9 8 H9", 0.8) +
-           '<g fill="#8a847a"><circle cx="-5" cy="-2" r="2.2"/><circle cx="3" cy="2" r="1.6"/><circle cx="5" cy="-5" r="1.2"/><circle cx="-2" cy="6" r="1.4"/></g>' + ln(P, "M2 -12 L0 -6 L3 -3", 0.7),
-        why: "Děravý jak cedník, sádra byla plná bublin. Najdi lepší trup." }
-    ];
-    var REAL = PCS.filter(function (p) { return !p.jako; });
-    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dílna keramičky: kusy sádrové sochy svatého Floriána a podstavec">' +
-      defs(P) + paper(P) +
-      '<text x="100" y="9" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="5.6" fill="#8a847a">Dílna keramičky</text>' +
-      // podstavec
-      shape(P, "M80 110 H120 V140 H80 Z", "#f9f7f1", 1.6) + '<path d="M80 110 H120 V140 H80 Z" fill="url(#' + P + 'x)" opacity=".3"/>' +
-      shape(P, "M75 104 H125 V110 H75 Z", "#f9f7f1", 1.5) + ln(P, "M86 124 H94", 0.8) +
-      // obrys sochy
-      '<g class="gm-ghost" fill="none" stroke="#8a847a" stroke-width=".8" stroke-dasharray="2 1.6">' +
-        REAL.map(function (p) { return '<path d="' + p.out + '" transform="translate(' + p.x + ' ' + p.y + ')' + (p.sc ? " scale(" + p.sc + ")" : "") + '"/>'; }).join("") +
-      '</g>' +
+    function cellPoly(c, r) {
+      var x0 = XS[c], x1 = XS[c + 1], y0 = YS[r], y1 = YS[r + 1];
+      var top = r === 0 ? [[x0, y0], [x1, y0]] : wave(x0, x1, y0, r * 7 + c, false);
+      var right = c === XS.length - 2 ? [[x1, y0], [x1, y1]] : wave(y0, y1, x1, c * 5 + r + 30, true);
+      var bot = r === YS.length - 2 ? [[x1, y1], [x0, y1]] : wave(x0, x1, y1, (r + 1) * 7 + c, false).reverse();
+      var left = c === 0 ? [[x0, y1], [x0, y0]] : wave(y0, y1, x0, (c - 1) * 5 + r + 30, true).reverse();
+      return "M" + top.concat(right, bot, left).map(function (p) { return f1(p[0]) + " " + f1(p[1]); }).join(" L") + " Z";
+    }
+    var PCS = CELLS.map(function (cr, i) {
+      return { c: cr[0], r: cr[1], cx: (XS[cr[0]] + XS[cr[0] + 1]) / 2, cy: (YS[cr[1]] + YS[cr[1] + 1]) / 2,
+        hw: (XS[cr[0] + 1] - XS[cr[0]]) / 2, hh: (YS[cr[1] + 1] - YS[cr[1]]) / 2, d: cellPoly(cr[0], cr[1]) };
+    });
+    // hromádka vlevo: 3 × 3, zamíchané
+    var SPOT = [[18, 26], [48, 30], [78, 24], [20, 74], [50, 78], [80, 72], [18, 122], [48, 126], [78, 120]];
+    var MIX = [4, 8, 1, 6, 0, 3, 7, 2, 5];
+    var defsX = '<g id="' + P + 'bota">' + art + '</g><clipPath id="' + P + 'tvar"><path d="' + bootOut + '"/></clipPath>' + PCS.map(function (p, i) { return '<clipPath id="' + P + 'c' + i + '"><path d="' + p.d + '"/></clipPath>'; }).join("");
+    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rozbitý sádrový odlitek vysoké gumové boty, kusy se skládají na obrys">' +
+      defs(P, defsX) + paper(P, false) +
+      '<text x="48" y="146" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="5.4" fill="#8a847a">kusy odlitku</text>' +
+      ln(P, "M94 4 V146", 0.7, ' stroke-dasharray="2 3" opacity=".5"') +
+      // obrys boty, kam se kusy skládají
+      '<path class="gm-ghost" d="' + bootOut + '" fill="#fbfaf5" stroke="#8a847a" stroke-width="1" stroke-dasharray="2.4 1.8"/>' +
       '<g class="gm-pcs">' + PCS.map(function (p, i) {
-        return '<g class="gm-pc" data-i="' + i + '"><g class="gm-rot">' + p.d + '</g></g>';
+        return '<g class="gm-pc" data-i="' + i + '"><g clip-path="url(#' + P + 'c' + i + ')"><use href="#' + P + 'bota"/></g>' +
+          '<path class="gm-cut" d="' + p.d + '" fill="none" stroke="#8a847a" stroke-width=".7" clip-path="url(#' + P + 'tvar)"/></g>';
       }).join("") + '</g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, dots: REAL.length, tip: "Táhni kusy na obrys sochy", label: "Skládání sochy svatého Floriána z odlitků" });
+    var g = shell(b, hotovo, { svg: svg, dots: PCS.length, tip: "Táhni kusy na obrys boty", label: "Skládání rozbitého sádrového gumáku" });
     g.onDone(onDone);
     var s = g.svg, layer = s.querySelector(".gm-pcs"), els = s.querySelectorAll(".gm-pc"), st = g.stage;
-    var st8 = PCS.map(function (p) { return { x: hotovo && !p.jako ? p.x : p.home[0], y: hotovo && !p.jako ? p.y : p.home[1], rot: hotovo ? 0 : p.rot, on: hotovo && !p.jako }; });
+    var q = PCS.map(function (p, i) { var h = SPOT[MIX.indexOf(i)]; return hotovo ? { x: p.cx, y: p.cy, sc: 1, on: true } : { x: h[0], y: h[1], sc: TS, on: false }; });
     function paint(i) {
-      var q = st8[i], el = els[i];
-      el.setAttribute("transform", "translate(" + f1(q.x) + " " + f1(q.y) + ")");
-      el.querySelector(".gm-rot").style.transform = "rotate(" + q.rot + "deg)";
-      el.classList.toggle("on", q.on);
-      el.style.display = hotovo && PCS[i].jako ? "none" : "";
+      var p = PCS[i], o = q[i];
+      els[i].setAttribute("transform", "translate(" + f1(o.x) + " " + f1(o.y) + ") scale(" + o.sc + ") translate(" + (-p.cx) + " " + (-p.cy) + ")");
+      els[i].classList.toggle("on", o.on);
     }
-    // pořadí vrstev: hotové kusy podle z (prapor vzadu, ruka vpředu), volné kusy nad nimi
     function order() {
-      var idx = PCS.map(function (p, i) { return i; });
-      idx.sort(function (a, c) { return (st8[a].on ? 0 : 10) + PCS[a].z - ((st8[c].on ? 0 : 10) + PCS[c].z); });
-      idx.forEach(function (i) { layer.appendChild(els[i]); });
+      PCS.forEach(function (p, i) { if (q[i].on) layer.insertBefore(els[i], layer.firstChild); });
     }
     PCS.forEach(function (p, i) { paint(i); });
     order();
-    function placed() { return st8.filter(function (q) { return q.on; }).length; }
+    function placed() { return q.filter(function (o) { return o.on; }).length; }
     g.set(placed());
-    if (hotovo) return g.box;
+    if (hotovo) { s.classList.add("all"); return g.box; }
 
     function hitAt(p) {
       for (var k = layer.children.length - 1; k >= 0; k--) {
-        var i = +layer.children[k].getAttribute("data-i"), q = st8[i], pc = PCS[i];
-        if (q.on) continue;
-        var side = q.rot % 180 !== 0, hx = (side ? pc.hy : pc.hx) + 3, hy = (side ? pc.hx : pc.hy) + 3;
-        if (Math.abs(p.x - q.x) < hx && Math.abs(p.y - q.y) < hy) return i;
+        var i = +layer.children[k].getAttribute("data-i"), o = q[i], pc = PCS[i];
+        if (o.on) continue;
+        if (Math.abs(p.x - o.x) < pc.hw * o.sc + 3 && Math.abs(p.y - o.y) < pc.hh * o.sc + 3) return i;
       }
       return -1;
     }
-    function home(i) { st8[i].x = PCS[i].home[0]; st8[i].y = PCS[i].home[1]; paint(i); restart(els[i], "back"); }
+    function back(i) { var h = SPOT[MIX.indexOf(i)]; q[i].x = h[0]; q[i].y = h[1]; q[i].sc = TS; paint(i); restart(els[i], "back"); }
     function drop(i) {
-      var q = st8[i], pc = PCS[i];
-      if (pc.jako) {
-        var near = pc.jako.some(function (id) { var t = REAL.filter(function (r) { return r.id === id; })[0]; return Math.hypot(q.x - t.x, q.y - t.y) < SNAP + 4; });
-        if (near) { g.say(pc.why); vibrate([10, 30, 10]); g.bump(); SFX.thump(); home(i); }
-        return;
-      }
-      var d = Math.hypot(q.x - pc.x, q.y - pc.y);
-      if (d < SNAP) {
-        if (q.rot % 360 !== 0) { g.say("Tvar sedí, jenže je to otočené. Klepnutím kus otoč."); vibrate([10, 30, 10]); g.bump(); home(i); return; }
-        q.x = pc.x; q.y = pc.y; q.on = true; paint(i); order();
+      var o = q[i], pc = PCS[i];
+      if (Math.hypot(o.x - pc.cx, o.y - pc.cy) < SNAP) {
+        o.x = pc.cx; o.y = pc.cy; o.on = true; paint(i); order();
         SFX.thump(); vibrate(25); g.set(placed());
-        if (placed() === REAL.length) { g.say(""); setTimeout(function () { s.classList.add("all"); g.finish(); }, 400); }
-        else g.say(["", "První kus sedí.", "Florián roste.", "Už je to polovina.", "Ještě pár kusů.", "Skoro hotovo.", "Poslední kus!"][placed()] || "");
+        if (placed() === PCS.length) { g.say(""); setTimeout(function () { s.classList.add("all"); g.finish(); }, 400); }
+        else g.say(placed() === PCS.length - 1 ? "Poslední kus!" : "");
         return;
       }
-      // kus položený jinde na sochu
-      var other = REAL.some(function (r) { return Math.hypot(q.x - r.x, q.y - r.y) < SNAP && r !== pc; });
-      if (other) { g.say("Sem tenhle kus nepatří."); g.bump(); home(i); }
+      if (o.x > 94) {
+        // položený na botu, ale jinam: zkusit, jestli neleží u jiného místa
+        var near = PCS.some(function (r, k) { return k !== i && !q[k].on && Math.hypot(o.x - r.cx, o.y - r.cy) < SNAP; });
+        g.say(near ? "Tenhle kus patří jinam. Podívej se na tvar okrajů." : "");
+        if (near) g.bump();
+        back(i);
+      } else { o.sc = TS; paint(i); }
     }
     var drag = null;
     st.addEventListener("pointerdown", function (e) {
@@ -986,272 +986,286 @@
       if (i < 0) return;
       e.preventDefault(); ac(); g.hideTip();
       try { st.setPointerCapture(e.pointerId); } catch (x) {}
-      drag = { i: i, dx: st8[i].x - p.x, dy: st8[i].y - p.y, start: p, moved: false };
-      layer.appendChild(els[i]); els[i].classList.add("lift");
+      drag = { i: i, dx: q[i].x - p.x, dy: q[i].y - p.y };
+      // při zvednutí se kus zvětší na skutečnou velikost (kolem prstu)
+      q[i].sc = 1; drag.dx = 0; drag.dy = -6; q[i].x = p.x; q[i].y = p.y - 6; paint(i);
+      layer.appendChild(els[i]); els[i].classList.add("lift"); SFX.tick();
     });
     st.addEventListener("pointermove", function (e) {
       if (!drag) return;
-      var p = pt(s, e);
-      if (!drag.moved && Math.hypot(p.x - drag.start.x, p.y - drag.start.y) < 3) return;
-      drag.moved = true;
-      var q = st8[drag.i]; q.x = Math.max(4, Math.min(196, p.x + drag.dx)); q.y = Math.max(4, Math.min(146, p.y + drag.dy)); paint(drag.i);
+      var p = pt(s, e), o = q[drag.i];
+      o.x = Math.max(4, Math.min(196, p.x + drag.dx)); o.y = Math.max(4, Math.min(146, p.y + drag.dy)); paint(drag.i);
     });
     function up() {
       if (!drag) return;
       var d = drag; drag = null; els[d.i].classList.remove("lift");
-      if (!d.moved) { st8[d.i].rot += 90; paint(d.i); SFX.tick(); return; }
       drop(d.i);
     }
     st.addEventListener("pointerup", up);
     st.addEventListener("pointercancel", up);
     st.classList.add("hr-draw");
-    // bez dotyku: tlačítko přiloží další správný kus
-    var kb = E("button", { class: "hr-sr", text: "Přiložit další kus sochy" });
+    // bez dotyku: tlačítko přiloží další kus
+    var kb = E("button", { class: "hr-sr", text: "Přiložit další kus boty" });
     kb.addEventListener("click", function () {
-      var i = PCS.map(function (p, k) { return k; }).filter(function (k) { return !PCS[k].jako && !st8[k].on; })[0];
+      var i = q.map(function (o, k) { return k; }).filter(function (k) { return !q[k].on; })[0];
       if (i === undefined) return;
-      st8[i].rot = 0; st8[i].x = PCS[i].x; st8[i].y = PCS[i].y; drop(i);
+      q[i].x = PCS[i].cx; q[i].y = PCS[i].cy; q[i].sc = 1; drop(i);
     });
     g.box.appendChild(kb);
     return g.box;
   };
 
   // =====================================================================
-  // 7) Sokolovna: olympijská sestava na kruzích (výmyk, výdrž v kříži, seskok)
+  // 7) Sokolovna: sestava na kruzích na přesnost (tachometr) a zlatá medaile z Berlína 1936
   // =====================================================================
-  // 1) Výmyk: rychlé klepání přidává sílu, síla pomalu ubývá; na plnou sílu se Hudec vytáhne do kříže.
-  // 2) Výdrž: prst zůstává na displeji, ručička vodováhy ujíždí a posouváním prstu doleva a doprava
-  //    se drží v zeleném pásu. Čím déle, tím víc se třese. Puštěním prstu Hudec povolí a začíná se výmykem.
-  // 3) Seskok: ručička kmitá, prst se pustí, když je v zeleném. Podle toho rozhodčí ukážou známky.
+  // Ručička tachometru pod obrázkem kmitá sem a tam. Klepnutí ve chvíli, kdy je v zeleném poli,
+  // = Hudec předvede další prvek sestavy. Zelené pole je pokaždé jinde, užší a ručička rychlejší.
+  // Po posledním prvku (seskok) přijde stupeň vítězů a zlatá medaile z OH v Berlíně 1936.
   HRY.kruhy = function (b, hotovo, onDone) {
-    var P = "kr-", NEED = b.hra.sekund || 6, ZONE = 5, HANG = 26;
-    var GX = 100, GY = 20, GW = 36; // vodováha: střed a polovina šířky (v jednotkách kresby)
+    var P = "kr-", ROPE = [{ x: 72, y: 3 }, { x: 128, y: 3 }];
+    // pozice těla: h = ruce (kruhy) [L, R], s = ramena, k = boky, n = chodidla [L, R]
+    var POSE = {
+      vis:   { h: [[88, 50], [112, 50]], s: [100, 60], k: [100, 86], n: [[98, 112], [102, 112]] },
+      vzpor: { h: [[88, 74], [112, 74]], s: [100, 54], k: [100, 80], n: [[98, 106], [102, 106]] },
+      kriz:  { h: [[68, 62], [132, 62]], s: [100, 62], k: [100, 89], n: [[98, 115], [102, 115]] },
+      vznos: { h: [[88, 74], [112, 74]], s: [100, 54], k: [100, 78], n: [[126, 77], [126, 80]] },
+      stoj:  { h: [[88, 74], [112, 74]], s: [100, 68], k: [100, 42], n: [[98, 16], [102, 16]] },
+      toc:   { h: [[96, 52], [104, 52]], s: [108, 58], k: [133, 60], n: [[158, 60], [158, 64]] },
+      dopad: { h: [[84, 64], [116, 64]], s: [100, 80], k: [100, 104], n: [[95, 129], [105, 129]] }
+    };
+    var PRVKY = [
+      { p: "vzpor", t: "Výmyk do vzporu" }, { p: "kriz", t: "Kříž" }, { p: "vznos", t: "Vzpor vznesmo" },
+      { p: "stoj", t: "Stoj na rukou" }, { p: "toc", t: "Velký toč" }, { p: "dopad", t: "Seskok s obratem" }
+    ];
+    var WIDTH = [17, 15, 13, 12, 11, 10], PERIOD = [2.4, 2.2, 2.0, 1.8, 1.6, 1.5]; // pole (± stupně), perioda kmitu (s)
     var bars = function (x) {
       var d = "M" + x + " 14 V138 M" + (x + 16) + " 14 V138";
       for (var y = 22; y < 136; y += 9) d += " M" + x + " " + y + " H" + (x + 16);
       return ln(P, d, 0.9, ' opacity=".55"');
     };
-    function zoneX(z) { return f1(GX + z / 30 * GW); }
-    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gymnasta Alois Hudec na kruzích v sokolovně">' +
-      defs(P) + paper(P, false) +
-      bars(6) + bars(178) +
+    var wl = 'fill="none" stroke="' + INK + '" stroke-linecap="round" stroke-linejoin="round" filter="url(#' + P + 'w1)"';
+    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alois Hudec cvičí sestavu na kruzích v sokolovně">' +
+      defs(P) + paper(P, false) + bars(6) + bars(178) +
       ln(P, "M0 138 H200", 1) +
       shape(P, "M58 129 H142 L146 138 H54 Z", "#f1ece0", 1.3) + '<path d="M58 129 H142 L146 138 H54 Z" fill="url(#' + P + 'x)" opacity=".35"/>' +
       ln(P, "M30 3 H170", 2.2) +
-      // lana a kruhy
-      ln(P, "M72 3 L72 42 M128 3 L128 42", 1.2) +
-      '<circle cx="72" cy="48" r="6" fill="none" stroke="' + INK + '" stroke-width="2.2" filter="url(#' + P + 'w1)"/>' +
-      '<circle cx="128" cy="48" r="6" fill="none" stroke="' + INK + '" stroke-width="2.2" filter="url(#' + P + 'w1)"/>' +
-      // vodováha (výdrž a seskok) a ukazatel síly (výmyk)
-      '<g class="kr-gauge">' +
-        '<rect x="' + (GX - GW) + '" y="' + (GY - 4) + '" width="' + (GW * 2) + '" height="8" rx="4" fill="#fffdf7"/>' +
-        '<rect class="kr-green" x="' + zoneX(-ZONE) + '" y="' + (GY - 4) + '" width="' + f1(ZONE / 15 * GW) + '" height="8" fill="#8fd18f"/>' +
-        ln(P, "M" + (GX - GW) + " " + (GY - 4) + " H" + (GX + GW) + " V" + (GY + 4) + " H" + (GX - GW) + " Z", 1.1) +
-        '<g class="kr-needle"><path d="M0 -6 V6" stroke="#c2341e" stroke-width="1.8" stroke-linecap="round"/><circle cy="-6" r="1.6" fill="#c2341e"/></g>' +
+      '<path class="kr-ropes" ' + wl + ' stroke-width="1.2"/>' +
+      '<path class="kr-legs" ' + wl + ' stroke-width="3"/>' +
+      '<path class="kr-torso" fill="#fff8d6" stroke="' + INK + '" stroke-width="1.5" stroke-linejoin="round" filter="url(#' + P + 'w1)"/>' +
+      '<path class="kr-arms" ' + wl + ' stroke-width="2.6"/>' +
+      '<circle class="kr-head" r="6.6" fill="#fffdf7" stroke="' + INK + '" stroke-width="1.5" filter="url(#' + P + 'w1)"/>' +
+      '<circle class="kr-ring kr-r0" r="5.6" fill="none" stroke="' + INK + '" stroke-width="2.2" filter="url(#' + P + 'w1)"/>' +
+      '<circle class="kr-ring kr-r1" r="5.6" fill="none" stroke="' + INK + '" stroke-width="2.2" filter="url(#' + P + 'w1)"/>' +
+      '<g class="kr-name"><rect x="40" y="10" width="120" height="16" rx="8" fill="' + INK + '"/><text x="100" y="21.4" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="8.4" fill="#f5c400"></text></g>' +
+      // stupeň vítězů a zlatá medaile (Berlín 1936)
+      '<g class="kr-medal">' +
+        '<rect width="200" height="150" fill="#f7f4ec" opacity=".96"/>' +
+        '<text x="100" y="17" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="9" fill="' + INK + '">OLYMPIJSKÉ HRY BERLÍN 1936</text>' +
+        '<text x="100" y="27" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="6" fill="#554c40">Sportovní gymnastika, kruhy</text>' +
+        shape(P, "M76 104 H124 V140 H76 Z", "#f9f7f1", 1.5) + shape(P, "M36 116 H76 V140 H36 Z", "#f9f7f1", 1.4) + shape(P, "M124 122 H164 V140 H124 Z", "#f9f7f1", 1.4) +
+        '<text x="100" y="128" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="16" fill="' + INK + '">1</text>' +
+        '<text x="56" y="133" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="11" fill="' + INK + '">2</text>' +
+        '<text x="144" y="136" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="10" fill="' + INK + '">3</text>' +
+        // Hudec na stupni, ruce nahoře
+        ln(P, "M96 103 L98 86 M104 103 L102 86", 2.6) + shape(P, "M94 62 H106 L104 86 H96 Z", "#fff8d6", 1.4) +
+        '<text x="100" y="77" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="5" fill="' + INK + '">S</text>' +
+        ln(P, "M95 64 L86 46 M105 64 L114 46", 2.4) +
+        shape(P, "M100 46 C104 46 106.5 49 106.5 53 C106.5 57 104 60 100 60 C96 60 93.5 57 93.5 53 C93.5 49 96 46 100 46 Z", "#fffdf7", 1.4) +
+        ln(P, "M97.6 55.6 C99.2 57 100.8 57 102.4 55.6", 0.8) +
+        // medaile na stuze
+        '<g class="kr-gold">' + ln(P, "M96 62 L100 72 L104 62", 1.2, "", "#c2341e") +
+          '<circle cx="100" cy="75" r="4.6" fill="#f5c400" stroke="' + INK + '" stroke-width="1.1"/><text x="100" y="77" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="4.6" fill="' + INK + '">1</text></g>' +
+        '<text x="100" y="40" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="7.5" fill="#c2341e">ZLATO: ALOIS HUDEC</text>' +
+        // konfety
+        '<g class="kr-konf"><rect x="40" y="50" width="3" height="5" fill="#f5c400" transform="rotate(20 41 52)"/><rect x="152" y="58" width="3" height="5" fill="#c2341e" transform="rotate(-25 153 60)"/>' +
+          '<rect x="62" y="74" width="3" height="5" fill="#9fc3ee" transform="rotate(40 63 76)"/><rect x="136" y="82" width="3" height="5" fill="#f5c400" transform="rotate(-10 137 84)"/>' +
+          '<rect x="28" y="92" width="3" height="5" fill="#c2341e"/><rect x="170" y="96" width="3" height="5" fill="#9fc3ee" transform="rotate(30 171 98)"/></g>' +
       '</g>' +
-      '<g class="kr-power"><rect x="' + (GX - GW) + '" y="' + (GY - 4) + '" width="' + (GW * 2) + '" height="8" rx="4" fill="#fffdf7"/>' +
-        '<rect class="kr-pfill" x="' + (GX - GW) + '" y="' + (GY - 4) + '" width="0" height="8" rx="4" fill="#f5c400"/>' +
-        ln(P, "M" + (GX - GW) + " " + (GY - 4) + " H" + (GX + GW) + " V" + (GY + 4) + " H" + (GX - GW) + " Z", 1.1) +
-        '<text x="' + GX + '" y="' + (GY + 2) + '" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5" fill="' + INK + '">SÍLA</text></g>' +
-      // ruce od kruhů k ramenům (mění se, jak se Hudec vytahuje)
-      '<path class="kr-arms" d="" fill="none" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round" filter="url(#' + P + 'w1)"/>' +
-      '<g class="kr-body"><g class="kr-tilt">' +
-        shape(P, "M93.5 52 H106.5 L104.5 81 H95.5 Z", "#fff8d6", 1.6) + '<path d="M93.5 52 H106.5 L104.5 81 H95.5 Z" fill="url(#' + P + 'yel)" opacity=".7"/>' +
-        ln(P, "M96 81 C96.5 92 97.5 104 98 113 M104 81 C103.5 92 102.5 104 102 113 M100 84 V112", 1.6) +
-        ln(P, "M98 113 L99.4 119 M102 113 L100.6 119", 1.6) +
-        shape(P, "M100 34.5 C104 34.5 106.5 37.5 106.5 41.5 C106.5 45.5 104 48.5 100 48.5 C96 48.5 93.5 45.5 93.5 41.5 C93.5 37.5 96 34.5 100 34.5 Z", "#fffdf7", 1.5) +
-        ln(P, "M94 39 C95 35 99 33.5 103 34.5 C105 35 106 37 106.4 39", 1.8) +
-        ln(P, "M98 44.5 C99.3 45.4 100.7 45.4 102 44.5", 0.8) +
-        '<text x="100" y="69" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="5" fill="' + INK + '">S</text>' +
-        '<g class="kr-sweat" fill="#9fc3ee" stroke="' + INK + '" stroke-width=".5"><path d="M110 36 C112 39 112 41 110 41 C108 41 108 39 110 36 Z"/><path d="M89 38 C91 41 91 43 89 43 C87 43 87 41 89 38 Z"/></g>' +
-        // ruce nahoře po seskoku
-        '<g class="kr-up">' + ln(P, "M94 53 L86 36 M106 53 L114 36", 2.4) + '</g>' +
-      '</g></g>' +
-      // známky rozhodčích
-      '<g class="kr-judges">' + [0, 1, 2].map(function (k) {
-        var x = 34 + k * 22 + (k === 2 ? 88 : 0) - (k === 1 ? 0 : 0);
-        x = [36, 150, 164][k];
-        return '<g transform="translate(' + x + ' 96)">' + shape(P, "M-8 -6 H8 V6 H-8 Z", "#fffdf7", 1) + ln(P, "M0 6 V14", 1) +
-          '<text class="kr-mark" y="2.2" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="6.4" fill="' + INK + '"></text></g>';
-      }).join("") + '</g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, dots: NEED, tip: "Rychle klepej: výmyk!", label: "Kruhy: výmyk klepáním, výdrž posouváním prstu, seskok puštěním prstu" });
+    var g = shell(b, hotovo, { svg: svg, dots: PRVKY.length, tip: "Klepni, až bude ručička v zeleném", label: "Kruhy: klepni, když je ručička tachometru v zeleném poli" });
     g.onDone(onDone);
-    var s = g.svg, st = g.stage, body = s.querySelector(".kr-body"), tilt = s.querySelector(".kr-tilt"), arms = s.querySelector(".kr-arms");
-    var needle = s.querySelector(".kr-needle"), pfill = s.querySelector(".kr-pfill");
-    // phase: 1 výmyk, 2 výdrž, 3 seskok, 4 hotovo
-    var phase = hotovo ? 4 : 1, power = 0, dy = hotovo ? 0 : HANG, ang = 0, bal = 0, drift = 0, ctrl = 0, fx0 = 0, held = false;
-    var still = hotovo ? NEED : 0, lastSec = 0, holdT = 0, last = 0, raf = 0, osc = 0, landY = 0, armed = false;
-    function draw() {
-      body.setAttribute("transform", "translate(0 " + f1(dy + landY) + ")");
-      tilt.setAttribute("transform", "rotate(" + f1(ang) + " 100 53)");
-      arms.setAttribute("d", phase === 4 && landY ? "" : "M73 51 L94 " + f1(53 + dy) + " M127 51 L106 " + f1(53 + dy));
-      pfill.setAttribute("width", f1(GW * 2 * Math.min(1, power / 100)));
-      var nv = phase === 3 ? osc : bal + ctrl;
-      needle.setAttribute("transform", "translate(" + f1(GX + Math.max(-30, Math.min(30, nv)) / 30 * GW) + " " + GY + ")");
-      s.classList.toggle("p1", phase === 1);
-      s.classList.toggle("calm", phase === 2 && Math.abs(bal + ctrl) < ZONE);
-      s.classList.toggle("wobble", phase === 2 && Math.abs(bal + ctrl) > 14);
+    var s = g.svg, st = g.stage;
+    // tachometr pod obrázkem
+    var R = 80, CX = 100, CY = 92;
+    function arcPt(a, r) { var t = (a - 90) * Math.PI / 180; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
+    function arc(a0, a1, r) { var p0 = arcPt(a0, r), p1 = arcPt(a1, r); return "M" + f1(p0[0]) + " " + f1(p0[1]) + " A" + r + " " + r + " 0 0 1 " + f1(p1[0]) + " " + f1(p1[1]); }
+    var ticks = ""; for (var a = -90; a <= 90; a += 15) { var t0 = arcPt(a, R - 6), t1 = arcPt(a, R + 2); ticks += "M" + f1(t0[0]) + " " + f1(t0[1]) + " L" + f1(t1[0]) + " " + f1(t1[1]) + " "; }
+    var tacho = E("div", { class: "kr-tacho", html:
+      '<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<path d="' + arc(-90, 90, R) + '" fill="none" stroke="#e9e5db" stroke-width="16"/>' +
+        '<path class="kr-zone" d="" fill="none" stroke="#5cb85c" stroke-width="16"/>' +
+        '<path d="' + arc(-90, 90, R + 8) + '" fill="none" stroke="' + INK + '" stroke-width="1.6"/>' +
+        '<path d="' + arc(-90, 90, R - 8) + '" fill="none" stroke="' + INK + '" stroke-width="1"/>' +
+        '<path d="' + ticks + '" stroke="' + INK + '" stroke-width="1.2"/>' +
+        '<g class="kr-needle"><path d="M' + CX + ' ' + CY + ' L' + CX + ' ' + (CY - R - 4) + '" stroke="#c2341e" stroke-width="3.2" stroke-linecap="round"/></g>' +
+        '<circle cx="' + CX + '" cy="' + CY + '" r="6" fill="' + INK + '"/>' +
+      '</svg>' });
+    g.stage.insertAdjacentElement("afterend", tacho);
+    var zoneEl = tacho.querySelector(".kr-zone"), needle = tacho.querySelector(".kr-needle");
+    var nameEl = s.querySelector(".kr-name"), nameT = nameEl.querySelector("text");
+
+    function lerp(a, c, t) { return a + (c - a) * t; }
+    function mix(p, q, t) {
+      function pt2(a, c) { return [lerp(a[0], c[0], t), lerp(a[1], c[1], t)]; }
+      return { h: [pt2(p.h[0], q.h[0]), pt2(p.h[1], q.h[1])], s: pt2(p.s, q.s), k: pt2(p.k, q.k), n: [pt2(p.n[0], q.n[0]), pt2(p.n[1], q.n[1])] };
+    }
+    var cur = POSE[hotovo ? "dopad" : "vis"];
+    function M(p) { return f1(p[0]) + " " + f1(p[1]); }
+    function draw(p) {
+      var dx = p.s[0] - p.k[0], dy = p.s[1] - p.k[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      var head = [p.s[0] + ux * 8.5, p.s[1] + uy * 8.5];
+      var free = cur === POSE.dopad;
+      // ruce drží kruhy, po seskoku kruhy visí volně
+      var ring = free ? [[72, 48], [128, 48]] : p.h;
+      s.querySelector(".kr-ropes").setAttribute("d", "M72 3 L" + M([ring[0][0], ring[0][1] - 5.6]) + " M128 3 L" + M([ring[1][0], ring[1][1] - 5.6]));
+      s.querySelector(".kr-r0").setAttribute("cx", f1(ring[0][0])); s.querySelector(".kr-r0").setAttribute("cy", f1(ring[0][1]));
+      s.querySelector(".kr-r1").setAttribute("cx", f1(ring[1][0])); s.querySelector(".kr-r1").setAttribute("cy", f1(ring[1][1]));
+      s.querySelector(".kr-arms").setAttribute("d", "M" + M(p.h[0]) + " L" + M(p.s) + " L" + M(p.h[1]));
+      // trup jako lichoběžník kolem osy ramena–boky
+      var nx = -uy, ny = ux;
+      var tor = [[p.s[0] + nx * 6.5, p.s[1] + ny * 6.5], [p.s[0] - nx * 6.5, p.s[1] - ny * 6.5], [p.k[0] - nx * 4.5, p.k[1] - ny * 4.5], [p.k[0] + nx * 4.5, p.k[1] + ny * 4.5]];
+      s.querySelector(".kr-torso").setAttribute("d", "M" + tor.map(M).join(" L") + " Z");
+      s.querySelector(".kr-legs").setAttribute("d", "M" + M(p.k) + " L" + M(p.n[0]) + " M" + M(p.k) + " L" + M(p.n[1]));
+      var hd = s.querySelector(".kr-head"); hd.setAttribute("cx", f1(head[0])); hd.setAttribute("cy", f1(head[1]));
+    }
+    var anim = 0;
+    function poseTo(name, ms, cb) {
+      var from = cur, to = POSE[name], t0 = performance.now(); cur = to;
+      cancelAnimationFrame(anim);
+      (function stp() {
+        var t = Math.min(1, (performance.now() - t0) / (reduced ? 1 : ms)), e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        draw(mix(from, to, e));
+        if (t < 1) anim = requestAnimationFrame(stp); else if (cb) cb();
+      })();
+    }
+    draw(cur);
+    if (hotovo) { s.classList.add("medal", "all"); tacho.hidden = true; g.set(PRVKY.length); return g.box; }
+
+    var k = 0, zc = 0, ang = -90, ph = 0, last = 0, raf = 0, busy = false, misses = 0;
+    function newZone() {
+      var w = WIDTH[k];
+      do { zc = Math.round(-80 + w + Math.random() * (160 - 2 * w)); } while (Math.abs(zc - ang) < 30);
+      zoneEl.setAttribute("d", arc(zc - w, zc + w, R));
     }
     function loop(ts) {
-      if (!g.box.isConnected || phase === 4) { raf = 0; return; }
+      if (!g.box.isConnected || g.finished) return;
       var dt = Math.min(0.05, (ts - last) / 1000); last = ts;
-      if (phase === 1) {
-        power = Math.max(0, power - 18 * dt);
-        dy = HANG * (1 - power / 100);
-      } else if (phase === 2) {
-        if (held && armed) {
-          holdT += dt;
-          // únava: čím déle, tím silnější třes
-          var tired = 1 + holdT / 3;
-          drift += (Math.random() - 0.5) * 60 * tired * dt;
-          drift *= 1 - 1.2 * dt;
-          bal += drift * dt * 6 + (bal * 0.25) * dt;
-          bal = Math.max(-22, Math.min(22, bal)); // prstem (±30) jde vždycky vyrovnat
-          var n = bal + ctrl;
-          ang = n * 0.7;
-          if (Math.abs(n) < ZONE) {
-            still += dt;
-            var sec = Math.floor(still);
-            if (sec > lastSec) { lastSec = sec; SFX.tick(); g.set(Math.min(sec, NEED)); }
-            g.say("Drží! " + Math.min(NEED, Math.floor(still)) + " z " + NEED + " s");
-          } else g.say(n > 0 ? "Ujíždí doprava: posuň prst doleva." : "Ujíždí doleva: posuň prst doprava.");
-          if (still >= NEED) {
-            phase = 3; osc = 0; g.set(NEED); ang = 0;
-            SFX.pop(); vibrate([20, 40, 20]);
-            g.say("Výdrž je v kapse! Teď seskok: pusť prst, až bude ručička v zeleném.");
-          }
-        }
-      } else if (phase === 3) {
-        osc = Math.sin(ts / 1000 * Math.PI * 1.6) * 28;
-        ang *= 0.9;
-      }
-      draw();
+      if (!busy) ph += dt * 2 * Math.PI / PERIOD[k];
+      ang = Math.sin(ph) * 88;
+      needle.setAttribute("transform", "rotate(" + f1(ang) + " " + CX + " " + CY + ")");
+      tacho.classList.toggle("in", Math.abs(ang - zc) <= WIDTH[k]);
       raf = requestAnimationFrame(loop);
     }
-    function cross() {
-      // výdrž začne až dalším položením prstu (poslední klepnutí výmyku se nepočítá jako puštění)
-      phase = 2; power = 100; dy = 0; bal = 0; drift = 0; holdT = 0; ctrl = 0; armed = false;
-      SFX.pop(); vibrate(30);
-      g.say("Kříž! Polož prst na displej a nech ho tam. Posouváním doleva a doprava drž ručičku v zeleném.");
-      g.tip("Polož prst a drž");
+    function showName(t) { nameT.textContent = t; restart(nameEl, "on"); }
+    function hitTap(e) {
+      if (e) e.preventDefault();
+      if (g.finished || busy) return;
+      ac(); g.hideTip();
+      if (Math.abs(ang - zc) <= WIDTH[k]) {
+        var pr = PRVKY[k]; busy = true; misses = 0;
+        tone({ f: 660 + k * 60, dur: 0.12, gain: 0.12, type: "triangle" }); vibrate(30);
+        showName(pr.t); g.say(pr.t + "!");
+        var last6 = k === PRVKY.length - 1;
+        poseTo(pr.p, last6 ? 900 : 600, function () {
+          k++; g.set(k);
+          if (last6) { SFX.thump(); setTimeout(medal, 900); return; }
+          busy = false; newZone();
+        });
+      } else {
+        misses++;
+        g.say(misses >= 3 ? "Vedle. Sleduj ručičku a klepni, až vjede do zeleného, ne až když tam je." : "Vedle! Hudec zaváhal.");
+        vibrate([10, 30, 10]); restart(tacho, "miss"); noise({ f: 300, q: 0.7, dur: 0.15, gain: 0.15 });
+      }
     }
-    function run() { if (!raf && phase < 4) { last = performance.now(); raf = requestAnimationFrame(loop); } }
-    function land() {
-      var off = Math.abs(osc), marks, msg;
-      if (off < ZONE) { marks = ["9,9", "10", "9,9"]; msg = "Telemark jako z učebnice! Sokolovna šílí."; }
-      else if (off < 14) { marks = ["9,5", "9,6", "9,4"]; msg = "Malý krůček při dopadu. Pořád krása."; }
-      else { marks = ["8,5", "9,0", "8,8"]; msg = "Sedl si na žíněnku, ale s úsměvem. Publikum tleská stejně."; }
-      phase = 4; ang = 0; landY = 10; draw();
-      s.classList.add("landed");
-      Array.prototype.forEach.call(s.querySelectorAll(".kr-mark"), function (t, k) { t.textContent = marks[k]; });
-      SFX.thump(); vibrate([30, 60, 30]);
-      g.say(msg);
-      setTimeout(function () { s.classList.add("all"); g.finish(); }, 1200);
+    function medal() {
+      tacho.hidden = true; g.say("Olympijské hry v Berlíně 1936: Alois Hudec vyhrál kruhy a získal zlatou medaili!");
+      s.classList.add("medal"); SFX.bell();
+      setTimeout(function () { s.classList.add("all"); g.finish(); }, 1600);
     }
-    st.addEventListener("pointerdown", function (e) {
-      if (g.finished || phase === 4) return;
-      e.preventDefault(); ac(); g.hideTip();
-      try { st.setPointerCapture(e.pointerId); } catch (x) {}
-      held = true; fx0 = pt(s, e).x - ctrl / 0.9;
-      run();
-      if (phase === 1) {
-        power = Math.min(100, power + 12); vibrate(8);
-        tone({ f: 220 + power * 3, dur: 0.06, gain: 0.08, type: "triangle" });
-        if (power >= 100) cross(); else g.say("Výmyk! Klepej rychleji.");
-      } else if (phase === 2 && !armed) { armed = true; ctrl = 0; fx0 = pt(s, e).x; g.say(""); }
-    });
-    st.addEventListener("pointermove", function (e) {
-      if (!held || phase !== 2) return;
-      ctrl = (pt(s, e).x - fx0) * 0.9;
-      ctrl = Math.max(-30, Math.min(30, ctrl));
-    });
-    function up() {
-      if (!held) return;
-      held = false;
-      if (phase === 2 && armed) {
-        // pustil prst: Hudec povolí a visí, začíná se výmykem (odvisené vteřiny zůstávají)
-        phase = 1; power = 40; ctrl = 0; ang = 0;
-        g.say("Pustil ses a Hudec povolil. Vytáhni ho znovu klepáním a pak drž prst na displeji.");
-        vibrate([10, 30, 10]);
-      } else if (phase === 3) land();
-    }
-    st.addEventListener("pointerup", up);
-    st.addEventListener("pointercancel", up);
-    if (!hotovo) st.classList.add("hr-draw");
-    // bez dotyku: tlačítko odcvičí celou sestavu
-    var kb = E("button", { class: "hr-sr", text: "Odcvičit sestavu na kruzích" });
-    kb.addEventListener("click", function () { if (g.finished) return; still = NEED; dy = 0; osc = 0; phase = 3; land(); });
-    if (hotovo) { s.classList.add("all", "landed"); landY = 10; Array.prototype.forEach.call(s.querySelectorAll(".kr-mark"), function (t, k) { t.textContent = ["9,9", "10", "9,9"][k]; }); }
-    else g.box.appendChild(kb);
-    g.set(Math.floor(still));
-    draw();
+    st.addEventListener("pointerdown", hitTap);
+    tacho.addEventListener("pointerdown", hitTap);
+    g.box.addEventListener("keydown", function (e) { if ((e.key === " " || e.key === "Enter") && e.target === kb) hitTap(e); });
+    var kb = E("button", { class: "hr-sr", text: "Klepnout (ručička v zeleném)" });
+    kb.addEventListener("click", function () { if (!busy && !g.finished) { ang = zc; hitTap(); } });
+    g.box.appendChild(kb);
+    st.classList.add("hr-draw");
+    newZone();
+    last = performance.now(); raf = requestAnimationFrame(loop);
     return g.box;
   };
 
   // =====================================================================
-  // 8) Úřad: kočárky do jeslí, nová hranice obce, razítko a podpis
+  // 8) Úřad: nekonečná fronta do jeslí, hraniční kameny, razítko a podpis
   // =====================================================================
-  // Krok 1: kočárky se táhnou (nebo klepne na jesle) do Račic nebo Pístovic, obojí jesle se zaplní.
-  // Krok 2: prstem obtáhne jednu hranici kolem obou obcí. Krok 3: orazítkuje a podepíše výnos.
+  // Krok 1: dítě se veze na jeřábu, klepnutím ho pustíš na hromadu na střeše jeslí. Přesně = dvojčata (+2).
+  //         Až je hromada dost vysoká, jesle prasknou: jedna obec nestačí.
+  // Krok 2: na každý kolík nové hranice klepni třikrát, kámen se zatluče a hranice se protáhne.
+  // Krok 3: orazítkuje a podepíše výnos.
   HRY.vynos = function (b, hotovo, onDone) {
-    var P = "vy-", NS = "http://www.w3.org/2000/svg", SIGN = 70;
+    var P = "vy-", SIGN = 70;
     var ST = { x: 74, y: 112 };
     var VES = [{ x: 62, y: 66, name: "Račice", n: 8 }, { x: 140, y: 92, name: "Pístovice", n: 7 }];
-    var kocarek = function (twins) {
-      var body = "M-10 -6 C-10 3 10 3 10 -6 Z", hood = "M-10 -6 C-10 -15 -1 -16 0 -15 V-6 Z";
-      var one = function (dx) {
-        return '<g transform="translate(' + dx + ' 0)">' + shape(P, body, "#fffdf7", 1.3) + shape(P, hood, "#e9e5db", 1.2) + '<path d="' + hood + '" fill="url(#' + P + 'x)" opacity=".5"/>' +
-          '<circle cx="-6" cy="4.5" r="2.8" fill="#fffdf7" stroke="' + INK + '" stroke-width="1.1"/><circle cx="6" cy="4.5" r="2.8" fill="#fffdf7" stroke="' + INK + '" stroke-width="1.1"/></g>';
-      };
-      return (twins ? one(-10) + one(10) + ln(P, "M20 -6 L23 -11 H26", 1.2) : one(0) + ln(P, "M10 -6 L13 -11 H16", 1.2));
-    };
-    // ---- krok 1: hlavolam „Pořadník MNV“ ----
-    // Budovy (řádky): jesle a školka v každé vsi, místa = okna. v = ves (0 Račice, 1 Pístovice).
-    var BUD = [{ name: "Jesle", v: 0, cap: 2, j: true }, { name: "Školka", v: 0, cap: 3, j: false },
-               { name: "Jesle", v: 1, cap: 2, j: true }, { name: "Školka", v: 1, cap: 1, j: false }];
-    var VCOL = ["#f5c400", "#9fc3ee"], VNAME = ["Račice", "Pístovice"];
-    // Děti: f = rodina (písmeno na kartičce), k = kočárek (jinak odrážedlo), v = ves, tw = dvojčata.
-    // S pravidlem 5 (každý do své vsi) to vyřešit nejde: račických kočárků je víc než míst v račických jeslích.
-    // Bez něj má hlavolam právě jedno řešení (ověřeno vyzkoušením všech rozložení): SOL = řádek pro každé dítě.
-    var KIDS = [{ f: "N", k: true, v: 0, tw: true }, { f: "N", k: true, v: 0, tw: true }, { f: "D", k: true, v: 0 }, { f: "S", k: true, v: 1 },
-                { f: "N", k: false, v: 0 }, { f: "D", k: false, v: 0 }, { f: "S", k: false, v: 1 }, { f: "V", k: false, v: 1 }];
-    var SOL = [2, 2, 0, 0, 3, 1, 1, 1], HOME = [4, 0, 6, 2, 7, 1, 5, 3]; // HOME = pořadí v čekárně
-    var ROWY = [16, 42, 68, 94], SLOTX = 98, SLOTW = 25, WAITY = 128;
-    var RULES = [
-      "Kočárek patří do jeslí, odrážedlo do školky.",
-      "Dvojčata (puntíky) jsou pod jednou střechou.",
-      "Sourozenci (stejné písmeno) chodí ve stejné vsi.",
-      "Novákovi (N) a Dvořákovi (D) se hádají přes plot. Jejich děti nesmí pod jednu střechu.",
-      "Každé dítě chodí ve své vsi (barva peřinky)."
-    ];
-    function kidCard(c) {
-      var col = VCOL[c.v], h = '<rect x="-11" y="-11" width="22" height="22" rx="3" fill="' + col + '" opacity=".55"/>';
-      if (c.tw) h += '<g fill="' + INK + '" opacity=".35"><circle cx="-6" cy="7" r="1"/><circle cx="-2" cy="8.5" r="1"/><circle cx="3" cy="7.5" r="1"/><circle cx="7" cy="8.5" r="1"/><circle cx="-8" cy="3" r="1"/></g>';
-      h += ln(P, "M-11 -8 C-11 -10 -10 -11 -8 -11 H8 C10 -11 11 -10 11 -8 V8 C11 10 10 11 8 11 H-8 C-10 11 -11 10 -11 8 Z", 1.1);
-      h += c.k ? '<g transform="translate(2 2) scale(.5)">' + kocarek(false) + '</g>'
-               : '<g transform="translate(2 1)">' + ln(P, "M-6 4 H3 L5 -5 M3 -5 H7 M-4 1 H1", 1.2) + '<circle cx="-6" cy="5" r="2.6" fill="#fffdf7" stroke="' + INK + '" stroke-width="1"/><circle cx="5" cy="5" r="2.6" fill="#fffdf7" stroke="' + INK + '" stroke-width="1"/></g>';
-      h += '<text x="-9" y="-3.5" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="7.5" fill="' + INK + '">' + c.f + '</text>';
-      return h;
+    // ---- krok 1: hromada dětí ----
+    var GOAL = 12, ROOF = 104, BH = 9, HANG = 30, PERFECT = 3.5, GOOD = 15, CAP = 6;
+    function baby(i) {
+      var col = i % 2 ? "#9fc3ee" : "#f5c400", fl = (i * 7) % 3 === 0 ? -1 : 1;
+      return '<g transform="scale(' + fl + ' 1)"><rect x="-14" y="-4.5" width="28" height="9" rx="4.5" fill="#fffdf7" stroke="' + INK + '" stroke-width="1.2"/>' +
+        '<path d="M-3 -4.2 V4.2" stroke="' + col + '" stroke-width="2.6"/><path d="M-9 -4.2 V4.2" stroke="' + col + '" stroke-width="1.1" opacity=".7"/>' +
+        '<circle cx="9.6" cy="0" r="4.3" fill="#fde7d6" stroke="' + INK + '" stroke-width="1"/>' +
+        '<path d="M8.2 -.7 h.1 M11 -.7 h.1" stroke="' + INK + '" stroke-width="1.2" stroke-linecap="round"/>' +
+        '<path d="M8.8 1.6 Q9.6 2.4 10.4 1.6" fill="none" stroke="' + INK + '" stroke-width=".6"/></g>';
     }
-    function board() {
-      var h = paper(P);
-      BUD.forEach(function (bd, r) {
-        var y = ROWY[r];
-        h += '<rect class="vy-row" data-r="' + r + '" x="2" y="' + (y - 12.5) + '" width="196" height="25" rx="3" fill="' + VCOL[bd.v] + '" opacity=".14"/>' +
-          '<rect x="2" y="' + (y - 12.5) + '" width="3" height="25" fill="' + VCOL[bd.v] + '"/>' +
-          shape(P, "M9 " + (y + 6) + " V" + (y - 2) + " L15 " + (y - 8) + " L21 " + (y - 2) + " V" + (y + 6) + " Z", "#fffdf7", 0.9) +
-          '<text x="25" y="' + (y - 1) + '" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="6.4" fill="' + INK + '">' + bd.name.toUpperCase() + '</text>' +
-          '<text x="25" y="' + (y + 6.5) + '" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5" fill="#554c40">' + VNAME[bd.v] + ' · ' + bd.cap + (bd.cap === 1 ? " místo" : " místa") + '</text>';
-        for (var i = 0; i < bd.cap; i++) h += '<rect x="' + (SLOTX + i * SLOTW - 11) + '" y="' + (y - 11) + '" width="22" height="22" rx="3" fill="#fffdf7" stroke="#8a847a" stroke-width=".8" stroke-dasharray="2 1.6"/>';
+    function mom(x, o, col) {
+      return '<g opacity="' + o + '"><circle cx="' + x + '" cy="114" r="4.4" fill="#fde7d6" stroke="' + INK + '" stroke-width="1"/>' +
+        '<path d="M' + (x - 4.5) + ' 112 C' + (x - 4.5) + ' 107 ' + (x + 4.5) + ' 107 ' + (x + 4.5) + ' 112 C' + (x + 2) + ' 110 ' + (x - 2) + ' 110 ' + (x - 4.5) + ' 112Z" fill="#8a5a3a"/>' +
+        shape(P, "M" + (x - 6) + " 136 C" + (x - 6) + " 122 " + (x + 6) + " 122 " + (x + 6) + " 136 Z", col, 1) +
+        shape(P, "M" + (x + 8) + " 128 C" + (x + 8) + " 134 " + (x + 20) + " 134 " + (x + 20) + " 128 Z", "#fffdf7", 1) +
+        shape(P, "M" + (x + 8) + " 128 C" + (x + 8) + " 122 " + (x + 13) + " 121 " + (x + 14) + " 122 V128 Z", "#e9e5db", 0.9) +
+        '<circle cx="' + (x + 11) + '" cy="135.5" r="1.8" fill="#fffdf7" stroke="' + INK + '" stroke-width=".8"/><circle cx="' + (x + 17) + '" cy="135.5" r="1.8" fill="#fffdf7" stroke="' + INK + '" stroke-width=".8"/></g>';
+    }
+    function jesle() {
+      var w = "";
+      [[61, 117], [107, 117]].forEach(function (p, k) {
+        w += '<rect x="' + p[0] + '" y="' + p[1] + '" width="12" height="10" fill="#fffdf7" stroke="' + INK + '" stroke-width="1"/>' +
+          '<g class="vy-peek vy-peek' + k + '" fill="#fde7d6" stroke="' + INK + '" stroke-width=".7"><circle cx="' + (p[0] + 4) + '" cy="' + (p[1] + 5) + '" r="2.4"/><circle cx="' + (p[0] + 8.5) + '" cy="' + (p[1] + 6) + '" r="2.4"/></g>';
       });
-      h += ln(P, "M4 110 H196", 0.7, ' opacity=".4"') +
-        '<text x="100" y="116" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5" fill="#554c40">ČEKÁRNA MNV</text>' +
-        '<g class="vy-kids">' + KIDS.map(function (c, i) { return '<g class="vy-kid" data-i="' + i + '">' + kidCard(c) + '</g>'; }).join("") + '</g>' +
-        '<g class="vy-rej" transform="translate(100 62) rotate(-12)"><rect x="-52" y="-12" width="104" height="24" rx="3" fill="none" stroke="#c2341e" stroke-width="2.2"/>' +
-          '<text y="6" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="15" letter-spacing="2" fill="#c2341e">ZAMÍTNUTO</text></g>';
-      return h;
+      return '<g class="vy-jesle">' +
+        shape(P, "M54 104 H126 V138 H54 Z", "#efe8d8", 1.4) + '<rect x="54" y="104" width="72" height="34" fill="url(#' + P + 'x)" opacity=".2"/>' +
+        ln(P, "M50 104 H130", 2.4) +
+        '<text x="90" y="113" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="6" fill="' + INK + '">JESLE RAČICE</text>' + w +
+        shape(P, "M84 120 H96 V138 H84 Z", "#a8643a", 1) +
+        '<path class="vy-crack vy-crack1" d="M57 106 l4 6 l-3 4 l3 5" fill="none" stroke="' + INK + '" stroke-width=".8"/>' +
+        '<path class="vy-crack vy-crack2" d="M124 107 l-4 5 l3 5 l-4 6 M88 105 l2 5 l-2 4" fill="none" stroke="' + INK + '" stroke-width=".8"/>' +
+      '</g>' +
+      '<g class="vy-ruin">' + shape(P, "M54 138 L57 116 L66 120 L70 108 L82 114 L92 104 L102 112 L112 106 L118 118 L126 114 L126 138 Z", "#efe8d8", 1.4) +
+        '<text x="88" y="128" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="5.4" fill="' + INK + '" transform="rotate(-6 88 128)">JESLE RAČ…</text></g>';
     }
+    var scene1 = '<g class="vy-sc vy-sc1"><rect width="200" height="150" fill="#f7f4ec"/><rect width="200" height="150" filter="url(#' + P + 'paper)"/>' +
+      '<g class="vy-world">' +
+        '<rect x="-200" y="138" width="600" height="200" fill="#d9cfbd"/>' + ln(P, "M-200 138 H400", 1.4) +
+        shape(P, "M4 138 C6 128 30 128 34 138 Z", "#f5c400", 1) + ln(P, "M10 132 L14 128 M20 131 L22 127 M27 132 L30 129", 0.6) +
+        '<g class="vy-queue">' + mom(142, 1, "#9fc3ee") + mom(166, 0.6, "#f5c400") + mom(190, 0.35, "#e9e5db") + mom(214, 0.2, "#9fc3ee") + '</g>' +
+        jesle() +
+        '<g class="vy-pile"></g>' +
+      '</g>' +
+      // jeřáb MNV (drží se nahoře, kamera s ním nehýbe)
+      '<g class="vy-crane">' + shape(P, "M0 2 H200 V7 H0 Z", "#e9e5db", 1.2) +
+        ln(P, "M6 7 L12 2 L18 7 L24 2 L30 7 L36 2 L42 7 L48 2 L54 7 L60 2 L66 7 L72 2 L78 7 L84 2 L90 7 L96 2 L102 7 L108 2 L114 7 L120 2 L126 7 L132 2 L138 7 L144 2 L150 7 L156 2 L162 7 L168 2 L174 7 L180 2 L186 7 L192 2 L198 7", 0.5, ' opacity=".6"') +
+        '<g class="vy-trolley"><rect x="-6" y="5" width="12" height="5" rx="1" fill="#8a847a" stroke="' + INK + '" stroke-width="1"/>' +
+          '<path class="vy-rope" d="M0 10 V' + (HANG - 5) + '" stroke="' + INK + '" stroke-width=".9"/>' +
+          '<path class="vy-hook" d="M-3 ' + (HANG - 7) + ' Q0 ' + (HANG - 3) + ' 3 ' + (HANG - 7) + '" fill="none" stroke="' + INK + '" stroke-width="1"/>' +
+          '<g class="vy-hang" transform="translate(0 ' + HANG + ')"></g>' +
+        '</g>' +
+      '</g>' +
+      '<g class="vy-fall"></g>' +
+      '<text class="vy-pop" x="0" y="0" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="8" fill="#1f3f8f"></text>' +
+      '<g class="vy-boom"><text x="100" y="52" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="15" fill="#c2341e">KŘÁÁÁCH!</text>' +
+        '<g transform="rotate(-6 100 19)"><rect x="40" y="8" width="120" height="18" rx="2" fill="#fffdf7" fill-opacity=".8" stroke="#c2341e" stroke-width="2"/>' +
+        '<text x="100" y="22.6" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="8.4" letter-spacing=".6" fill="#c2341e" dy="-2">KAPACITA PŘEKROČENA</text></g></g>' +
+    '</g>';
+
+    // ---- krok 2: hraniční kameny ----
+    var STONES = [[22, 62], [58, 34], [112, 46], [170, 66], [176, 108], [118, 124], [48, 104]], HITS = 3, SINK = 3;
     function houses(v) {
       var r = rng(v.n * 97), h = "";
       for (var i = 0; i < v.n; i++) {
@@ -1260,6 +1274,38 @@
       }
       return h;
     }
+    function stones() {
+      return STONES.map(function (s, i) {
+        return '<g class="vy-st" data-i="' + i + '" transform="translate(' + s[0] + ' ' + s[1] + ')">' +
+          '<g class="vy-flag">' + ln(P, "M0 0 V-12", 1) + '<path d="M0 -12 L6 -10 L0 -8 Z" fill="#c2341e"/></g>' +
+          '<ellipse class="vy-ring" cx="0" cy="-3" rx="11" ry="11" fill="none" stroke="#f5c400" stroke-width="2.2"/>' +
+          '<g clip-path="url(#' + P + 'kc)"><g class="vy-stone">' +
+            shape(P, "M-4.5 0 L-3.8 -14 Q0 -16.5 3.8 -14 L4.5 0 Z", "#d6d1c6", 1.1) +
+            '<text x="0" y="-10.6" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="3.4" fill="' + INK + '">R·P</text>' +
+          '</g></g>' +
+          '<ellipse cx="0" cy="0" rx="6" ry="1.8" fill="#a8643a" opacity=".45"/>' +
+          '<g class="vy-hits"><circle cx="-5" cy="6" r="1.6"/><circle cx="0" cy="6" r="1.6"/><circle cx="5" cy="6" r="1.6"/></g>' +
+        '</g>';
+      }).join("");
+    }
+    var scene2 = '<g class="vy-sc vy-sc2"><rect width="200" height="150" fill="#f3eddc"/><rect width="200" height="150" filter="url(#' + P + 'paper)"/>' +
+      '<text x="8" y="12" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="6.5" fill="' + INK + '">Plánek obcí · ONV Vyškov</text>' +
+      ln(P, "M0 112 C40 104 70 90 100 82 C130 76 170 70 200 74", 1.2, ' opacity=".7"') + // silnice
+      ln(P, "M20 150 C50 130 90 128 120 118 C150 108 180 112 200 104", 2.4, "", "#9fc3ee") + // potok
+      '<path class="vy-new-fill" d="M' + STONES.map(function (s) { return s.join(" "); }).join(" L") + ' Z" fill="url(#' + P + 'yel)" opacity=".55"/>' +
+      VES.map(function (v) {
+        return '<g class="vy-old"><ellipse cx="' + v.x + '" cy="' + v.y + '" rx="27" ry="19" fill="none" stroke="#8a847a" stroke-width="1" stroke-dasharray="3 2"/></g>' +
+          houses(v) +
+          '<text x="' + v.x + '" y="' + (v.y - 22) + '" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="6" fill="' + INK + '">' + v.name + '</text>';
+      }).join("") +
+      '<path class="vy-line" d="" fill="none" stroke="#c2341e" stroke-width="1.8" stroke-dasharray="4 2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      stones() +
+      '<g class="vy-ham-pos"><g class="vy-ham">' +
+        shape(P, "M-9 -1 H0 V1 H-9 Z", "#a8643a", 0.8) + shape(P, "M-16 -4 H-8 V3 H-16 Z", "#8a847a", 1) +
+      '</g></g>' +
+      '<text class="vy-bum" x="0" y="0" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="7" fill="' + INK + '">BUM!</text>' +
+      '<text class="vy-new-name" x="100" y="140" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="8" fill="#c2341e">RAČICE-PÍSTOVICE</text>' +
+    '</g>';
     // výnos (jedno vyhotovení)
     var sheet = '<g class="vy-sheet" transform="rotate(-1.2 100 75)">' +
       shape(P, "M38 6 H162 V144 H38 Z", "#fffdf7", 1.3) +
@@ -1277,24 +1323,9 @@
         '<text y="2" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="5.6" fill="#c2341e">1960</text>' +
       '</g>' +
     '</g>';
-    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jesle v Račicích a Pístovicích, plánek obcí a výnos o sloučení">' +
-      defs(P) +
-      // krok 1: jesle
-      '<g class="vy-sc vy-sc1">' + board() + '</g>' +
-      // krok 2: plánek
-      '<g class="vy-sc vy-sc2"><rect width="200" height="150" fill="#f3eddc"/><rect width="200" height="150" filter="url(#' + P + 'paper)"/>' +
-        '<text x="8" y="12" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="6.5" fill="' + INK + '">Plánek obcí · ONV Vyškov</text>' +
-        ln(P, "M0 112 C40 104 70 90 100 82 C130 76 170 70 200 74", 1.2, ' opacity=".7"') + // silnice
-        ln(P, "M20 150 C50 130 90 128 120 118 C150 108 180 112 200 104", 2.4, "", "#9fc3ee") + // potok
-        '<path class="vy-new-fill" d="" fill="url(#' + P + 'yel)" opacity=".55"/>' +
-        VES.map(function (v) {
-          return '<g class="vy-old"><ellipse cx="' + v.x + '" cy="' + v.y + '" rx="27" ry="19" fill="none" stroke="#8a847a" stroke-width="1" stroke-dasharray="3 2"/></g>' +
-            houses(v) +
-            '<text x="' + v.x + '" y="' + (v.y - 27) + '" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="6" fill="' + INK + '">' + v.name + '</text>';
-        }).join("") +
-        '<path class="vy-line" d="" fill="none" stroke="#c2341e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<text class="vy-new-name" x="100" y="136" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="8" fill="#c2341e">RAČICE-PÍSTOVICE</text>' +
-      '</g>' +
+    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jesle v Račicích, plánek obcí s hraničními kameny a výnos o sloučení">' +
+      defs(P, '<clipPath id="' + P + 'kc"><rect x="-9" y="-30" width="18" height="30.3"/></clipPath>') +
+      scene1 + scene2 +
       // krok 3: výnos
       '<g class="vy-sc vy-sc3"><rect width="200" height="150" fill="#eadcc0"/><rect width="200" height="150" fill="url(#' + P + 'x)" opacity=".18"/><rect width="200" height="150" filter="url(#' + P + 'paper)"/>' +
         sheet +
@@ -1306,190 +1337,199 @@
         '<path class="vy-ink" fill="none" stroke="#1f3f8f" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>' +
       '</g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, dots: 3, tip: "Vyber dítě a klepni na budovu", label: "Úřední kolečko: rozdělení dětí do jeslí a školek, hranice obce a výnos" });
+    var g = shell(b, hotovo, { svg: svg, dots: 3, tip: "Klepni, ať dítě pustíš", label: "Úřední kolečko: děti do jeslí, hraniční kameny a výnos" });
     g.onDone(onDone);
     var s = g.svg, st = g.stage, step = 0;
     var line = s.querySelector(".vy-line"), ink = s.querySelector(".vy-ink"), sh = s.querySelector(".vy-sheet");
     var SIG = "M110 121 C112 112 116 112 115 121 C114 127 118 113 122 117 C124 120 126 112 130 118 C133 123 136 114 140 119 L150 117";
     function go(k) {
       step = k; s.classList.remove("k1", "k2", "k3"); s.classList.add("k" + k);
-      if (tools1) tools1.hidden = k === 3;
+      meter.hidden = k !== 1;
       st.classList.toggle("hr-draw", k !== 3);
     }
-    var kids = Array.prototype.map.call(s.querySelectorAll(".vy-kid"), function (el) { return el; });
-    var row = KIDS.map(function () { return -1; }), sel = -1, drag = null, rejects = 0, judging = false;
-    // pravidla pod obrázkem
-    var rulesEl = E("ol", { class: "vy-rules" });
-    RULES.forEach(function (t, i) { rulesEl.appendChild(E("li", { text: t, "data-r": i })); });
-    var submit = E("button", { class: "btn btn-primary btn-block", text: "Předložit komisi", disabled: "" });
-    var solveBtn = E("button", { class: "btn btn-ghost btn-block", text: "Komise, poraďte", hidden: "" });
-    var tools1 = E("div", { class: "vy-tools" }, [rulesEl, submit, solveBtn]);
-    function slotOf(i) {
-      var r = row[i]; if (r < 0) return -1;
-      var k = 0; for (var j = 0; j < i; j++) if (row[j] === r) k++;
-      return k;
+    function uaa() { tone({ f: 620, to: 430, dur: 0.22, gain: 0.12, type: "triangle" }); tone({ f: 560, to: 380, dur: 0.3, gain: 0.1, type: "triangle", at: AC && AC.currentTime + 0.24 }); }
+
+    // ---- krok 1: hromada ----
+    var world = s.querySelector(".vy-world"), pile = s.querySelector(".vy-pile"), trolley = s.querySelector(".vy-trolley");
+    var hang = s.querySelector(".vy-hang"), fallG = s.querySelector(".vy-fall"), popT = s.querySelector(".vy-pop");
+    var stack = [], born = 0, miss = 0, cam = 0, phase = 0, raf = 0, last = 0, fall = null, ready = false, ended = false;
+    var meter = E("div", { class: "vy-meter", "aria-hidden": "true" }, [E("span", { class: "vy-m-name", text: "Jesle Račice" }), E("span", { class: "vy-m-bar" }, [E("i")]), E("span", { class: "vy-m-txt" })]);
+    function deti(n) { return n === 1 ? "1 dítě" : n > 1 && n < 5 ? n + " děti" : n + " dětí"; }
+    function showMeter() {
+      var n = stack.length;
+      meter.querySelector("i").style.width = Math.min(100, n / GOAL * 100) + "%";
+      meter.classList.toggle("over", n > CAP);
+      meter.querySelector(".vy-m-txt").textContent = deti(n) + " · místa jsou " + CAP;
+      s.querySelector(".vy-peek0").classList.toggle("on", n >= 2);
+      s.querySelector(".vy-peek1").classList.toggle("on", n >= 4);
+      s.querySelector(".vy-crack1").classList.toggle("on", n >= 6);
+      s.querySelector(".vy-crack2").classList.toggle("on", n >= 9);
+      s.querySelector(".vy-jesle").classList.toggle("shake", n >= 9);
     }
-    function posOf(i) {
-      if (row[i] < 0) { var h = HOME.indexOf(i); return { x: 13 + h * 24.8, y: WAITY + 4 }; }
-      return { x: SLOTX + slotOf(i) * SLOTW, y: ROWY[row[i]] };
+    function topX() { return stack.length ? stack[stack.length - 1] : 100; }
+    function levelY(k) { return ROOF - BH / 2 - k * BH; }
+    function spawn() {
+      hang.innerHTML = baby(born); ready = true;
+      restart(hang, "in");
     }
-    function layout(skip) {
-      kids.forEach(function (el, i) {
-        if (i === skip) return;
-        var p = posOf(i); el.setAttribute("transform", "translate(" + f1(p.x) + " " + f1(p.y) + ")");
-        el.classList.toggle("sel", i === sel);
-      });
-      var all = row.every(function (r) { return r >= 0; });
-      submit.disabled = !all || judging;
+    function addLevel(x) {
+      var el = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      el.setAttribute("transform", "translate(" + f1(x) + " " + f1(levelY(stack.length)) + ")");
+      el.innerHTML = '<g class="vy-b">' + baby(born++) + '</g>';
+      pile.appendChild(el); stack.push(x);
+      showMeter();
     }
-    function count(r) { return row.filter(function (x) { return x === r; }).length; }
-    function rowAt(p) {
-      if (p.y > 110) return -2; // čekárna
-      for (var r = 0; r < ROWY.length; r++) if (Math.abs(p.y - ROWY[r]) <= 13) return r;
-      return -3;
+    function popup(txt, x, y, col) {
+      popT.textContent = txt; popT.setAttribute("x", f1(Math.max(30, Math.min(170, x)))); popT.setAttribute("y", f1(y));
+      popT.setAttribute("fill", col || "#1f3f8f"); restart(popT, "on");
     }
-    function clearBad() {
-      kids.forEach(function (el) { el.classList.remove("bad"); });
-      Array.prototype.forEach.call(rulesEl.children, function (li) { li.classList.remove("bad"); });
-    }
-    function put(i, r) {
-      clearBad();
-      if (r === -2) { row[i] = -1; sel = -1; layout(); SFX.slide(); return; }
-      if (r < 0) { sel = -1; layout(); return; }
-      if (row[i] === r) { sel = -1; layout(); return; }
-      if (count(r) >= BUD[r].cap) {
-        g.say(BUD[r].name + " " + (BUD[r].v ? "v Pístovicích" : "v Račicích") + " je plná. Nejdřív odtud někoho přesuň do čekárny.");
-        vibrate([10, 30, 10]); g.bump(); sel = -1; layout(); return;
+    function trolleyX() { return 100 + 44 * Math.sin(phase); }
+    function loop(t) {
+      if (!g.box.isConnected || step !== 1) { raf = 0; return; }
+      var dt = Math.min(0.05, (t - last) / 1000 || 0); last = t;
+      if (!ended) {
+        var speed = 1.9 + stack.length * 0.13 - Math.min(miss, 3) * 0.3;
+        phase += dt * speed;
+        var x = trolleyX(), sway = Math.cos(phase) * speed * -4;
+        trolley.setAttribute("transform", "translate(" + f1(x) + " 0)");
+        hang.setAttribute("transform", "translate(0 " + HANG + ") rotate(" + f1(sway) + " 0 -" + (HANG - 10) + ")");
       }
-      row[i] = r; sel = -1; SFX.pop(); vibrate(15); g.say(""); layout();
+      var want = Math.max(0, 62 - (ROOF - stack.length * BH));
+      cam += (want - cam) * Math.min(1, dt * 4);
+      if (!ended) world.setAttribute("transform", "translate(0 " + f1(cam) + ")");
+      if (fall) {
+        fall.vy += 560 * dt; fall.y += fall.vy * dt;
+        if (fall.bad) { fall.x += fall.side * 55 * dt; fall.rot += fall.side * 260 * dt; }
+        var land = levelY(stack.length) + cam;
+        if (!fall.bad && fall.y >= land) { fallG.innerHTML = ""; landed(fall.x, fall.dx); fall = null; }
+        else if (fall.bad && fall.y > 175) { fallG.innerHTML = ""; fall = null; setTimeout(spawn, 250); }
+        else fallG.firstChild.setAttribute("transform", "translate(" + f1(fall.x) + " " + f1(fall.y) + ") rotate(" + f1(fall.rot) + ")");
+      }
+      raf = requestAnimationFrame(loop);
     }
-    function kidAt(p) {
-      for (var i = kids.length - 1; i >= 0; i--) { var q = posOf(i); if (Math.abs(p.x - q.x) < 12.5 && Math.abs(p.y - q.y) < 12.5) return i; }
-      return -1;
+    function drop() {
+      if (step !== 1 || !ready || fall || ended || g.finished) return;
+      ac(); g.hideTip(); ready = false;
+      var x = trolleyX(), dx = x - topX(), first = !stack.length;
+      var bad = first ? Math.abs(dx) > 30 : Math.abs(dx) > GOOD;
+      hang.innerHTML = "";
+      fallG.innerHTML = '<g>' + baby(born) + '</g>';
+      fall = { x: x, y: HANG, vy: 30, dx: dx, bad: bad, side: dx < 0 ? -1 : 1, rot: 0 };
+      SFX.whoosh();
+      if (bad) {
+        var land = levelY(stack.length) + cam;
+        fall.y = HANG; // necháme ho padat, sklouzne bokem
+        setTimeout(function () { if (step === 1) { SFX.slide(); uaa(); } }, Math.max(80, (land - HANG) * 3));
+        miss++;
+        g.say(miss >= 2 ? "Hups, do sena! Jeřábník zpomalí. Pusť dítě, až bude nad tím horním." : "Hups, do sena! Maminka nese dítě zpátky do fronty.");
+        vibrate([10, 30, 10]);
+      }
+    }
+    function landed(x, dx) {
+      var perfect = Math.abs(dx) <= PERFECT;
+      if (!stack.length) x = Math.max(70, Math.min(110, x));
+      else if (perfect) x = topX();
+      addLevel(x); miss = 0; SFX.pop(); vibrate(15);
+      var y = levelY(stack.length - 1) + cam;
+      if (perfect && stack.length < GOAL) {
+        addLevel(x); popup("PŘESNĚ! DVOJČATA!", x, y - 14, "#1f3f8f");
+        tone({ f: 660, to: 990, dur: 0.15, gain: 0.18, type: "triangle" });
+        g.say("Přesně! Dvojčata, hromada roste o dvě.");
+      } else if (Math.abs(dx) > 9) {
+        restart(pile, "wob"); popup("VRATKÉ!", x, y - 14, "#c2341e"); g.say("Vratké… příště přesněji.");
+      } else g.say("");
+      restart(s.querySelector(".vy-queue"), "step");
+      if (stack.length >= GOAL) { burst(); return; }
+      setTimeout(spawn, 300);
+    }
+    function burst() {
+      ended = true; ready = false; hang.innerHTML = "";
+      s.querySelector(".vy-crane").classList.add("gone");
+      var t0 = performance.now(), c0 = cam, S = 0.6;
+      g.say("Jesle Račice: " + deti(stack.length) + " na 6 míst. A fronta pořád nekončí…");
+      (function zoom(t) {
+        if (!g.box.isConnected) return;
+        var k = Math.min(1, (t - t0) / 900), e = k * k * (3 - 2 * k), sc = 1 + (S - 1) * e;
+        world.setAttribute("transform", "translate(" + f1(100 * (1 - S) * e) + " " + f1(c0 * (1 - e) + 138 * (1 - S) * e) + ") scale(" + sc.toFixed(3) + ")");
+        if (k < 1) requestAnimationFrame(zoom);
+      })(t0);
+      setTimeout(function () {
+        if (!g.box.isConnected) return;
+        s.classList.add("vy-boomed"); SFX.thump(); noise({ type: "lowpass", f: 500, dur: 0.6, gain: 0.6 }); uaa(); vibrate([60, 40, 120]); g.bump();
+        var r = rng(7);
+        Array.prototype.forEach.call(pile.querySelectorAll(".vy-b"), function (el, i) {
+          var dir = i % 2 ? 1 : -1;
+          el.style.transform = "translate(" + Math.round(dir * (30 + r() * 90)) + "px," + Math.round(10 + r() * 60 + i * 6) + "px) rotate(" + Math.round(dir * (90 + r() * 200)) + "deg)";
+        });
+      }, 1100);
+      setTimeout(function () {
+        if (!g.box.isConnected) return;
+        g.say("Komise MNV: Soudruzi, jedna obec na to zjevně nestačí. Spojíme se s Pístovicemi! Ale nejdřív nová hranice.");
+      }, 2300);
+      setTimeout(toStep2, 6200);
+    }
+    function fillAll() { // bez dotyku: hromada se postaví sama
+      if (step !== 1 || ended) return;
+      while (stack.length < GOAL) addLevel(100 + (stack.length % 3 - 1) * 3);
+      burst();
     }
     st.addEventListener("pointerdown", function (e) {
-      if (step !== 1 || g.finished || judging) return;
-      var p = pt(s, e), i = kidAt(p);
-      e.preventDefault(); ac(); g.hideTip();
-      if (i >= 0) {
-        try { st.setPointerCapture(e.pointerId); } catch (x) {}
-        var q = posOf(i);
-        drag = { i: i, dx: q.x - p.x, dy: q.y - p.y, start: p, moved: false };
-        kids[i].parentNode.appendChild(kids[i]); kids.forEach(function (el, k) { el.classList.toggle("lift", k === i); });
-        return;
-      }
-      if (sel >= 0) put(sel, rowAt(p));
+      if (step !== 1) return;
+      e.preventDefault(); drop();
     });
-    st.addEventListener("pointermove", function (e) {
-      if (!drag) return;
-      var p = pt(s, e);
-      if (!drag.moved && Math.hypot(p.x - drag.start.x, p.y - drag.start.y) < 3) return;
-      drag.moved = true;
-      kids[drag.i].setAttribute("transform", "translate(" + f1(p.x + drag.dx) + " " + f1(p.y + drag.dy) + ")");
-    });
-    function up1(e) {
-      if (!drag) return;
-      var d = drag; drag = null;
-      kids[d.i].classList.remove("lift");
-      if (!d.moved) { sel = sel === d.i ? -1 : d.i; if (sel >= 0) { SFX.tick(); g.say("Teď klepni na budovu, kam dítě patří."); } layout(); return; }
-      var p = pt(s, e);
-      put(d.i, rowAt({ x: p.x + d.dx, y: p.y + d.dy }));
-    }
-    st.addEventListener("pointerup", up1);
-    st.addEventListener("pointercancel", up1);
 
-    // komise: vrátí první porušené pravidlo a děti, kterých se týká
-    function check() {
-      var n = KIDS.length, i, j;
-      for (i = 0; i < n; i++) if (BUD[row[i]].j !== KIDS[i].k) return { r: 0, who: [i] };
-      for (i = 0; i < n; i++) for (j = i + 1; j < n; j++) if (KIDS[i].tw && KIDS[j].tw && KIDS[i].f === KIDS[j].f && row[i] !== row[j]) return { r: 1, who: [i, j] };
-      for (i = 0; i < n; i++) for (j = i + 1; j < n; j++) if (KIDS[i].f === KIDS[j].f && BUD[row[i]].v !== BUD[row[j]].v) return { r: 2, who: [i, j] };
-      for (i = 0; i < n; i++) for (j = i + 1; j < n; j++) if (KIDS[i].f !== KIDS[j].f && /^[ND]$/.test(KIDS[i].f) && /^[ND]$/.test(KIDS[j].f) && row[i] === row[j]) return { r: 3, who: [i, j] };
-      var away = []; for (i = 0; i < n; i++) if (BUD[row[i]].v !== KIDS[i].v) away.push(i);
-      return away.length ? { r: 4, who: away } : null;
+    // ---- krok 2: hraniční kameny ----
+    var cur = 0, hits = 0;
+    var stEls = Array.prototype.slice.call(s.querySelectorAll(".vy-st")), hamPos = s.querySelector(".vy-ham-pos"), ham = s.querySelector(".vy-ham"), bum = s.querySelector(".vy-bum");
+    function seg(k) { return STONES.slice(0, k + 1).map(function (p, i) { return (i ? "L" : "M") + p[0] + " " + p[1]; }).join(" "); }
+    function aim() {
+      if (cur >= STONES.length) return;
+      stEls.forEach(function (el, i) { el.classList.toggle("cur", i === cur); el.classList.toggle("set", i < cur); el.classList.toggle("todo", i > cur); });
+      var p = STONES[cur], top = -14 + hits * SINK;
+      hamPos.setAttribute("transform", "translate(" + (p[0] + 12) + " " + f1(p[1] + top - 3) + ")");
+      stEls[cur].querySelector(".vy-stone").setAttribute("transform", "translate(0 " + hits * SINK + ")");
+      Array.prototype.forEach.call(stEls[cur].querySelectorAll(".vy-hits circle"), function (c, k) { c.classList.toggle("on", k < hits); });
     }
-    var WHY = [
-      "Kočárek nepatří do školky a odrážedlo do jeslí.",
-      "Dvojčata se nesmí rozdělit.",
-      "Sourozenci musí chodit ve stejné vsi, maminka nebude běhat mezi vesnicemi.",
-      "Novákovi a Dvořákovi pod jednou střechou? To by byla válka!",
-      ""
-    ];
-    submit.addEventListener("click", function () {
-      if (step !== 1 || judging || row.some(function (r) { return r < 0; })) return;
-      clearBad(); sel = -1; layout();
-      var res = check();
-      rulesEl.children[res.r].classList.add("bad");
-      res.who.forEach(function (i) { kids[i].classList.add("bad"); });
-      if (res.r < 4) {
-        rejects++;
-        restart(s.querySelector(".vy-rej"), "on"); SFX.thump(); vibrate([40, 60, 40]); g.bump();
-        g.say("ZAMÍTNUTO. " + WHY[res.r] + (rejects >= 3 ? " Rada komise: pravidlo 5 klidně poruš, ostatní musí platit." : ""));
-        if (rejects >= 3) solveBtn.hidden = false;
-        return;
-      }
-      // Pointa: všechno sedí, jen pravidlo 5 ne. Jedna obec na to nestačí.
-      judging = true; layout();
-      SFX.tick(); vibrate(30);
-      g.say("Komise: Jinak všechno sedí. Jenže račické kočárky se do račických jeslí nevejdou, ať je skládáš jakkoli. Jedna obec na to nestačí! Pravidlo 5 zrušíme, ale napřed musí být obě vsi jedna obec.");
-      setTimeout(function () {
-        rulesEl.children[4].classList.remove("bad"); rulesEl.children[4].classList.add("zrus");
-        kids.forEach(function (el) { el.classList.remove("bad"); });
-        submit.hidden = true; solveBtn.hidden = true;
-      }, 1800);
-      setTimeout(toStep2, 5200);
-    });
-    function solve() { row = SOL.slice(); sel = -1; clearBad(); layout(); SFX.slide(); g.say("Komise děti rozdělila sama. Teď je předlož."); solveBtn.hidden = true; }
-    solveBtn.addEventListener("click", solve);
-
-    // ---- krok 2: hranice ----
-    var pts = [], drawing2 = false;
     function toStep2() {
       if (step !== 1) return;
-      g.set(1); go(2);
-      g.say("Obtáhni prstem jednu hranici kolem Račic i Pístovic. Pak už bude jedno, ve které vsi dítě chodí.");
-      g.tip("Obtáhni obě vesnice jednou čarou");
+      g.set(1); go(2); cur = 0; hits = 0; aim();
+      g.say("Zatluč hraniční kameny kolem Račic i Pístovic. Na každý kámen ve žlutém kroužku klepni třikrát.");
+      g.tip("Klepni na kámen ve žlutém kroužku");
     }
-    function inside(p, poly) {
-      var c = false;
-      for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-        if (((poly[i].y > p.y) !== (poly[j].y > p.y)) && (p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)) c = !c;
-      }
-      return c;
+    function hit() {
+      if (step !== 2 || g.finished || cur >= STONES.length) return;
+      ac(); g.hideTip();
+      hits++;
+      restart(ham, "hit");
+      (function () {
+        aim(); SFX.thump(); vibrate(25); g.bump();
+        var p = STONES[cur];
+        bum.setAttribute("x", f1(Math.min(176, p[0] + 8))); bum.setAttribute("y", f1(p[1] - 16)); restart(bum, "on");
+        if (hits >= HITS) {
+          var k = cur; cur++; hits = 0;
+          if (k > 0) line.setAttribute("d", seg(k));
+          if (cur >= STONES.length) {
+            line.setAttribute("d", seg(k) + " Z");
+            stEls.forEach(function (el) { el.classList.remove("cur", "todo"); el.classList.add("set"); });
+            hamPos.classList.add("gone");
+            s.classList.add("merged"); SFX.pop(); g.set(2);
+            g.say("Hranice je zatlučená. Teď už jen razítko a podpis.");
+            setTimeout(function () { go(3); g.say(""); g.tip("Klepni na M. P."); stampBtn.hidden = false; }, 1700);
+          } else {
+            g.say("Kámen " + cur + " ze " + STONES.length + " sedí. Další!");
+            setTimeout(aim, 250);
+          }
+        } else g.say(hits === 1 ? "Bum! Ještě dvakrát." : "Bum! Ještě jednou.");
+      })();
     }
-    function pathD(a, close) { return a.map(function (p, i) { return (i ? "L" : "M") + f1(p.x) + " " + f1(p.y); }).join(" ") + (close ? " Z" : ""); }
     st.addEventListener("pointerdown", function (e) {
       if (step !== 2 || g.finished) return;
-      e.preventDefault(); g.hideTip(); g.say("");
-      try { st.setPointerCapture(e.pointerId); } catch (x) {}
-      drawing2 = true; pts = [pt(s, e)]; line.setAttribute("d", pathD(pts));
+      e.preventDefault();
+      var p = pt(s, e), q = STONES[cur];
+      if (!q) return;
+      if (Math.hypot(p.x - q[0], p.y - (q[1] - 4)) <= 17) hit();
+      else { g.say("Tady ne. Klepni na kámen ve žlutém kroužku."); restart(stEls[cur].querySelector(".vy-ring"), "blink"); }
     });
-    st.addEventListener("pointermove", function (e) {
-      if (!drawing2) return;
-      var p = pt(s, e), l = pts[pts.length - 1];
-      if (Math.hypot(p.x - l.x, p.y - l.y) < 1.5) return;
-      pts.push(p); line.setAttribute("d", pathD(pts));
-      if (pts.length % 4 === 0) SFX.pen();
-    });
-    function up2() {
-      if (!drawing2) return; drawing2 = false;
-      var len = 0; for (var i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
-      var gap = pts.length > 1 ? Math.hypot(pts[0].x - pts[pts.length - 1].x, pts[0].y - pts[pts.length - 1].y) : 1e9;
-      var both = VES.every(function (v) { return inside(v, pts); });
-      if (len > 120 && gap < 40 && both) {
-        line.setAttribute("d", pathD(pts, true));
-        s.querySelector(".vy-new-fill").setAttribute("d", pathD(pts, true));
-        s.classList.add("merged"); SFX.pop(); vibrate(30); g.set(2);
-        g.say("Hranice platí. Zbývá to orazítkovat.");
-        setTimeout(function () { go(3); g.say(""); g.tip("Klepni na M. P."); stampBtn.hidden = false; }, 1500);
-        return;
-      }
-      g.say(len < 120 || gap >= 40 ? "Čára musí obě vesnice obejmout dokola a skončit tam, kde začala." : "Jedna z obcí zůstala venku. Obtáhni obě najednou.");
-      vibrate([10, 30, 10]);
-      setTimeout(function () { if (step === 2 && !drawing2) line.setAttribute("d", ""); }, 700);
-    }
-    st.addEventListener("pointerup", up2);
-    st.addEventListener("pointercancel", up2);
 
     // ---- krok 3: razítko a podpis ----
     var stamped = false, inkD = "", inkLen = 0, drawing = false, lastP = null, lastSnd = 0;
@@ -1532,20 +1572,19 @@
     var kb = E("button", { class: "hr-sr", text: "Udělat další úřední krok" });
     kb.addEventListener("click", function () {
       if (g.finished) return;
-      if (step === 1) { if (row.some(function (r) { return r < 0; })) solve(); else submit.click(); }
-      else if (step === 2) {
-        pts = [{ x: 22, y: 60 }, { x: 60, y: 36 }, { x: 120, y: 54 }, { x: 176, y: 80 }, { x: 160, y: 118 }, { x: 100, y: 112 }, { x: 40, y: 92 }];
-        drawing2 = true; up2();
-      } else if (!stamped) stampBtn.click();
+      if (step === 1) fillAll();
+      else if (step === 2) hit();
+      else if (!stamped) stampBtn.click();
       else { ink.setAttribute("d", SIG); g.set(3); g.finish(); }
     });
 
     if (hotovo) {
       go(3); sh.classList.add("stamped"); ink.setAttribute("d", SIG); st.classList.remove("hr-draw");
     } else {
-      go(1); layout();
-      g.box.querySelector(".dj-count").insertAdjacentElement("afterend", tools1);
+      go(1); showMeter();
+      st.insertAdjacentElement("afterend", meter);
       g.box.appendChild(kb);
+      spawn(); last = performance.now(); raf = requestAnimationFrame(loop);
     }
     return g.box;
   };

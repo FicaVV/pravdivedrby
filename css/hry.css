@@ -75,34 +75,33 @@
 @keyframes am-note { from { transform: translateY(1.5px) rotate(-8deg); } to { transform: translateY(-2.5px) rotate(8deg); } }
 @keyframes am-new { from { opacity: 0; } }
 
-/* sochy */
+/* sochy: skládání boty */
 .gm-pc { cursor: grab; }
 .gm-pc.on { cursor: default; }
 .gm-pc.lift { cursor: grabbing; filter: drop-shadow(0 3px 2px rgba(22, 19, 15, .35)); }
-.gm-rot { transition: transform .2s ease-out; }
-.gm-pc.lift .gm-rot { transition: none; }
 .gm-pc.back { animation: gm-back .3s ease-out; }
-.all .gm-ghost { opacity: 0; transition: opacity .6s; }
+.gm-cut { transition: opacity .6s; }
+.gm-pc.on .gm-cut { opacity: .5; }
+.all .gm-pc .gm-cut { opacity: 0; }
 @keyframes gm-back { 30% { opacity: .4; } }
 
-/* sokolovna */
-.kr-sweat { opacity: 0; transition: opacity .3s; }
-.wobble .kr-sweat { opacity: 1; }
-.kr-power { display: none; }
-.p1 .kr-power { display: inline; }
-.p1 .kr-gauge, .landed .kr-gauge { display: none; }
-.kr-green { opacity: .55; transition: opacity .2s; }
-.calm .kr-green { opacity: 1; }
-.kr-up, .kr-judges { opacity: 0; transition: opacity .4s; }
-.landed .kr-up, .landed .kr-judges { opacity: 1; }
+/* sokolovna: tachometr a medaile */
+.kr-tacho { touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; margin-top: -4px; }
+.kr-tacho svg { display: block; width: 100%; max-width: 300px; margin: 0 auto; }
+.kr-tacho.in .kr-zone { stroke: #2f9e44; }
+.kr-tacho.miss { animation: kr-miss .3s ease-out; }
+.kr-name { opacity: 0; }
+.kr-name.on { animation: kr-name 1.6s ease-out; }
+.kr-medal { opacity: 0; pointer-events: none; transition: opacity .8s; }
+.medal .kr-medal { opacity: 1; }
+.kr-gold { transform: translateY(-60px); transition: transform 1s cubic-bezier(.3, 1.4, .5, 1) .5s; }
+.medal .kr-gold { transform: none; }
+@keyframes kr-name { 0% { opacity: 0; transform: translateY(-4px); } 15% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes kr-miss { 30% { transform: translateX(-6px); } 60% { transform: translateX(5px); } }
 
 /* úřad */
 .vy-sc { display: none; }
 .k1 .vy-sc1, .k2 .vy-sc2, .k3 .vy-sc3 { display: inline; animation: am-new .4s ease-out; }
-.vy-win.on path:first-child { fill: #f5c400; }
-.vy-full, .vy-cry { opacity: 0; }
-.vy-full.on { opacity: 1; transition: opacity .3s; }
-.vy-cry.on { animation: vy-cry 1.2s ease-out; }
 .vy-new-fill, .vy-new-name { opacity: 0; transition: opacity .6s; }
 .merged .vy-new-fill { opacity: .55; }
 .merged .vy-new-name { opacity: 1; }
@@ -111,7 +110,6 @@
 .stamped .vy-imprint { opacity: .88; }
 .vy-imprint.pop { animation: vy-pop .3s ease-out; transform-box: fill-box; transform-origin: center; }
 @keyframes vy-pop { 0% { opacity: 0; } 30% { opacity: 1; } }
-@keyframes vy-cry { 0% { opacity: 0; } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
   .hs-fl > *, .sv-fl, .hs-fire.puff .hs-smoke, .ks-spark, .am-note { animation: none; }
@@ -122,20 +120,55 @@
 .po-hre { display: flex; flex-direction: column; gap: inherit; }
 .po-hre[hidden] { display: none; }
 
-/* úřad: hlavolam s dětmi */
-.vy-kid { transition: transform .25s ease-out; cursor: pointer; }
-.vy-kid.lift { transition: none; filter: drop-shadow(0 3px 2px rgba(22, 19, 15, .35)); }
-.vy-kid.sel > rect:first-child { opacity: 1; }
-.vy-kid.sel { filter: drop-shadow(0 0 2.5px #1f3f8f); }
-.vy-kid.bad { animation: vy-bad .5s ease-in-out 3; }
-.vy-rej { opacity: 0; pointer-events: none; }
-.vy-rej.on { animation: vy-rej 1.6s ease-out; }
-@keyframes vy-bad { 50% { filter: drop-shadow(0 0 3px #c2341e); transform-origin: center; } }
-@keyframes vy-rej { 0% { opacity: 0; } 12% { opacity: .95; } 75% { opacity: .95; } 100% { opacity: 0; } }
-.vy-tools { display: flex; flex-direction: column; gap: 10px; }
-.vy-rules { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 1.35; }
-.vy-rules li { padding: 2px 6px; border-radius: 6px; }
-.vy-rules li.bad { background: #f6dcd6; color: #8c1f10; font-weight: 700; }
-.vy-rules li.zrus { text-decoration: line-through; color: var(--muted); }
-.vy-rules li.zrus::after { content: " Zrušeno sloučením obcí."; text-decoration: none; display: inline-block; margin-left: 4px; color: #c2341e; font-weight: 700; }
-@media (prefers-reduced-motion: reduce) { .vy-kid { transition: none; } .vy-kid.bad { animation: none; filter: drop-shadow(0 0 3px #c2341e); } }
+/* úřad: hromada dětí na jeslích */
+.vy-peek, .vy-crack, .vy-ruin, .vy-boom { opacity: 0; transition: opacity .3s; }
+.vy-peek.on, .vy-crack.on { opacity: 1; }
+.vy-jesle.shake { animation: vy-shake .5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.vy-boomed .vy-jesle { opacity: 0; animation: none; }
+.vy-boomed .vy-ruin, .vy-boomed .vy-boom { opacity: 1; }
+.vy-boomed .vy-boom { animation: vy-boom .5s ease-out; transform-box: fill-box; transform-origin: center; }
+.vy-b { transition: transform 1.1s cubic-bezier(.2, .7, .4, 1); }
+.vy-pile.wob { animation: vy-wob .6s ease-in-out; transform-box: fill-box; transform-origin: 50% 100%; }
+.vy-hang.in > g { animation: vy-in .3s ease-out; }
+.vy-crane { transition: opacity .5s; }
+.vy-crane.gone { opacity: 0; }
+.vy-pop { opacity: 0; pointer-events: none; }
+.vy-pop.on { animation: vy-float 1.1s ease-out; }
+.vy-queue.step { animation: vy-step .5s ease-in-out; }
+.vy-meter { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 10px; font-weight: 700; font-size: 15px; }
+.vy-meter[hidden] { display: none; }
+.vy-m-bar { height: 16px; border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; background: #fffdf7; }
+.vy-m-bar i { display: block; height: 100%; width: 0; background: #f5c400; transition: width .3s, background .3s; }
+.vy-meter.over .vy-m-bar i { background: #c2341e; }
+.vy-m-txt { grid-column: 1 / -1; color: var(--muted); font-size: 14px; }
+.vy-meter.over .vy-m-txt { color: #8c1f10; }
+@keyframes vy-shake { 25% { transform: rotate(-.8deg); } 75% { transform: rotate(.8deg); } }
+@keyframes vy-wob { 25% { transform: rotate(-2.5deg); } 60% { transform: rotate(1.8deg); } }
+@keyframes vy-in { from { transform: translateY(-24px); } }
+@keyframes vy-float { 0% { opacity: 0; transform: translateY(4px); } 20% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
+@keyframes vy-step { 50% { transform: translateX(-3px); } }
+@keyframes vy-boom { 0% { transform: scale(.4); } 70% { transform: scale(1.08); } }
+
+/* úřad: hraniční kameny */
+.vy-st .vy-ring { opacity: 0; }
+.vy-st.cur .vy-ring { opacity: 1; animation: vy-ring 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.vy-ring.blink { animation: vy-blink .5s ease-in-out 2 !important; }
+.vy-st .vy-stone, .vy-st .vy-hits { display: none; }
+.vy-st.cur .vy-stone, .vy-st.set .vy-stone, .vy-st.cur .vy-hits { display: inline; }
+.vy-st.cur .vy-flag, .vy-st.set .vy-flag { display: none; }
+.vy-st.todo { opacity: .75; }
+.vy-stone { transition: transform .12s ease-in; }
+.vy-hits circle { fill: #fffdf7; stroke: #2f2c28; stroke-width: .7; }
+.vy-hits circle.on { fill: #2f2c28; }
+.vy-ham { transform-box: fill-box; transform-origin: 100% 100%; transform: rotate(40deg); }
+.vy-ham.hit { animation: vy-ham .26s ease-in; }
+.vy-ham-pos.gone { display: none; }
+.vy-bum { opacity: 0; pointer-events: none; }
+.vy-bum.on { animation: vy-float .7s ease-out; }
+@keyframes vy-ring { 50% { transform: scale(1.15); } }
+@keyframes vy-blink { 50% { stroke: #c2341e; transform: scale(1.3); } }
+@keyframes vy-ham { 0% { transform: rotate(40deg); } 45% { transform: rotate(-4deg); } 100% { transform: rotate(40deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .vy-jesle.shake, .vy-pile.wob, .vy-st.cur .vy-ring, .vy-ham.hit, .vy-hang.in > g { animation: none; }
+  .vy-b { transition: none; }
+}

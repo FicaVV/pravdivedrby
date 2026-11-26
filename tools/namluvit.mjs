@@ -26,6 +26,7 @@
 // - nevejde-li se celé namlouvání pod 950 000, nezačne se vůbec; nad 800 000 se varuje.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, unlinkSync, openSync, closeSync, renameSync, statSync, appendFileSync } from "node:fs";
 import vm from "node:vm";
+import { spawnSync } from "node:child_process";
 
 const root = new URL("../", import.meta.url);
 const env = process.env;
@@ -43,6 +44,10 @@ const KEY = AZ ? env.AZURE_SPEECH_KEY : GKEY;
 const REGION = (env.AZURE_SPEECH_REGION || "swedencentral").replace(/\s+/g, "").toLowerCase();
 const VOICE = (AZ ? env.AZURE_VOICE : env.GOOGLE_TTS_VOICE) || (AZ ? "cs-CZ-AntoninNeural" : "cs-CZ-Chirp3-HD-Charon");
 const RATE = Number(env.TTS_RATE || env.GOOGLE_TTS_RATE || 0.95);
+// Modlitba u kříže jako od faráře v kostele: pomaleji, (u Azure i hlouběji) a s dozvukem kostelní lodi.
+// Dozvuk přidává ffmpeg (na GitHubu je předinstalovaný); bez něj zůstane jen pomalejší tempo.
+const FARAR = { rate: Number(env.TTS_RATE_MODLITBA || 0.8), pitch: -8,
+  ozvena: "aecho=0.8:0.88:45|90|150|230:0.32|0.24|0.16|0.1,lowpass=f=7000,apad=pad_dur=1" };
 const arg = (a) => process.argv.includes(a);
 const FORCE = arg("--znovu"), DRY = arg("--nanecisto");
 const GAPI = "https://texttospeech.googleapis.com/v1";
@@ -169,11 +174,22 @@ async function call(url, opts, json, predPokusem) {
   }
 }
 const esc = (s) => s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]));
-async function synth(text, voice = VOICE) {
+// dozvuk přes ffmpeg; když ffmpeg chybí nebo selže, vrátí nahrávku beze změny
+function ozvena(mp3, filtr) {
+  const tmp = new URL(".ozvena-" + process.pid + ".mp3", root), out = new URL(".ozvena-" + process.pid + "-out.mp3", root);
+  try {
+    writeFileSync(tmp, mp3);
+    const r = spawnSync("ffmpeg", ["-v", "error", "-y", "-i", tmp.pathname, "-af", filtr, "-ac", "1", "-b:a", "64k", out.pathname]);
+    return r.status === 0 ? readFileSync(out) : mp3;
+  } catch (e) { return mp3; }
+  finally { for (const f of [tmp, out]) if (existsSync(f)) unlinkSync(f); }
+}
+async function synth(text, voice = VOICE, styl = null) {
+  const rate = styl ? styl.rate : RATE;
   if (AZ) {
-    const pct = Math.round((RATE - 1) * 100);
+    const pct = Math.round((rate - 1) * 100);
     const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="cs-CZ">` +
-      `<voice name="${voice}"><prosody rate="${pct >= 0 ? "+" : ""}${pct}%">${esc(text)}</prosody></voice></speak>`;
+      `<voice name="${voice}"><prosody rate="${pct >= 0 ? "+" : ""}${pct}%"${styl ? ` pitch="${styl.pitch}%"` : ""}>${esc(text)}</prosody></voice></speak>`;
     return call(AAPI + "/v1", { method: "POST", body: ssml, headers: {
       "Ocp-Apim-Subscription-Key": KEY, "Content-Type": "application/ssml+xml",
       "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3", "User-Agent": "pravdive-drby-namluvit"
@@ -183,7 +199,7 @@ async function synth(text, voice = VOICE) {
   const casti = [];
   for (const kus of rozdelit(text)) {
     const j = await call(GAPI + "/text:synthesize", { method: "POST", headers: { "x-goog-api-key": KEY, "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ input: { text: kus }, voice: { languageCode: voice.slice(0, 5), name: voice }, audioConfig: { audioEncoding: "MP3", speakingRate: RATE } })
+      body: JSON.stringify({ input: { text: kus }, voice: { languageCode: voice.slice(0, 5), name: voice }, audioConfig: { audioEncoding: "MP3", speakingRate: rate } })
     }, true, () => pripsat(znaku(kus)));
     casti.push(Buffer.from(j.audioContent, "base64"));
   }
@@ -207,12 +223,12 @@ for (const f of readdirSync(new URL("data/", root)).filter((f) => f.endsWith(".j
   vm.runInContext(readFileSync(new URL("data/" + f, root), "utf8"), ctx, { filename: f });
 }
 const lines = (x) => [].concat(x).join(" ");
-const segs = new Set();
+const segs = new Set(), modlitby = new Set();
 for (const obec of ctx.window.PD_OBCE || []) {
   for (const b of obec.body) {
     (b.text || []).forEach((t) => segs.add(norm(t)));
     // stejné úseky jako prayerSegs/questionSegs v js/app.js
-    if (b.modlitba) b.modlitba.concat(b.modlitbaKonec || []).forEach((sl) => segs.add(norm(lines(sl))));
+    if (b.modlitba) b.modlitba.concat(b.modlitbaKonec || []).forEach((sl) => { segs.add(norm(lines(sl))); modlitby.add(norm(lines(sl))); });
     if (b.otazka) {
       if (b.predOtazkou) segs.add(norm(b.predOtazkou));
       segs.add(norm(b.otazka));
@@ -242,7 +258,8 @@ try {
       console.log("ukazky/" + v + ".mp3");
     }
   } else {
-    const fileKey = (t) => textKey(VOICE + "|" + RATE + "|" + norm(t));
+    const styl = (t) => modlitby.has(norm(t)) ? FARAR : null;
+    const fileKey = (t) => textKey(VOICE + "|" + (styl(t) ? "farar|" + FARAR.rate + "|" + FARAR.ozvena : RATE) + "|" + norm(t));
     mkdirSync(new URL("audio/", root), { recursive: true });
     // nejdřív zjistit, co chybí (hotové nahrávky se znovu nenamlouvají)
     const files = {}, keep = new Set(), todo = [];
@@ -259,7 +276,10 @@ try {
       // celé namlouvání se musí vejít do limitu, jinak se nezačne (žádné useknuté audio)
       if (!AZ && todo.length) overitPredem(znaky);
       for (const [t, name] of todo) {
-        writeFileSync(new URL("audio/" + name, root), await synth(t));
+        const st = styl(t);
+        let mp3 = await synth(t, VOICE, st);
+        if (st) mp3 = ozvena(mp3, st.ozvena);
+        writeFileSync(new URL("audio/" + name, root), mp3);
         process.stdout.write(".");
       }
       for (const f of readdirSync(new URL("audio/", root))) {

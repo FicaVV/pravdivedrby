@@ -767,7 +767,7 @@
   // Koza je kresba img/racice/1-dojeni-koza.svg (strakatá, tužka + žlutá, bez vemene).
   // Vemeno, vědro, mléko a bublina se kreslí tady, ať jdou animovat; vše funguje offline.
   // Vemeno je kreslené v „místních“ souřadnicích (vrch 112,62) a do kresby se zmenší přes UDDER.
-  var UDDER = { x: 136, y: 97, s: 0.5 };    // kde vemeno visí na koze a jak je velké
+  var UDDER = { x: 136, y: 97, s: 0.55 };    // kde vemeno visí na koze a jak je velké
   var BUCKET = { x: 136, y: 141, s: 0.55 }; // střed dna vědra na trávě
   function djUdderTip(scale, left) {         // špička struku v souřadnicích kresby
     return { x: UDDER.x + ((left ? 101.5 : 122.5) - 112) * UDDER.s, y: UDDER.y + (42 * scale + 1) * UDDER.s };
@@ -789,7 +789,7 @@
       return '<g class="dj-stream ' + cls + '"><path stroke="' + ink + '" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".5"/>' +
         '<path stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></g>';
     }
-    return '<svg class="dj-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Strakatá koza s nateklým vemenem a vědro pod ní">' +
+    return '<svg class="dj-svg" viewBox="56 36 144 108" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Strakatá koza s nateklým vemenem a vědro pod ní">' +
       '<defs>' +
       '<filter id="' + P + 'w1"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="1.4"/></filter>' +
       '<filter id="' + P + 'w2"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="1.8"/></filter>' +
@@ -831,8 +831,8 @@
       stream("dj-l") + stream("dj-r") +
       '<g class="dj-splash" fill="#fff" stroke="' + ink + '" stroke-width=".5"><circle r="1.1"/><circle r=".9"/><circle r=".8"/></g>' +
       // zamečení u hlavy
-      '<g class="dj-mee"><path d="M6 30 C6 20 46 20 46 30 C46 39 34 39 30 39 L32 47 L23 39 C14 39 6 38 6 30Z" fill="#fff" stroke="' + ink + '" stroke-width="1.2" filter="url(#' + P + 'w1)"/>' +
-        '<text x="26" y="33.5" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="10" fill="' + ink + '">Méé!</text></g>' +
+      '<g transform="translate(58 20)"><g class="dj-mee"><path d="M6 30 C6 20 46 20 46 30 C46 39 34 39 30 39 L32 47 L23 39 C14 39 6 38 6 30Z" fill="#fff" stroke="' + ink + '" stroke-width="1.2" filter="url(#' + P + 'w1)"/>' +
+        '<text x="26" y="33.5" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="10" fill="' + ink + '">Méé!</text></g></g>' +
       '</svg>';
   }
 
@@ -944,9 +944,8 @@
       }
       n++;
       squirt(side === 0);
-      stage.classList.remove("bump"); void stage.offsetWidth; stage.classList.add("bump");
       vibrate(n >= need ? [30, 60, 30, 60, 90] : 25);
-      bleat();
+      if (n >= need) bleat(); // koza zamečí jen při chybě a na konci
       // další struk: většinou ten druhý, ale občas zase stejný
       want = Math.random() < 0.65 ? 1 - side : side;
       lock = true; setTimeout(function () { lock = false; }, 220);
