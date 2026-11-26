@@ -103,7 +103,7 @@ window.PD_OBCE.push({
       priblizne: false,
       typ: "modlitba",
       text: [
-        "Zastav se u kříže, zapal svíčku a pusť si nahrávku modlitby."
+        "Po tolika patáliích za jediný den je čas se na chvíli zastavit. Zapal u kříže svíčku a pak si v klidu poslechni modlitbu."
       ],
       // nejdřív svíčka (škrtnutí sirky: audio/racice/sirka.mp3), pak se odemkne modlitba
       hra: {
@@ -117,7 +117,7 @@ window.PD_OBCE.push({
       // sloky modlitby (každá sloka = pole řádků); mezi slokami je při předčítání pauza
       modlitba: [
         ["Pane,", "stojíme na místě, kde se člověk zastaví,", "když neví, kudy dál."],
-        ["Nehledáme viníka,", "protože každému z nás se někdy", "něco nepovedlo."],
+        ["Nehledáme viníka,", "vždyť každému z nás se někdy", "něco nepovede."],
         ["Prosíme tě o klid v myšlenkách", "a o rozvahu v činech,", "aby drobné chyby nezanechaly velké stopy."],
         ["Ať si pamatujeme,", "že věci mají své místo,", "čas svůj řád", "a odpovědnost svou váhu."]
       ],
