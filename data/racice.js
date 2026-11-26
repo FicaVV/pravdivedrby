@@ -174,9 +174,9 @@ window.PD_OBCE.push({
       ],
       hra: {
         typ: "gumaky",
-        nadpis: "Odlij Floriánovi nohy",
-        zadani: "Keramička odlévá nové nohy z gumáků svého muže. Drž prst a lij sádru do formy. Pusť přesně u rysky, sádra ještě chvilku dotéká. Pak hotové odlitky přetáhni na sochu.",
-        hotovo: "Sedí jako ulité. Svatý Florián je od té doby jediný svatý v gumácích široko daleko."
+        nadpis: "Slep Floriána z odlitků",
+        zadani: "Keramička pro jistotu odlila celého Floriána znovu, kus po kusu, a nohy z gumáků svého muže. Přetáhni kusy prstem na obrys sochy. Klepnutím kus otočíš. Pozor, v dílně se válí i zmetky.",
+        hotovo: "Sedí jako ulitý. Svatý Florián je od té doby jediný svatý v gumácích široko daleko."
       }
     },
     {
@@ -194,9 +194,9 @@ window.PD_OBCE.push({
       hra: {
         typ: "kruhy",
         sekund: 6,
-        nadpis: "Udrž kříž na kruzích",
-        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Udrž ho šest vteřin v klidu. Když se rozhoupe na jednu stranu, klepni na tu stranu: vykoukne soused nebo babička a sfoukne ho zpátky.",
-        hotovo: "Šest vteřin bez hnutí! Rozhodčí by dali desítku a louky za vsí by se plnily stany."
+        nadpis: "Zacvič sestavu na kruzích",
+        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Zacvič jeho sestavu. Nejdřív rychle klepej, ať se vytáhne do kříže. Pak nech prst na displeji a posouváním doleva a doprava drž ručičku v zeleném, šest vteřin. Nakonec pusť prst ve chvíli, kdy je ručička v zeleném, a Hudec seskočí.",
+        hotovo: "Šest vteřin v kříži a čistý seskok! Rozhodčí zvedají známky a louky za vsí se plní stany."
       }
     },
     {
