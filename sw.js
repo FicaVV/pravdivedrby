@@ -6,6 +6,8 @@ const SHELL = [
   "data/racice-mapa.js", "js/kreslena-mapa.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
+  // minihry na stanovištích
+  "css/hry.css", "js/hry.js",
   "audio/racice/hymna-kdo-je-tady-doma.mp3", "audio/racice/zvony-modlitba.mp3",
   "audio/racice/koza-1.mp3", "audio/racice/koza-2.mp3",
   // kresby tužkou

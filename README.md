@@ -102,6 +102,24 @@ Koza je `img/racice/1-dojeni-koza.svg`, vemeno, vědro a mléko kreslí a animuj
 Při každém klepnutí koza zamečí: náhodně jedna z nahrávek v `meceni`, pokaždé trochu jinou výškou.
 Nahrávky kozy jsou CC0 od uživatele Kinoton z Freesound, přehled licencí je v `audio/racice/LICENSE.md`.
 
+## Minihry na ostatních stanovištích
+
+Ostatní minihry jsou v `js/hry.js` (styly v `css/hry.css`), bod je zapne přes `hra: { typ, nadpis, zadani, hotovo }`:
+
+| Stanoviště | `typ` | Co se dělá | Vztah k otázce |
+|---|---|---|---|
+| Hasičárna | `haseni` | klepáním stříká pivo z hadice na 6 plamenů | před otázkou |
+| Školka | `kase` | prstem stírá kaši z 8 oken a dveří | před otázkou |
+| Kříž | `svicka` (`pred: true`) | podrží prst na knotu, svíčka se zapálí | před modlitbou i otázkou |
+| Stadion | `tleskani` (`tempo`, `tlesknuti`) | tleská do rytmu RA-ČI-CE! | místo otázky |
+| Sochy | `gumaky` | přetáhne Floriánovi gumáky na sochu | před otázkou |
+| Sokolovna | `kruhy` (`sekund`) | klepáním vlevo/vpravo drží gymnastu v klidu | před otázkou |
+| Úřad | `vynos` | orazítkuje 3 vyhotovení a podepíše originál | před poslední kapitolou |
+
+Když má bod i `otazka` (nebo `konec`), zbytek stanoviště se odemkne až po dohrání. Bez otázky hra
+úkol nahrazuje. Zvuky se syntetizují ve Web Audio, takže nic dalšího se nestahuje a vše jede offline.
+Kresby používají stávající obrázky stanovišť, nové kresby (svíčka, kruhy, výnos) jsou přímo v kódu.
+
 ## Nahrávky u stanovišť
 
 Stanoviště může mít přehrávač s nahrávkou: v bodu v `data/racice.js` vyplňte

@@ -15,6 +15,7 @@ const out = `<title>Pravdivé drby</title>
 <style>
 ${r("vendor/leaflet/leaflet.css")}
 ${r("css/app.css")}
+${r("css/hry.css")}
 </style>
 ${markup}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -24,6 +25,9 @@ ${r("data/racice.js")}
 ${r("data/racice-kronika.js")}
 ${r("data/racice-mapa.js")}
 ${r("js/kreslena-mapa.js")}
+</script>
+<script>
+${r("js/hry.js")}
 </script>
 <script>
 ${r("js/kronika.js")}
