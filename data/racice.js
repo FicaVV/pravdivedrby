@@ -34,9 +34,10 @@ window.PD_OBCE.push({
       pozice: [49.276466, 16.872248], // z Vojtovy trasy na mapy.com
       priblizne: false,
       text: [
-        "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958, tedy první zmínky o událostech, které o dva roky později vedly ke sloučení Račic a Pístovic.",
-        "Vše začalo docela nevinně. Bylo krásné počasí, slunce svítilo a ve vesnici byl klid. Jenom koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše. Ta se toho dne podávala k oblíbené uzené krkovici. Jídlo díky tomu bylo nepoživatelné. Někteří hosté si stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
-        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal do ešusu nabrat čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu."
+        "Otevíráme obecní kroniku Račic na létě roku 1958. Právě tady začínají události, které o dva roky později vedly ke sloučení Račic a Pístovic.",
+        "Všechno začalo docela nevinně. Svítilo slunce a ve vsi byl klid. Jen koza hostinského se u plotu za hospodou přejedla kopřiv. Nateklo jí vemeno a mléko v něm zhořklo.",
+        "Vinou hospodářské neobratnosti to hořké mléko přesto skončilo v bramborové kaši. A ta se ten den podávala k oblíbené uzené krkovici. Oběd byl rázem nepoživatelný. Někteří hosté si stěžovali hned. Jiní neodolali vůni uzeného a ozvali se až po výplachu žaludku.",
+        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal do ešusu nabrat čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu. Kaši si nevzal."
       ],
       // minihra místo otázky (js/app.js → dojeni)
       hra: {
