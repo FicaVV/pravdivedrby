@@ -112,10 +112,10 @@ Ostatní minihry jsou v `js/hry.js` (styly v `css/hry.css`), bod je zapne přes 
 | Hasičárna | `haseni` | klepáním stříká pivo z hadice na 6 plamenů | `audio/racice/hadice.mp3` (úryvek na každé stříknutí) |
 | Školka | `kase` | prstem stírá kaši z bílé školky a natírá ji na žluto, nápis NA KAŠI ZÁLEŽÍ se mění na NAŠÍ MLÁDEŽI | `audio/racice/umyvani.mp3` (hraje, dokud se prst hýbe) |
 | Kříž | `svicka` (`pred: true`) | podrží prst na knotu, svíčka se zapálí, pak se odemkne modlitba | `audio/racice/sirka.mp3` (škrtnutí sirky) |
-| Stadion | `tleskani` (`tempo`, `tlesknuti`) | tleská do rytmu RA-ČI-CE! | syntetizovaný |
-| Sochy | `gumaky` | přetáhne Floriánovi gumáky na sochu | syntetizovaný |
-| Sokolovna | `kruhy` (`sekund`) | klepáním vlevo/vpravo drží gymnastu v klidu | syntetizovaný |
-| Úřad | `vynos` | orazítkuje 3 vyhotovení a podepíše originál | syntetizovaný |
+| Stadion | `amplion` | tahem prstu nahoru hází kameny na 3 ampliony, každý zásah hymnu ztiší a rozladí | `audio/racice/hymna-kdo-je-tady-doma.mp3` (ve smyčce, dokud nejsou ampliony zmlklé) |
+| Sochy | `gumaky` | držením prstu lije sádru do 2 forem z gumáků (pustit u rysky, sádra chvilku dotéká), pak odlitky přetáhne na sochu | syntetizovaný |
+| Sokolovna | `kruhy` (`sekund`) | klepnutím vlevo/vpravo vyjede soused nebo babička a gymnastu sfoukne zpátky do klidu; na straně, kam se houpe, hlava vykukuje jako nápověda | syntetizovaný |
+| Úřad | `vynos` | 3 kroky: rozveze kočárky do jeslí v Račicích a Pístovicích (oboje se zaplní), obtáhne jednu hranici kolem obou obcí, orazítkuje a podepíše výnos | syntetizovaný |
 
 Minihra je úkolem stanoviště: po dohrání se kapitola zapíše do kroniky a bouchne razítko. Otázky s možnostmi
 hra už nemá (kód je pořád umí přes `otazka`, `moznosti`, `answer`, `napoveda`). Pod dohranou hrou je
@@ -123,7 +123,7 @@ hra už nemá (kód je pořád umí přes `otazka`, `moznosti`, `answer`, `napov
 
 Zvuk `hra.zvuk` je MP3, které se načte do Web Audia (jde pak přehrávat úryvky a přes sebe). Musí být v `SHELL`
 v `sw.js`, aby hrálo offline. Když se nenačte (třeba v jednosouborové ukázce), hra použije syntetický zvuk.
-Ostatní zvuky se syntetizují ve Web Audio. Kresby používají obrázky stanovišť, nové kresby (svíčka, kruhy, výnos)
+Ostatní zvuky se syntetizují ve Web Audio. Kresby používají obrázky stanovišť, nové kresby (svíčka, ampliony, formy na gumáky, kruhy, jesle, plánek, výnos)
 jsou přímo v kódu.
 
 Školka má dvě kresby: `3-skolka-bila.svg` (bílá, kaše, NA KAŠI ZÁLEŽÍ) se ukazuje, dokud úkol není splněný
