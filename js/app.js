@@ -92,7 +92,7 @@
 
   // ---------- mapa ----------
   var map, meMarker, accCircle, pins = {}, routeLine, tileOk = 0, tileErr = 0, schematic = false;
-  var osmTiles = null, kresba = null, kresbaAttr = false;
+  var osmTiles = null, kreslena = null, kresbaAttr = false;
   var MAPA = (window.PD_MAPA || {})[OBEC.id] || null;
   var OSM_ATTR = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">přispěvatelé OpenStreetMap</a>';
   var KRESBA_ATTR = 'Kresba podle dat © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">přispěvatelé OpenStreetMap</a> (ODbL)';
@@ -105,12 +105,12 @@
       osmTiles.on("tileload", function () { tileOk++; });
       osmTiles.on("tileerror", function () {
         tileErr++;
-        if (tileErr > 4 && !tileOk) { if (kresba) { setPodklad("kresba", true); toast("Skutečná mapa se bez signálu nenačte, ukazuji kreslenou."); } else goSchematic(); }
+        if (tileErr > 4 && !tileOk) { if (kreslena) { setPodklad("kresba", true); toast("Skutečná mapa se bez signálu nenačte, ukazuji kreslenou."); } else goSchematic(); }
       });
     }
     if (MAPA && window.PD_KRESBA) {
-      kresba = PD_KRESBA.vytvor(map, MAPA, OBEC, { onKoza: function () { toast("Mééé! Koza se ti schovávala v mapě."); vibrate(60); } });
-      kresba.trasa.addTo(map);
+      kreslena = PD_KRESBA.vytvor(map, MAPA, OBEC, { onKoza: function () { toast("Mééé! Koza se ti schovávala v mapě."); vibrate(60); } });
+      kreslena.trasa.addTo(map);
       L.control.scale({ imperial: false, maxWidth: 90, position: "bottomleft" }).addTo(map);
       var rose = L.control({ position: "bottomleft" });
       rose.onAdd = function () {
@@ -123,8 +123,8 @@
       };
       kartus.addTo(map);
     }
-    if (!kresba && !osmTiles) goSchematic();
-    if (kresba && osmTiles) {
+    if (!kreslena && !osmTiles) goSchematic();
+    if (kreslena && osmTiles) {
       var sw = L.control({ position: "topright" });
       sw.onAdd = function () {
         var box = el("div", { class: "pd-podklad", role: "group", "aria-label": "Podklad mapy" }, [
@@ -137,10 +137,10 @@
       };
       sw.addTo(map);
     }
-    if (kresba) setPodklad(state.podklad === "osm" && osmTiles ? "osm" : "kresba", true);
+    if (kreslena) setPodklad(state.podklad === "osm" && osmTiles ? "osm" : "kresba", true);
     else if (osmTiles) osmTiles.addTo(map);
     routeLine = L.polyline([], { color: "#142019", weight: 3, dashArray: "6 8", opacity: .55 });
-    if (!kresba) routeLine.addTo(map);
+    if (!kreslena) routeLine.addTo(map);
     OBEC.body.forEach(function (b, i) {
       var m = L.marker(b.pozice, { icon: pinIcon(b, i), keyboard: true, title: b.nazev }).addTo(map);
       m.on("click", function () { onPinClick(i); });
@@ -160,10 +160,10 @@
   }
   // Kreslená mapa (výchozí, je celá v telefonu) nebo skutečná mapa z dlaždic OpenStreetMap
   function setPodklad(p, quiet) {
-    if (!kresba) return;
+    if (!kreslena) return;
     var osm = p === "osm" && !!osmTiles;
     state.podklad = osm ? "osm" : "kresba"; if (!quiet) save();
-    kresba.zobrazit(!osm);
+    kreslena.zobrazit(!osm);
     if (osmTiles) { if (osm) osmTiles.addTo(map); else osmTiles.remove(); }
     // kresba je odvozená z dat OSM (ODbL), proto uvádíme zdroj i licenci; dlaždice mají vlastní atribuci
     if (osm !== !kresbaAttr) { kresbaAttr = !osm; if (osm) map.attributionControl.removeAttribution(KRESBA_ATTR); else map.attributionControl.addAttribution(KRESBA_ATTR); }
@@ -171,7 +171,7 @@
   }
   function fitRoute() {
     // u kreslené mapy víc okraje: kartičky stanovišť vyčnívají ze značek do stran
-    var k = kresba && state.podklad !== "osm";
+    var k = kreslena && state.podklad !== "osm";
     map.fitBounds(OBEC.body.map(function (b) { return b.pozice; }), { paddingTopLeft: [k ? 70 : 24, k ? 150 : 90], paddingBottomRight: [k ? 50 : 24, k ? 90 : 40] });
   }
   function goSchematic() {
@@ -190,7 +190,7 @@
   function refreshPins() {
     $("#edit-bar").hidden = !state.edit;
     if (!map) return;
-    if (kresba) kresba.update(state);
+    if (kreslena) kreslena.update(state);
     OBEC.body.forEach(function (b, i) {
       var m = pins[b.id];
       if (!m) return; // značky ještě nevznikly (schematická mapa se zapne dřív)
