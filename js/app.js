@@ -806,13 +806,16 @@
         '<g class="dj-udder" style="transform-origin:112px 62px">' +
           '<path d="' + teatL + ' Z" fill="#f6e2da"/>' + line(teatL, 2.4) +
           '<path d="' + teatR + ' Z" fill="#f6e2da"/>' + line(teatR, 2.4) +
+          // který struk je na řadě: žlutý kroužek kolem něj
+          '<g class="dj-hl dj-hl-l"><ellipse cx="101.5" cy="97" rx="13" ry="15" fill="#f5c400" opacity=".6"/><ellipse cx="101.5" cy="97" rx="13" ry="15" fill="none" stroke="' + ink + '" stroke-width="2" stroke-dasharray="3 2.5"/></g>' +
+          '<g class="dj-hl dj-hl-r"><ellipse cx="122.5" cy="97" rx="13" ry="15" fill="#f5c400" opacity=".6"/><ellipse cx="122.5" cy="97" rx="13" ry="15" fill="none" stroke="' + ink + '" stroke-width="2" stroke-dasharray="3 2.5"/></g>' +
           '<path d="' + udder + '" fill="#f6e2da"/>' +
           '<path class="dj-sore" d="' + udder + '" fill="url(#' + P + 'red)" opacity=".55"/>' +
           line(udder.replace(/ Z$/, ""), 2.6) + line("M112 70 C111 78 112 84 113 90", 1) +
         '</g>' +
       '</g>' +
       // vědro s mlékem
-      '<g ' + at(BUCKET) + '>' +
+      '<g class="dj-bucket" style="transform-origin:136px 141px"><g ' + at(BUCKET) + '>' +
         '<path d="' + bucket + '" fill="#e9e5db"/>' +
         '<g clip-path="url(#' + P + 'in)"><g class="dj-milk" style="transform:translateY(26px)">' +
           '<rect x="70" y="120" width="84" height="32" fill="#fffdf7"/>' +
@@ -821,7 +824,9 @@
         '<path d="M86 146 L138 146 L140 138 L84 138 Z" fill="url(#' + P + 'x)" opacity=".45"/>' +
         line(bucket, 2.6) + line("M82 128 L142 128 M84 138 L140 138", 1.3) + line("M80 120 C96 123 128 123 144 120", 1.4) +
         '<path d="M81 124 C84 141 140 141 143 124" fill="none" stroke="' + ink + '" stroke-width="1.8" filter="url(#' + P + 'w1)"/>' +
-      '</g>' +
+      '</g></g>' +
+      // vyšplíchnuté mléko, když se vědro zhoupne
+      '<g class="dj-spill" fill="#fff" stroke="' + ink + '" stroke-width=".6"><path d="M118 126 C114 120 112 122 113 127 Z"/><path d="M154 126 C158 120 160 122 159 127 Z"/><circle cx="111" cy="121" r="1.3"/><circle cx="161" cy="120" r="1.2"/><circle cx="116" cy="117" r=".9"/></g>' +
       // proud mléka (střídavě z levého a pravého struku) a kapky nad vědrem
       stream("dj-l") + stream("dj-r") +
       '<g class="dj-splash" fill="#fff" stroke="' + ink + '" stroke-width=".5"><circle r="1.1"/><circle r=".9"/><circle r=".8"/></g>' +
@@ -873,9 +878,11 @@
     box.appendChild(el("h3", { text: h.nadpis }));
     box.appendChild(el("p", { text: h.zadani }));
     var stage = el("div", { class: "dj-stage", html: dojeniSvg() });
-    var tap = el("button", { class: "dj-tap", "aria-label": "Podojit kozu" });
-    stage.appendChild(tap);
-    var tip = el("span", { class: "dj-tip", text: "Klepni na vemeno" });
+    // dva velké terče: levá a pravá polovina vemene (struky jsou na prst moc malé)
+    var taps = [el("button", { class: "dj-tap dj-tl", "aria-label": "Podojit levý struk" }),
+                el("button", { class: "dj-tap dj-tr", "aria-label": "Podojit pravý struk" })];
+    taps.forEach(function (t) { stage.appendChild(t); });
+    var tip = el("span", { class: "dj-tip", text: "Klepni na žlutý struk" });
     stage.appendChild(tip);
     box.appendChild(stage);
     var dots = el("div", { class: "dj-dots", "aria-hidden": "true" });
@@ -886,17 +893,23 @@
     var fb = el("div", { class: "feedback ok", hidden: "", text: h.hotovo });
     box.appendChild(fb);
     var svg = stage.querySelector("svg"), mee = svg.querySelector(".dj-mee");
+    // který struk je na řadě (0 levý, 1 pravý); vybírá se náhodně, takže je potřeba se dívat
+    var want = Math.random() < 0.5 ? 0 : 1, lock = false, misses = 0;
 
     function scaleAt(m) { return 1.25 - 0.25 * m / need; }
-    function paint() {
+    function paint(msg) {
       var p = n / need;
       svg.querySelector(".dj-milk").style.transform = "translateY(" + (26 - 22 * p).toFixed(1) + "px)";
       svg.querySelector(".dj-udder").style.transform = "scale(" + scaleAt(n).toFixed(3) + ")";
       svg.querySelector(".dj-sore").style.opacity = (0.55 * (1 - p)).toFixed(2);
       svg.querySelector(".dj-pain").style.opacity = n >= need ? 0 : (1 - 0.8 * p).toFixed(2);
+      svg.querySelector(".dj-hl-l").classList.toggle("on", n < need && want === 0);
+      svg.querySelector(".dj-hl-r").classList.toggle("on", n < need && want === 1);
+      taps[0].setAttribute("aria-label", "Podojit levý struk" + (want === 0 ? " (je na řadě)" : ""));
+      taps[1].setAttribute("aria-label", "Podojit pravý struk" + (want === 1 ? " (je na řadě)" : ""));
       Array.prototype.forEach.call(dots.children, function (d, k) { d.className = k < n ? "on" : ""; });
-      live.textContent = n >= need ? "" : n ? "Podojeno " + n + " z " + need + "." : "";
-      if (n >= need) { box.classList.add("done"); tap.disabled = true; tip.hidden = true; fb.hidden = false; }
+      live.textContent = n >= need ? "" : msg || (n ? "Podojeno " + n + " z " + need + ". Teď " + (want ? "pravý" : "levý") + " struk." : "");
+      if (n >= need) { box.classList.add("done"); taps.forEach(function (t) { t.disabled = true; }); tip.hidden = true; fb.hidden = false; }
     }
     function squirt(left) {
       var s = svg.querySelector(left ? ".dj-l" : ".dj-r"), t = djUdderTip(scaleAt(n - 1), left), rim = djRimY() + 2;
@@ -911,21 +924,39 @@
       mee.classList.remove("pop"); void mee.getBBox(); mee.classList.add("pop");
       djBleat(h.meceni);
     }
-    tap.addEventListener("click", function () {
-      if (n >= need) return;
+    function milk(side) {
+      if (n >= need || lock) return;
       djLoad(h.meceni);
-      n++;
-      squirt(n % 2 === 1);
-      stage.classList.remove("bump"); void stage.offsetWidth; stage.classList.add("bump");
       tip.hidden = true;
+      if (side !== want) {
+        // vedle: koza ucukne, vědro se zhoupne a kus mléka vyšplíchne
+        misses++;
+        if (n > 0) n--;
+        var bk = svg.querySelector(".dj-bucket"), sp = svg.querySelector(".dj-spill");
+        bk.classList.remove("rock"); void bk.getBBox(); bk.classList.add("rock");
+        sp.classList.remove("go"); void sp.getBBox(); sp.classList.add("go");
+        stage.classList.remove("kick"); void stage.offsetWidth; stage.classList.add("kick");
+        vibrate([40, 40, 40]);
+        bleat();
+        lock = true; setTimeout(function () { lock = false; }, 500);
+        paint(misses > 1 && n === 0 ? "Vedle! Klepej jen na struk se žlutým kroužkem." : "Vedle! Koza ucukla a kus mléka vyšplíchl.");
+        return;
+      }
+      n++;
+      squirt(side === 0);
+      stage.classList.remove("bump"); void stage.offsetWidth; stage.classList.add("bump");
       vibrate(n >= need ? [30, 60, 30, 60, 90] : 25);
       bleat();
+      // další struk: většinou ten druhý, ale občas zase stejný
+      want = Math.random() < 0.65 ? 1 - side : side;
+      lock = true; setTimeout(function () { lock = false; }, 220);
       paint();
       if (n >= need) {
         setTimeout(function () { svg.classList.add("mee"); }, 450);
         if (onDone) setTimeout(onDone, 900);
       }
-    });
+    }
+    taps.forEach(function (t, k) { t.addEventListener("click", function () { milk(k); }); });
     if (hotovo) svg.classList.add("mee");
     else djLoad(h.meceni);
     paint();

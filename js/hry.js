@@ -228,24 +228,40 @@
         '<path class="hs-jet" pathLength="100" stroke="#f5c400" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>' +
       '<g class="hs-foam" fill="#fffdf7" stroke="' + INK + '" stroke-width=".5"><circle r="2.2"/><circle r="1.8"/><circle r="1.6"/><circle r="1.3"/></g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, dots: F.length, tip: "Klepej na plameny", label: "Hořící zbrojnice" });
+    var g = shell(b, hotovo, { svg: svg, tip: "Klepej na plameny", label: "Hořící zbrojnice" });
     g.onDone(onDone);
     if (!hotovo) loadSample(b.hra.zvuk);
-    var hp = F.map(function () { return hotovo ? 0 : HP; });
+    // Na začátku hoří čtyři místa. Plamen, který nikdo nehasí, po chvíli přeskočí na sousední okno
+    // a přiškrcený plamen se zase rozhoří. Piva je v sudu omezeně; když dojde, hostinský přivalí nový sud.
+    var BEER = 16, SPREAD = 3000, REGROW = 2600;
+    var beerLeft = BEER, started = false, refilling = false, timer = null, lastHit = F.map(function () { return 0; });
+    var hp = F.map(function (p, k) { return hotovo ? 0 : (k === 0 || k === 2 || k === 3 || k === 5) ? HP : 0; });
     var fires = g.svg.querySelectorAll(".hs-fire");
     var jets = g.svg.querySelectorAll(".hs-jet"), beer = g.svg.querySelector(".hs-beer"), foam = g.svg.querySelector(".hs-foam");
-    function out() { return hp.filter(function (x) { return x === 0; }).length; }
+    // ukazatel piva v sudu (vpravo nahoře)
+    var gauge = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    gauge.setAttribute("class", "hs-gauge");
+    gauge.innerHTML = '<rect x="178" y="10" width="12" height="44" rx="2" fill="#fffdf7"/>' +
+      '<rect class="hs-level" x="178" y="10" width="12" height="44" rx="2" fill="#f5c400"/>' +
+      ln(P, "M178 10 H190 V54 H178 Z", 1.2) +
+      '<text x="184" y="62" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="6" fill="' + INK + '">PIVO</text>';
+    g.svg.appendChild(gauge);
+    var level = gauge.querySelector(".hs-level");
+    function burning() { return hp.filter(function (x) { return x > 0; }).length; }
+    function mist(n) { return n === 1 ? "jedno místo" : n + (n < 5 ? " místa" : " míst"); }
     function paint() {
       Array.prototype.forEach.call(fires, function (f, k) {
         f.setAttribute("data-hp", hp[k]);
         var fl = f.querySelector(".hs-fl"); fl.style.transform = hp[k] === HP ? "" : hp[k] ? "scale(.55)" : "scale(0)";
+        btns[k].disabled = g.finished || hp[k] === 0;
       });
-      g.set(out());
+      var r = beerLeft / BEER;
+      level.setAttribute("y", f1(10 + 44 * (1 - r))); level.setAttribute("height", f1(44 * r));
+      gauge.classList.toggle("low", beerLeft <= 3);
     }
-    function spray(k) {
-      var p = F[k], tx = p[0], ty = p[1] - 8;
+    function sprayTo(tx, ty) {
       var mx = (NOZ.x + tx) / 2, my = Math.min(NOZ.y, ty) - 30;
-      var d = "M" + NOZ.x + " " + NOZ.y + " Q" + f1(mx) + " " + f1(my) + " " + tx + " " + f1(ty);
+      var d = "M" + NOZ.x + " " + NOZ.y + " Q" + f1(mx) + " " + f1(my) + " " + f1(tx) + " " + f1(ty);
       Array.prototype.forEach.call(jets, function (j) { j.setAttribute("d", d); });
       restart(beer, "go");
       Array.prototype.forEach.call(foam.children, function (c, i) {
@@ -255,26 +271,76 @@
       // syčení hadice: kus nahrávky b.hra.zvuk, pokaždé odjinud
       if (!sample(b.hra.zvuk, { offset: Math.random() * 2, dur: 0.75, gain: 0.9, fadeOut: 0.25, rate: 0.95 + Math.random() * 0.1 })) SFX.spray();
     }
-    F.forEach(function (p, k) {
+    // stříknutí stojí pivo; vrací false, když je sud prázdný
+    function useBeer() {
+      if (refilling) { g.say("Hostinský teprve valí nový sud…"); g.bump(); return false; }
+      beerLeft--;
+      if (beerLeft <= 0) {
+        refilling = true;
+        g.say("Sud je prázdný! Hostinský valí nový, a oheň zatím nečeká.");
+        setTimeout(function () { refilling = false; beerLeft = BEER; paint(); if (!g.finished) g.say("Nový sud je napíchnutý. Šetři pivem!"); }, 2600);
+      }
+      return true;
+    }
+    function start() {
+      if (started || hotovo) return;
+      started = true;
+      timer = setInterval(tick, 400);
+    }
+    var lastSpread = 0;
+    function tick() {
+      if (g.finished || !g.box.isConnected) { clearInterval(timer); return; }
+      var now = performance.now(); if (!lastSpread) lastSpread = now;
+      // přiškrcený plamen se po chvíli znovu rozhoří
+      hp.forEach(function (x, k) { if (x > 0 && x < HP && now - lastHit[k] > REGROW) { hp[k] = HP; paint(); } });
+      if (now - lastSpread < SPREAD) return;
+      lastSpread = now;
+      // plamen přeskočí na nejbližší nehořící místo
+      var cand = [];
+      hp.forEach(function (x, k) {
+        if (x !== HP) return;
+        F.forEach(function (q, j) { if (hp[j] === 0 && Math.hypot(q[0] - F[k][0], q[1] - F[k][1]) < 45) cand.push(j); });
+      });
+      if (!cand.length) return;
+      var j = cand[Math.floor(Math.random() * cand.length)];
+      hp[j] = HP; lastHit[j] = now;
+      restart(fires[j], "puff");
+      noise({ f: 300, to: 900, q: 0.7, dur: 0.4, gain: 0.12, att: 0.05 }); // vzplanutí
+      g.say("Oheň přeskočil! Hoří už " + mist(burning()) + ".");
+      paint();
+    }
+    var btns = F.map(function (p, k) {
       var btn = hotspot(p[0], p[1] - 10, 15, 19, "Uhasit plamen " + (k + 1));
-      if (hotovo) btn.disabled = true;
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
         if (g.finished || hp[k] === 0) return;
-        g.hideTip();
-        hp[k]--;
-        spray(k);
+        g.hideTip(); start();
+        if (!useBeer()) { paint(); return; }
+        hp[k]--; lastHit[k] = performance.now();
+        sprayTo(p[0], p[1] - 8);
         vibrate(20);
         if (hp[k] === 0) {
-          btn.disabled = true;
           setTimeout(function () { SFX.hiss(); restart(fires[k], "puff"); }, 280);
-          g.say("Uhašeno " + out() + " z " + F.length + ".");
+          g.say(burning() ? "Uhašeno! Ještě hoří " + mist(burning()) + "." : "");
         }
         setTimeout(paint, 250);
-        if (out() === F.length) {
+        if (!burning()) {
+          g.finished = true; clearInterval(timer);
           setTimeout(function () { g.finish(); }, 700);
         }
       });
       g.stage.appendChild(btn);
+      return btn;
+    });
+    // stříknutí vedle stojí taky pivo
+    g.stage.addEventListener("click", function (e) {
+      if (g.finished || hotovo || e.target.closest(".hr-hot, .hr-sr")) return;
+      var p = pt(g.svg, e);
+      if (p.x > 140) return;
+      g.hideTip(); start();
+      if (!useBeer()) { paint(); return; }
+      sprayTo(p.x, p.y);
+      paint();
     });
     paint();
     return g.box;
@@ -295,6 +361,17 @@
         '<g class="ks-rag" fill="none" stroke="#000" stroke-width="' + (R * 2) + '" stroke-linecap="round" stroke-linejoin="round"></g></mask>') +
       backdrop(b.ilustrace && b.ilustrace.obrazek || "img/racice/3-skolka.svg") +
       '<g class="ks-top" mask="url(#' + P + 'm)">' + backdrop(BILA) + '</g>' +
+      '<g class="ks-splats"></g>' +
+      // kluk v období vzdoru s kýblem kaše; vykoukne zespodu a hází
+      '<g class="ks-kid" transform="translate(-40 0)"><g class="ks-kid-in">' +
+        shape(P, "M-7 0 C-7 -10 -5 -16 0 -16 C5 -16 7 -10 7 0 Z", "#9fc3ee", 1.3) +
+        '<circle cx="0" cy="-21" r="6.2" fill="#f6e2da"/>' + ln(P, "M-6.2 -21 A6.2 6.2 0 1 0 6.2 -21 A6.2 6.2 0 1 0 -6.2 -21", 1.3) +
+        ln(P, "M-5.5 -24 C-3 -29 3 -29 5.8 -24 M-3 -27 L-1 -24 M1 -27.5 L2.5 -24", 1.1) +
+        ln(P, "M-2.4 -21.5 L-1.2 -20.6 M2.4 -21.5 L1.2 -20.6 M-2 -17.8 C-1 -18.8 1 -18.8 2 -17.8", 0.9) +
+        '<g class="ks-arm">' + ln(P, "M5 -13 L11 -22", 1.6) + '<path d="M8 -27 C8 -31 15 -31 15 -27 L14 -22 L9 -22 Z" fill="#e9e5db"/>' + ln(P, "M8 -27 C8 -31 15 -31 15 -27 L14 -22 L9 -22 Z", 1.1) + '</g>' +
+        ln(P, "M-5 -13 L-9 -6", 1.6) +
+      '</g></g>' +
+      '<g class="ks-fly"><circle r="3" fill="#f3e3b0"/>' + ln(P, "M-3 0 A3 3 0 1 0 3 0 A3 3 0 1 0 -3 0", 0.8) + '</g>' +
       '<g class="ks-shine" fill="none" stroke="' + INK + '" stroke-width="1" stroke-linecap="round"></g>' +
       '</svg>';
     var DOTS = 8;
@@ -313,6 +390,73 @@
     function podil() { return hit / pts.length; }
     if (hotovo) top.style.opacity = 0;
 
+    // ---- kluk s kýblem: znovu hází kaši na natřená místa, klepnutí na něj ho na chvíli uklidní ----
+    var NS = "http://www.w3.org/2000/svg", KIDX = [24, 100, 176], KR = 7;
+    var kid = g.svg.querySelector(".ks-kid"), fly = g.svg.querySelector(".ks-fly"), splatG = g.svg.querySelector(".ks-splats");
+    var splats = [], kidAt = null, kidUntil = 0, calmUntil = 0, nextThrow = 0, kidTimer = null, painting = false;
+    function kidShow(x) {
+      kidAt = x; kid.setAttribute("transform", "translate(" + x + " 150)");
+      restart(kid, "up");
+    }
+    function kidHide() { kid.classList.remove("up"); kidAt = null; }
+    function blob(cx, cy, seed) {
+      var r = rng(seed), d = "";
+      for (var i = 0; i < 9; i++) {
+        var a = i / 9 * Math.PI * 2, rr = KR * (0.65 + r() * 0.55);
+        d += (i ? " L" : "M") + f1(cx + Math.cos(a) * rr) + " " + f1(cy + Math.sin(a) * rr * 0.85);
+      }
+      return d + " Z";
+    }
+    function splat(tx, ty) {
+      var gg = document.createElementNS(NS, "g"), d = blob(tx, ty, Math.floor(tx * 31 + ty * 7));
+      gg.setAttribute("class", "ks-splat");
+      gg.innerHTML = '<path d="' + d + '" fill="#f3e3b0"/>' + ln(P, d, 1) + '<circle cx="' + f1(tx + KR + 2) + '" cy="' + f1(ty - 3) + '" r="1.4" fill="#f3e3b0" stroke="' + INK + '" stroke-width=".6"/>';
+      splatG.appendChild(gg);
+      var mine = pts.filter(function (sp) { return Math.hypot(sp[0] - tx, sp[1] - ty) < KR + 1; });
+      mine.forEach(function (sp) { if (sp[2]) { sp[2] = false; hit--; } });
+      splats.push({ el: gg, pts: mine });
+      SFX.pop(); vibrate([15, 30, 15]);
+      g.say("Plesk! Kluk zase hází kaši. Klepni na něj, ať dá pokoj.");
+      paintSteps();
+    }
+    function throwAt() {
+      var cand = pts.filter(function (sp) { return sp[2] && !splats.some(function (q) { return q.pts.indexOf(sp) >= 0; }); });
+      if (!cand.length || kidAt === null) return;
+      var t = cand[Math.floor(Math.random() * cand.length)], from = { x: kidAt + 12, y: 120 }, t0 = performance.now();
+      restart(kid, "throw");
+      fly.style.opacity = 1;
+      (function stp() {
+        var q = Math.min(1, (performance.now() - t0) / 450);
+        var x = from.x + (t[0] - from.x) * q, y = from.y + (t[1] - from.y) * q - Math.sin(q * Math.PI) * 30;
+        fly.setAttribute("transform", "translate(" + f1(x) + " " + f1(y) + ")");
+        if (q < 1 && !g.finished) requestAnimationFrame(stp);
+        else { fly.style.opacity = 0; if (!g.finished) splat(t[0], t[1]); }
+      })();
+    }
+    function kidTick() {
+      if (g.finished || !g.box.isConnected) { clearInterval(kidTimer); kidHide(); return; }
+      var now = performance.now();
+      if (now < calmUntil || podil() < 0.15) return;
+      if (kidAt === null && now > nextThrow) { kidShow(KIDX[Math.floor(Math.random() * KIDX.length)]); kidUntil = now + 2600; setTimeout(function () { if (kidAt !== null && splats.length < 4) throwAt(); }, 700); return; }
+      if (kidAt !== null && now > kidUntil) { kidHide(); nextThrow = now + 1800 + Math.random() * 1600; }
+    }
+    function calm() {
+      kidHide(); calmUntil = performance.now() + 6000;
+      SFX.pop(); vibrate(20);
+      g.say("Kluk se uklidnil. Chvíli bude pokoj.");
+    }
+    function paintSteps() {
+      var k = Math.min(DOTS, Math.floor(podil() / HOTOVO * DOTS));
+      if (k < step) { step = k; g.set(k); }
+    }
+    function cleanSplats() {
+      splats = splats.filter(function (q) {
+        var done = q.pts.filter(function (sp) { return sp[2]; }).length >= q.pts.length * 0.8;
+        if (done) { q.el.classList.add("pryc"); setTimeout(function () { q.el.remove(); }, 400); }
+        return !done;
+      });
+    }
+
     var line = null, last = null, sndStop = null, sndT = 0;
     function rub(p) {
       pts.forEach(function (sp) {
@@ -320,14 +464,15 @@
         var dx = sp[0] - p.x, dy = sp[1] - p.y;
         if (dx * dx + dy * dy < R * R) { sp[2] = true; hit++; }
       });
+      if (splats.length) cleanSplats();
       var k = Math.min(DOTS, Math.floor(podil() / HOTOVO * DOTS));
       if (k > step) {
         step = k; g.set(k); vibrate(15);
         if (k < DOTS) { SFX.pop(); sparkle(p.x, p.y - 6); g.say("Natřeno " + Math.round(k / DOTS * 100) + " %."); }
       }
-      if (podil() >= HOTOVO && !g.finished) {
+      if (podil() >= HOTOVO && !splats.length && !g.finished) {
         top.classList.add("pryc"); // zbytek kaše zmizí sám
-        zvuk(false);
+        zvuk(false); clearInterval(kidTimer); kidHide();
         g.finish();
       }
     }
@@ -365,6 +510,9 @@
     st.addEventListener("pointerdown", function (e) {
       if (g.finished) return;
       g.hideTip();
+      var p0 = pt(g.svg, e);
+      if (kidAt !== null && Math.abs(p0.x - kidAt) < 18 && p0.y > 112) { e.preventDefault(); calm(); return; }
+      if (!kidTimer && !hotovo) kidTimer = setInterval(kidTick, 300);
       loadSample(b.hra.zvuk);
       try { st.setPointerCapture(e.pointerId); } catch (x) {}
       line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
@@ -394,7 +542,7 @@
   // 4) Kříž: zapal svíčku
   // =====================================================================
   HRY.svicka = function (b, hotovo, onDone) {
-    var P = "sv-", HOLD = 1600; // jak dlouho držet prst (ms)
+    var P = "sv-";
     var flame = "M0 0 C-4 -3 -4 -9 0 -18 C4 -9 4 -3 0 0 Z", core = "M0 -1 C-1.8 -3 -1.8 -6 0 -10 C1.8 -6 1.8 -3 0 -1 Z";
     var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Svíčka ve skleničce u paty památného kříže">' +
       defs(P, '<radialGradient id="' + P + 'glow"><stop offset="0" stop-color="#ffd84a" stop-opacity=".75"/><stop offset=".5" stop-color="#ffd84a" stop-opacity=".25"/><stop offset="1" stop-color="#ffd84a" stop-opacity="0"/></radialGradient>') +
@@ -420,51 +568,108 @@
       // plamen svíčky
       '<g class="sv-flame" transform="translate(130 97)"><g class="sv-fl"><path d="' + flame + '" fill="#ffe9a0"/>' + ln(P, flame, 1.1) +
         '<path d="' + core + '" fill="#f5c400"/></g></g>' +
-      // sirka a ukazatel držení
-      '<g class="sv-match"><path d="M170 66 L134 94" stroke="#d8b98a" stroke-width="3.2" stroke-linecap="round"/>' + ln(P, "M170 66 L134 94", 0.6) +
-        '<circle cx="134" cy="94" r="2.6" fill="#c2341e"/>' +
-        '<g class="sv-mf" transform="translate(133 92) rotate(-38)"><path d="' + flame + '" transform="scale(.5)" fill="#ffe9a0" stroke="' + INK + '" stroke-width="1.6"/></g></g>' +
-      '<circle class="sv-ring" cx="130" cy="94" r="15" fill="none" stroke="' + INK + '" stroke-width="2.2" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 130 94)" stroke-linecap="round"/>' +
+      // krabička sirek se škrtátkem
+      '<g class="sv-box">' + shape(P, "M150 120 H192 V140 H150 Z", "#e9e5db", 1.4) +
+        '<path d="M150 114 H192 V120 H150 Z" fill="#8a5a3a"/>' + ln(P, "M150 114 H192 V120 H150 Z", 1.1) +
+        ln(P, "M153 116 L157 118 M160 116 L164 118 M167 116 L171 118 M174 116 L178 118 M181 116 L185 118", 0.6, ' opacity=".6"', "#fff") +
+        '<g class="sv-left"></g></g>' +
+      // vítr: čárky zleva
+      '<g class="sv-wind" fill="none" stroke="' + INK + '" stroke-width="1.2" stroke-linecap="round">' +
+        '<path d="M60 40 C80 36 96 44 116 38"/><path d="M70 58 C92 54 104 62 126 56"/><path d="M56 76 C74 72 86 80 104 74"/>' +
+        '<path d="M110 30 C114 26 118 30 115 33" /></g>' +
+      // sirka v ruce: hlavička je v počátku, dřívko vede dolů doprava k prstu
+      '<g class="sv-match" transform="translate(-50 -50)"><g class="sv-stick">' +
+        '<path d="M0 0 L22 18" stroke="#d8b98a" stroke-width="3.2" stroke-linecap="round"/>' + ln(P, "M0 0 L22 18", 0.6) +
+        '<path class="sv-char" d="M0 0 L22 18" stroke="#3a3230" stroke-width="3.3" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>' +
+        '<circle class="sv-head" cx="0" cy="0" r="2.6" fill="#c2341e"/></g>' +
+        '<g class="sv-mf" transform="translate(-1 -2) rotate(-38)"><path d="' + flame + '" transform="scale(.55)" fill="#ffe9a0" stroke="' + INK + '" stroke-width="1.6"/></g></g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, tip: "Podrž prst na knotu", label: "Svíčka u kříže" });
+    var g = shell(b, hotovo, { svg: svg, tip: "Vezmi sirku a škrtni o krabičku", label: "Svíčka u kříže a krabička sirek" });
     g.onDone(onDone);
     if (!hotovo) loadSample(b.hra.zvuk);
-    var s = g.svg, ring = s.querySelector(".sv-ring"), btn = hotspot(132, 96, 36, 46, "Zapálit svíčku (podrž)");
-    g.stage.appendChild(btn);
-    var t0 = 0, raf = 0;
-    function lit() { s.classList.add("lit"); btn.disabled = true; }
-    if (hotovo) lit();
+    // Sirku vezmeš prstem, škrtneš švihem přes hnědé škrtátko a hořící doneseš ke knotu.
+    // Sirka dohoří za BURN ms. Když zafouká vítr (předem se objeví čárky), zhasne, pokud není ve skleničce.
+    var BURN = 7000, WICK = { x: 130, y: 97 }, GLASS = [111, 89, 149, 140], STRIP = [148, 110, 194, 122], OFF = { x: -20, y: -17 };
+    var s = g.svg, match = s.querySelector(".sv-match"), char = s.querySelector(".sv-char"), wind = s.querySelector(".sv-wind"), left = s.querySelector(".sv-left");
+    var MATCHES = 4, have = MATCHES, holding = false, burning = false, burnT0 = 0, lastP = null, lastT = 0, raf = 0, nextGust = 0, gustPhase = 0, gustT = 0;
+    function drawLeft() {
+      var h = "";
+      for (var i = 0; i < have; i++) h += '<path d="M' + (156 + i * 8) + ' 125 V137" stroke="#d8b98a" stroke-width="2.6" stroke-linecap="round"/><circle cx="' + (156 + i * 8) + '" cy="124" r="1.8" fill="#c2341e"/>';
+      left.innerHTML = h;
+    }
+    function lit() { s.classList.add("lit"); match.style.opacity = 0; }
+    if (hotovo) lit(); else drawLeft();
+    function place(p) { match.setAttribute("transform", "translate(" + f1(p.x + OFF.x) + " " + f1(p.y + OFF.y) + ")"); }
+    function head(p) { return { x: p.x + OFF.x, y: p.y + OFF.y }; }
+    function inGlass(q) { return q.x > GLASS[0] && q.x < GLASS[2] && q.y > GLASS[1] && q.y < GLASS[3]; }
+    function out(msg) {
+      burning = false; holding = false; cancelAnimationFrame(raf);
+      s.classList.remove("holding", "burning"); wind.classList.remove("warn", "on");
+      match.style.opacity = 0; char.setAttribute("stroke-dasharray", "0 100");
+      if (!have) { have = MATCHES; setTimeout(function () { if (!g.finished) { drawLeft(); g.say("Sirky došly, ale kostelník ti podal novou krabičku."); } }, 900); }
+      g.say(msg); g.tip("Vezmi další sirku");
+      vibrate([20, 40, 20]);
+    }
     function frame() {
-      var p = Math.min(1, (Date.now() - t0) / HOLD);
-      ring.style.strokeDashoffset = f1(94.25 * (1 - p));
-      if (p >= 1) {
-        stop(true);
-        lit(); SFX.bell(); g.finish();
-        return;
+      if (!burning || g.finished) return;
+      var now = performance.now(), q = Math.min(1, (now - burnT0) / BURN);
+      char.setAttribute("stroke-dasharray", f1(q * 100) + " 100");
+      s.querySelector(".sv-mf").style.transform = "scale(" + f1(1 - q * 0.45) + ")";
+      if (q >= 1) { out("Sirka dohořela a spálila prsty. Au! Příště rychleji."); return; }
+      // poryvy větru: varování, foukání, klid
+      if (gustPhase === 0 && now > nextGust) { gustPhase = 1; gustT = now; wind.classList.add("warn"); g.say("Zvedá se vítr!"); }
+      else if (gustPhase === 1 && now - gustT > 900) { gustPhase = 2; gustT = now; wind.classList.remove("warn"); wind.classList.add("on"); noise({ f: 500, to: 300, q: 0.4, dur: 1.1, gain: 0.18, att: 0.2 }); }
+      else if (gustPhase === 2) {
+        if (lastP && !inGlass(head(lastP))) { out("Fouklo a sirka zhasla. Při větru ji schovej do skleničky."); return; }
+        if (now - gustT > 1100) { gustPhase = 0; wind.classList.remove("on"); nextGust = now + 2600 + Math.random() * 1600; g.say(""); }
       }
       raf = requestAnimationFrame(frame);
     }
-    function start(e) {
-      if (g.finished || t0) return;
-      if (e) e.preventDefault();
-      g.hideTip(); g.say("");
-      t0 = Date.now(); s.classList.add("holding"); vibrate(15);
-      if (!sample(b.hra.zvuk, { gain: 1 })) SFX.match(); // škrtnutí sirky
+    function ignite() {
+      burning = true; burnT0 = performance.now(); gustPhase = 0; nextGust = burnT0 + 1500 + Math.random() * 1000;
+      s.classList.add("burning"); s.querySelector(".sv-mf").style.transform = "";
+      if (!sample(b.hra.zvuk, { gain: 1 })) SFX.match();
+      vibrate(25); g.say("Hoří! Teď ke knotu."); g.hideTip();
       raf = requestAnimationFrame(frame);
     }
-    function stop(ok) {
-      if (!t0) return;
-      cancelAnimationFrame(raf);
-      var early = ok !== true;
-      t0 = 0; s.classList.remove("holding"); ring.style.strokeDashoffset = "94.25";
-      if (early && !g.finished) { g.say("Sirka zhasla. Drž prst o chvilku déle."); g.tip("Podrž prst na knotu"); }
+    function done() {
+      burning = false; cancelAnimationFrame(raf); wind.classList.remove("warn", "on");
+      lit(); SFX.bell(); g.finish();
     }
-    btn.addEventListener("pointerdown", function (e) { try { btn.setPointerCapture(e.pointerId); } catch (x) {} start(e); });
-    btn.addEventListener("pointerup", stop);
-    btn.addEventListener("pointercancel", stop);
-    btn.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-    btn.addEventListener("keydown", function (e) { if ((e.key === " " || e.key === "Enter") && !e.repeat) start(e); });
-    btn.addEventListener("keyup", function (e) { if (e.key === " " || e.key === "Enter") stop(); });
+    var st = g.stage;
+    st.addEventListener("pointerdown", function (e) {
+      if (g.finished || holding) return;
+      e.preventDefault(); ac();
+      try { st.setPointerCapture(e.pointerId); } catch (x) {}
+      var p = pt(s, e);
+      holding = true; have--; drawLeft();
+      g.hideTip(); g.say("Škrtni švihem přes hnědé škrtátko.");
+      s.classList.add("holding"); match.style.opacity = 1; char.setAttribute("stroke-dasharray", "0 100");
+      lastP = p; lastT = performance.now(); place(p);
+    });
+    st.addEventListener("pointermove", function (e) {
+      if (!holding || g.finished) return;
+      var p = pt(s, e), now = performance.now(), hd = head(p), dt = Math.max(1, now - lastT);
+      var v = Math.hypot(p.x - lastP.x, p.y - lastP.y) / dt;
+      place(p);
+      if (!burning && hd.x > STRIP[0] && hd.x < STRIP[2] && hd.y > STRIP[1] && hd.y < STRIP[3]) {
+        if (v > 0.12) ignite(); else if (Math.random() < 0.08) SFX.wipe();
+      }
+      if (burning && Math.hypot(hd.x - WICK.x, hd.y - WICK.y) < 7) done();
+      lastP = p; lastT = now;
+    });
+    function up() {
+      if (!holding || g.finished) return;
+      if (burning) out("Sirka spadla do trávy a zhasla.");
+      else { holding = false; have++; drawLeft(); s.classList.remove("holding"); match.style.opacity = 0; g.say(""); g.tip("Vezmi sirku a škrtni o krabičku"); }
+    }
+    st.addEventListener("pointerup", up);
+    st.addEventListener("pointercancel", up);
+    if (!hotovo) st.classList.add("hr-draw");
+    // bez dotyku: tlačítko svíčku rovnou zapálí
+    var kb = E("button", { class: "hr-sr", text: "Škrtnout sirkou a zapálit svíčku" });
+    kb.addEventListener("click", function () { if (!g.finished) { if (!sample(b.hra.zvuk, { gain: 1 })) SFX.match(); done(); } });
+    if (!hotovo) g.box.appendChild(kb);
     return g.box;
   };
 
@@ -1001,10 +1206,8 @@
   // Krok 1: kočárky se táhnou (nebo klepne na jesle) do Račic nebo Pístovic, obojí jesle se zaplní.
   // Krok 2: prstem obtáhne jednu hranici kolem obou obcí. Krok 3: orazítkuje a podepíše výnos.
   HRY.vynos = function (b, hotovo, onDone) {
-    var P = "vy-", NS = "http://www.w3.org/2000/svg", CAP = 3, SIGN = 70;
-    var ST = { x: 74, y: 112 }, START = { x: 100, y: 116 };
-    var JES = [{ x: 8, name: "RAČICE" }, { x: 132, name: "PÍSTOVICE" }]; // levý okraj budovy, šířka 60
-    var PARK = [[16, 34, 52], [140, 158, 176]], PARK_Y = 139;
+    var P = "vy-", NS = "http://www.w3.org/2000/svg", SIGN = 70;
+    var ST = { x: 74, y: 112 };
     var VES = [{ x: 62, y: 66, name: "Račice", n: 8 }, { x: 140, y: 92, name: "Pístovice", n: 7 }];
     var kocarek = function (twins) {
       var body = "M-10 -6 C-10 3 10 3 10 -6 Z", hood = "M-10 -6 C-10 -15 -1 -16 0 -15 V-6 Z";
@@ -1014,15 +1217,51 @@
       };
       return (twins ? one(-10) + one(10) + ln(P, "M20 -6 L23 -11 H26", 1.2) : one(0) + ln(P, "M10 -6 L13 -11 H16", 1.2));
     };
-    function jesle(j) {
-      var x = j.x;
-      return shape(P, "M" + x + " 72 H" + (x + 60) + " V132 H" + x + " Z", "#fffdf7", 1.5) +
-        shape(P, "M" + (x - 4) + " 73 L" + (x + 30) + " 50 L" + (x + 64) + " 73 Z", "#e9e5db", 1.4) + '<path d="M' + (x - 4) + ' 73 L' + (x + 30) + ' 50 L' + (x + 64) + ' 73 Z" fill="url(#' + P + 'red)" opacity=".45"/>' +
-        shape(P, "M" + (x + 6) + " 78 H" + (x + 54) + " V91 H" + (x + 6) + " Z", "#fff8d6", 1.1) +
-        '<text x="' + (x + 30) + '" y="83.6" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="4.4" fill="' + INK + '">JESLE</text>' +
-        '<text x="' + (x + 30) + '" y="89" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="4.2" fill="' + INK + '">' + j.name + '</text>' +
-        [0, 1, 2].map(function (i) { return '<g class="vy-win" data-i="' + i + '">' + shape(P, "M" + (x + 7 + i * 17) + " 97 H" + (x + 19 + i * 17) + " V109 H" + (x + 7 + i * 17) + " Z", "#f7f4ec", 1) + '</g>'; }).join("") +
-        '<text class="vy-full" x="' + (x + 30) + '" y="124" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="9" fill="#c2341e" transform="rotate(-8 ' + (x + 30) + ' 121)">PLNO!</text>';
+    // ---- krok 1: hlavolam „Pořadník MNV“ ----
+    // Budovy (řádky): jesle a školka v každé vsi, místa = okna. v = ves (0 Račice, 1 Pístovice).
+    var BUD = [{ name: "Jesle", v: 0, cap: 2, j: true }, { name: "Školka", v: 0, cap: 3, j: false },
+               { name: "Jesle", v: 1, cap: 2, j: true }, { name: "Školka", v: 1, cap: 1, j: false }];
+    var VCOL = ["#f5c400", "#9fc3ee"], VNAME = ["Račice", "Pístovice"];
+    // Děti: f = rodina (písmeno na kartičce), k = kočárek (jinak odrážedlo), v = ves, tw = dvojčata.
+    // S pravidlem 5 (každý do své vsi) to vyřešit nejde: račických kočárků je víc než míst v račických jeslích.
+    // Bez něj má hlavolam právě jedno řešení (ověřeno vyzkoušením všech rozložení): SOL = řádek pro každé dítě.
+    var KIDS = [{ f: "N", k: true, v: 0, tw: true }, { f: "N", k: true, v: 0, tw: true }, { f: "D", k: true, v: 0 }, { f: "S", k: true, v: 1 },
+                { f: "N", k: false, v: 0 }, { f: "D", k: false, v: 0 }, { f: "S", k: false, v: 1 }, { f: "V", k: false, v: 1 }];
+    var SOL = [2, 2, 0, 0, 3, 1, 1, 1], HOME = [4, 0, 6, 2, 7, 1, 5, 3]; // HOME = pořadí v čekárně
+    var ROWY = [16, 42, 68, 94], SLOTX = 98, SLOTW = 25, WAITY = 128;
+    var RULES = [
+      "Kočárek patří do jeslí, odrážedlo do školky.",
+      "Dvojčata (puntíky) jsou pod jednou střechou.",
+      "Sourozenci (stejné písmeno) chodí ve stejné vsi.",
+      "Novákovi (N) a Dvořákovi (D) se hádají přes plot. Jejich děti nesmí pod jednu střechu.",
+      "Každé dítě chodí ve své vsi (barva peřinky)."
+    ];
+    function kidCard(c) {
+      var col = VCOL[c.v], h = '<rect x="-11" y="-11" width="22" height="22" rx="3" fill="' + col + '" opacity=".55"/>';
+      if (c.tw) h += '<g fill="' + INK + '" opacity=".35"><circle cx="-6" cy="7" r="1"/><circle cx="-2" cy="8.5" r="1"/><circle cx="3" cy="7.5" r="1"/><circle cx="7" cy="8.5" r="1"/><circle cx="-8" cy="3" r="1"/></g>';
+      h += ln(P, "M-11 -8 C-11 -10 -10 -11 -8 -11 H8 C10 -11 11 -10 11 -8 V8 C11 10 10 11 8 11 H-8 C-10 11 -11 10 -11 8 Z", 1.1);
+      h += c.k ? '<g transform="translate(2 2) scale(.5)">' + kocarek(false) + '</g>'
+               : '<g transform="translate(2 1)">' + ln(P, "M-6 4 H3 L5 -5 M3 -5 H7 M-4 1 H1", 1.2) + '<circle cx="-6" cy="5" r="2.6" fill="#fffdf7" stroke="' + INK + '" stroke-width="1"/><circle cx="5" cy="5" r="2.6" fill="#fffdf7" stroke="' + INK + '" stroke-width="1"/></g>';
+      h += '<text x="-9" y="-3.5" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="7.5" fill="' + INK + '">' + c.f + '</text>';
+      return h;
+    }
+    function board() {
+      var h = paper(P);
+      BUD.forEach(function (bd, r) {
+        var y = ROWY[r];
+        h += '<rect class="vy-row" data-r="' + r + '" x="2" y="' + (y - 12.5) + '" width="196" height="25" rx="3" fill="' + VCOL[bd.v] + '" opacity=".14"/>' +
+          '<rect x="2" y="' + (y - 12.5) + '" width="3" height="25" fill="' + VCOL[bd.v] + '"/>' +
+          shape(P, "M9 " + (y + 6) + " V" + (y - 2) + " L15 " + (y - 8) + " L21 " + (y - 2) + " V" + (y + 6) + " Z", "#fffdf7", 0.9) +
+          '<text x="25" y="' + (y - 1) + '" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="6.4" fill="' + INK + '">' + bd.name.toUpperCase() + '</text>' +
+          '<text x="25" y="' + (y + 6.5) + '" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5" fill="#554c40">' + VNAME[bd.v] + ' · ' + bd.cap + (bd.cap === 1 ? " místo" : " místa") + '</text>';
+        for (var i = 0; i < bd.cap; i++) h += '<rect x="' + (SLOTX + i * SLOTW - 11) + '" y="' + (y - 11) + '" width="22" height="22" rx="3" fill="#fffdf7" stroke="#8a847a" stroke-width=".8" stroke-dasharray="2 1.6"/>';
+      });
+      h += ln(P, "M4 110 H196", 0.7, ' opacity=".4"') +
+        '<text x="100" y="116" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5" fill="#554c40">ČEKÁRNA MNV</text>' +
+        '<g class="vy-kids">' + KIDS.map(function (c, i) { return '<g class="vy-kid" data-i="' + i + '">' + kidCard(c) + '</g>'; }).join("") + '</g>' +
+        '<g class="vy-rej" transform="translate(100 62) rotate(-12)"><rect x="-52" y="-12" width="104" height="24" rx="3" fill="none" stroke="#c2341e" stroke-width="2.2"/>' +
+          '<text y="6" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="15" letter-spacing="2" fill="#c2341e">ZAMÍTNUTO</text></g>';
+      return h;
     }
     function houses(v) {
       var r = rng(v.n * 97), h = "";
@@ -1052,13 +1291,7 @@
     var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jesle v Račicích a Pístovicích, plánek obcí a výnos o sloučení">' +
       defs(P) +
       // krok 1: jesle
-      '<g class="vy-sc vy-sc1">' + paper(P) + JES.map(jesle).join("") +
-        ln(P, "M100 0 C96 30 104 60 100 104", 0.8, ' stroke-dasharray="3 3" opacity=".5"') +
-        '<g class="vy-parked"></g>' +
-        '<g class="vy-cry" transform="translate(' + (START.x + 14) + ' ' + (START.y - 24) + ')">' + shape(P, "M-9 -6 H9 V4 H2 L-1 8 L-2 4 H-9 Z", "#fffdf7", 1) +
-          '<text y="1.2" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="5.4" fill="' + INK + '">UÁÁ!</text></g>' +
-        '<g class="vy-koc" transform="translate(' + START.x + ' ' + START.y + ') scale(1.2)"></g>' +
-      '</g>' +
+      '<g class="vy-sc vy-sc1">' + board() + '</g>' +
       // krok 2: plánek
       '<g class="vy-sc vy-sc2"><rect width="200" height="150" fill="#f3eddc"/><rect width="200" height="150" filter="url(#' + P + 'paper)"/>' +
         '<text x="8" y="12" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="6.5" fill="' + INK + '">Plánek obcí · ONV Vyškov</text>' +
@@ -1084,96 +1317,148 @@
         '<path class="vy-ink" fill="none" stroke="#1f3f8f" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>' +
       '</g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, dots: 3, tipTop: true, tip: "Táhni kočárek do jeslí", label: "Úřední kolečko: jesle, hranice obce a výnos" });
+    var g = shell(b, hotovo, { svg: svg, dots: 3, tip: "Vyber dítě a klepni na budovu", label: "Úřední kolečko: rozdělení dětí do jeslí a školek, hranice obce a výnos" });
     g.onDone(onDone);
     var s = g.svg, st = g.stage, step = 0;
-    var koc = s.querySelector(".vy-koc"), parked = s.querySelector(".vy-parked"), cry = s.querySelector(".vy-cry");
     var line = s.querySelector(".vy-line"), ink = s.querySelector(".vy-ink"), sh = s.querySelector(".vy-sheet");
     var SIG = "M110 121 C112 112 116 112 115 121 C114 127 118 113 122 117 C124 120 126 112 130 118 C133 123 136 114 140 119 L150 117";
     function go(k) {
       step = k; s.classList.remove("k1", "k2", "k3"); s.classList.add("k" + k);
+      if (tools1) tools1.hidden = k === 3;
       st.classList.toggle("hr-draw", k !== 3);
     }
-    function cryOut() {
-      restart(cry, "on");
-      var c = ac(); if (!c) return; var t = c.currentTime;
-      tone({ f: 520, to: 700, dur: 0.22, gain: 0.07, type: "sawtooth", at: t }); tone({ f: 690, to: 430, dur: 0.35, gain: 0.07, type: "sawtooth", at: t + 0.22 });
+    var kids = Array.prototype.map.call(s.querySelectorAll(".vy-kid"), function (el) { return el; });
+    var row = KIDS.map(function () { return -1; }), sel = -1, drag = null, rejects = 0, judging = false;
+    // pravidla pod obrázkem
+    var rulesEl = E("ol", { class: "vy-rules" });
+    RULES.forEach(function (t, i) { rulesEl.appendChild(E("li", { text: t, "data-r": i })); });
+    var submit = E("button", { class: "btn btn-primary btn-block", text: "Předložit komisi", disabled: "" });
+    var solveBtn = E("button", { class: "btn btn-ghost btn-block", text: "Komise, poraďte", hidden: "" });
+    var tools1 = E("div", { class: "vy-tools" }, [rulesEl, submit, solveBtn]);
+    function slotOf(i) {
+      var r = row[i]; if (r < 0) return -1;
+      var k = 0; for (var j = 0; j < i; j++) if (row[j] === r) k++;
+      return k;
     }
-
-    // ---- krok 1: kočárky ----
-    var inJes = [0, 0], placedN = 0, twins = false, kp = { x: START.x, y: START.y }, kdrag = null, kbusy = false;
-    function kocPos(p, sc) { kp = p; koc.setAttribute("transform", "translate(" + f1(p.x) + " " + f1(p.y) + ") scale(" + (sc || 1.2) + ")"); }
-    function newKoc() {
-      koc.innerHTML = kocarek(twins);
-      var from = { x: START.x, y: -16 }, t0 = performance.now(), dur = reduced ? 1 : 500;
-      kbusy = true;
-      (function stp() {
-        var p = Math.min(1, (performance.now() - t0) / dur), e = 1 - Math.pow(1 - p, 2);
-        kocPos({ x: from.x + (START.x - from.x) * e, y: from.y + (START.y - from.y) * e });
-        if (p < 1) requestAnimationFrame(stp); else { kbusy = false; cryOut(); }
-      })();
+    function posOf(i) {
+      if (row[i] < 0) { var h = HOME.indexOf(i); return { x: 13 + h * 24.8, y: WAITY + 4 }; }
+      return { x: SLOTX + slotOf(i) * SLOTW, y: ROWY[row[i]] };
     }
-    function moveTo(to, sc, cb) {
-      var from = { x: kp.x, y: kp.y }, t0 = performance.now(), dur = reduced ? 1 : 300;
-      kbusy = true;
-      (function stp() {
-        var p = Math.min(1, (performance.now() - t0) / dur), e = 1 - Math.pow(1 - p, 3);
-        kocPos({ x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e }, 1.2 + ((sc || 1.2) - 1.2) * e);
-        if (p < 1) requestAnimationFrame(stp); else { kbusy = false; if (cb) cb(); }
-      })();
-    }
-    function send(j) {
-      if (step !== 1 || kbusy || g.finished) return;
-      g.hideTip();
-      if (twins || inJes[j] >= CAP) {
-        g.say(twins ? "Dvojčata! Ale oboje jesle jsou plné." : "V " + (j ? "Pístovicích" : "Račicích") + " je plno! Zkus druhé jesle.");
-        vibrate([10, 30, 10]); g.bump();
-        moveTo(START, 1.2);
-        if (twins) setTimeout(toStep2, 1600);
-        return;
-      }
-      var i = inJes[j]++;
-      moveTo({ x: PARK[j][i], y: PARK_Y - 6 }, 0.62, function () {
-        var n = document.createElementNS(NS, "g");
-        n.setAttribute("transform", "translate(" + PARK[j][i] + " " + (PARK_Y - 6) + ") scale(.62)");
-        n.innerHTML = kocarek(false); parked.appendChild(n);
-        s.querySelectorAll(".vy-sc1 .vy-win")[j * 3 + i].classList.add("on");
-        if (inJes[j] >= CAP) s.querySelectorAll(".vy-full")[j].classList.add("on");
-        SFX.pop(); vibrate(20); placedN++;
-        if (placedN < CAP * 2) { g.say("V jeslích je " + placedN + " z " + CAP * 2 + " míst."); newKoc(); }
-        else { twins = true; g.say("A ještě dvojčata! Kam s nimi?"); newKoc(); }
+    function layout(skip) {
+      kids.forEach(function (el, i) {
+        if (i === skip) return;
+        var p = posOf(i); el.setAttribute("transform", "translate(" + f1(p.x) + " " + f1(p.y) + ")");
+        el.classList.toggle("sel", i === sel);
       });
+      var all = row.every(function (r) { return r >= 0; });
+      submit.disabled = !all || judging;
+    }
+    function count(r) { return row.filter(function (x) { return x === r; }).length; }
+    function rowAt(p) {
+      if (p.y > 110) return -2; // čekárna
+      for (var r = 0; r < ROWY.length; r++) if (Math.abs(p.y - ROWY[r]) <= 13) return r;
+      return -3;
+    }
+    function clearBad() {
+      kids.forEach(function (el) { el.classList.remove("bad"); });
+      Array.prototype.forEach.call(rulesEl.children, function (li) { li.classList.remove("bad"); });
+    }
+    function put(i, r) {
+      clearBad();
+      if (r === -2) { row[i] = -1; sel = -1; layout(); SFX.slide(); return; }
+      if (r < 0) { sel = -1; layout(); return; }
+      if (row[i] === r) { sel = -1; layout(); return; }
+      if (count(r) >= BUD[r].cap) {
+        g.say(BUD[r].name + " " + (BUD[r].v ? "v Pístovicích" : "v Račicích") + " je plná. Nejdřív odtud někoho přesuň do čekárny.");
+        vibrate([10, 30, 10]); g.bump(); sel = -1; layout(); return;
+      }
+      row[i] = r; sel = -1; SFX.pop(); vibrate(15); g.say(""); layout();
+    }
+    function kidAt(p) {
+      for (var i = kids.length - 1; i >= 0; i--) { var q = posOf(i); if (Math.abs(p.x - q.x) < 12.5 && Math.abs(p.y - q.y) < 12.5) return i; }
+      return -1;
     }
     st.addEventListener("pointerdown", function (e) {
-      if (step !== 1 || kbusy || g.finished) return;
-      var p = pt(s, e);
-      e.preventDefault(); ac();
-      if (Math.hypot(p.x - kp.x, p.y - kp.y + 6) < 22) {
+      if (step !== 1 || g.finished || judging) return;
+      var p = pt(s, e), i = kidAt(p);
+      e.preventDefault(); ac(); g.hideTip();
+      if (i >= 0) {
         try { st.setPointerCapture(e.pointerId); } catch (x) {}
-        kdrag = { dx: kp.x - p.x, dy: kp.y - p.y, start: p, moved: 0 }; g.hideTip();
-      } else if (p.x < 74 || p.x > 126) send(p.x < 100 ? 0 : 1);
+        var q = posOf(i);
+        drag = { i: i, dx: q.x - p.x, dy: q.y - p.y, start: p, moved: false };
+        kids[i].parentNode.appendChild(kids[i]); kids.forEach(function (el, k) { el.classList.toggle("lift", k === i); });
+        return;
+      }
+      if (sel >= 0) put(sel, rowAt(p));
     });
     st.addEventListener("pointermove", function (e) {
-      if (!kdrag) return;
+      if (!drag) return;
       var p = pt(s, e);
-      kdrag.moved = Math.max(kdrag.moved, Math.hypot(p.x - kdrag.start.x, p.y - kdrag.start.y));
-      kocPos({ x: p.x + kdrag.dx, y: p.y + kdrag.dy });
+      if (!drag.moved && Math.hypot(p.x - drag.start.x, p.y - drag.start.y) < 3) return;
+      drag.moved = true;
+      kids[drag.i].setAttribute("transform", "translate(" + f1(p.x + drag.dx) + " " + f1(p.y + drag.dy) + ")");
     });
-    function kup() {
-      if (!kdrag) return;
-      kdrag = null;
-      if (kp.x < 76) send(0); else if (kp.x > 124) send(1);
-      else { moveTo(START, 1.2); g.say("Táhni kočárek doleva do Račic, nebo doprava do Pístovic."); }
+    function up1(e) {
+      if (!drag) return;
+      var d = drag; drag = null;
+      kids[d.i].classList.remove("lift");
+      if (!d.moved) { sel = sel === d.i ? -1 : d.i; if (sel >= 0) { SFX.tick(); g.say("Teď klepni na budovu, kam dítě patří."); } layout(); return; }
+      var p = pt(s, e);
+      put(d.i, rowAt({ x: p.x + d.dx, y: p.y + d.dy }));
     }
-    st.addEventListener("pointerup", kup);
-    st.addEventListener("pointercancel", kup);
+    st.addEventListener("pointerup", up1);
+    st.addEventListener("pointercancel", up1);
+
+    // komise: vrátí první porušené pravidlo a děti, kterých se týká
+    function check() {
+      var n = KIDS.length, i, j;
+      for (i = 0; i < n; i++) if (BUD[row[i]].j !== KIDS[i].k) return { r: 0, who: [i] };
+      for (i = 0; i < n; i++) for (j = i + 1; j < n; j++) if (KIDS[i].tw && KIDS[j].tw && KIDS[i].f === KIDS[j].f && row[i] !== row[j]) return { r: 1, who: [i, j] };
+      for (i = 0; i < n; i++) for (j = i + 1; j < n; j++) if (KIDS[i].f === KIDS[j].f && BUD[row[i]].v !== BUD[row[j]].v) return { r: 2, who: [i, j] };
+      for (i = 0; i < n; i++) for (j = i + 1; j < n; j++) if (KIDS[i].f !== KIDS[j].f && /^[ND]$/.test(KIDS[i].f) && /^[ND]$/.test(KIDS[j].f) && row[i] === row[j]) return { r: 3, who: [i, j] };
+      var away = []; for (i = 0; i < n; i++) if (BUD[row[i]].v !== KIDS[i].v) away.push(i);
+      return away.length ? { r: 4, who: away } : null;
+    }
+    var WHY = [
+      "Kočárek nepatří do školky a odrážedlo do jeslí.",
+      "Dvojčata se nesmí rozdělit.",
+      "Sourozenci musí chodit ve stejné vsi, maminka nebude běhat mezi vesnicemi.",
+      "Novákovi a Dvořákovi pod jednou střechou? To by byla válka!",
+      ""
+    ];
+    submit.addEventListener("click", function () {
+      if (step !== 1 || judging || row.some(function (r) { return r < 0; })) return;
+      clearBad(); sel = -1; layout();
+      var res = check();
+      rulesEl.children[res.r].classList.add("bad");
+      res.who.forEach(function (i) { kids[i].classList.add("bad"); });
+      if (res.r < 4) {
+        rejects++;
+        restart(s.querySelector(".vy-rej"), "on"); SFX.thump(); vibrate([40, 60, 40]); g.bump();
+        g.say("ZAMÍTNUTO. " + WHY[res.r] + (rejects >= 3 ? " Rada komise: pravidlo 5 klidně poruš, ostatní musí platit." : ""));
+        if (rejects >= 3) solveBtn.hidden = false;
+        return;
+      }
+      // Pointa: všechno sedí, jen pravidlo 5 ne. Jedna obec na to nestačí.
+      judging = true; layout();
+      SFX.tick(); vibrate(30);
+      g.say("Komise: Jinak všechno sedí. Jenže račické kočárky se do račických jeslí nevejdou, ať je skládáš jakkoli. Jedna obec na to nestačí! Pravidlo 5 zrušíme, ale napřed musí být obě vsi jedna obec.");
+      setTimeout(function () {
+        rulesEl.children[4].classList.remove("bad"); rulesEl.children[4].classList.add("zrus");
+        kids.forEach(function (el) { el.classList.remove("bad"); });
+        submit.hidden = true; solveBtn.hidden = true;
+      }, 1800);
+      setTimeout(toStep2, 5200);
+    });
+    function solve() { row = SOL.slice(); sel = -1; clearBad(); layout(); SFX.slide(); g.say("Komise děti rozdělila sama. Teď je předlož."); solveBtn.hidden = true; }
+    solveBtn.addEventListener("click", solve);
 
     // ---- krok 2: hranice ----
     var pts = [], drawing2 = false;
     function toStep2() {
       if (step !== 1) return;
       g.set(1); go(2);
-      g.say("Jedna obec, jedny jesle. Obtáhni prstem jednu hranici kolem Račic i Pístovic.");
+      g.say("Obtáhni prstem jednu hranici kolem Račic i Pístovic. Pak už bude jedno, ve které vsi dítě chodí.");
       g.tip("Obtáhni obě vesnice jednou čarou");
     }
     function inside(p, poly) {
@@ -1258,7 +1543,7 @@
     var kb = E("button", { class: "hr-sr", text: "Udělat další úřední krok" });
     kb.addEventListener("click", function () {
       if (g.finished) return;
-      if (step === 1) { if (!kbusy) send(inJes[0] < CAP ? 0 : 1); }
+      if (step === 1) { if (row.some(function (r) { return r < 0; })) solve(); else submit.click(); }
       else if (step === 2) {
         pts = [{ x: 22, y: 60 }, { x: 60, y: 36 }, { x: 120, y: 54 }, { x: 176, y: 80 }, { x: 160, y: 118 }, { x: 100, y: 112 }, { x: 40, y: 92 }];
         drawing2 = true; up2();
@@ -1269,7 +1554,9 @@
     if (hotovo) {
       go(3); sh.classList.add("stamped"); ink.setAttribute("d", SIG); st.classList.remove("hr-draw");
     } else {
-      go(1); newKoc(); g.box.appendChild(kb);
+      go(1); layout();
+      g.box.querySelector(".dj-count").insertAdjacentElement("afterend", tools1);
+      g.box.appendChild(kb);
     }
     return g.box;
   };

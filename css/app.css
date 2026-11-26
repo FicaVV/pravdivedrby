@@ -377,9 +377,20 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .dj-splash.go { animation: dj-splash .5s ease-out .12s; }
 /* klepací plocha přes vemeno (aspoň 44 px i na úzkém displeji) */
 .dj-tap {
-  position: absolute; left: 52%; top: 52%; width: 32%; height: 40%; min-width: 64px; min-height: 64px;
+  position: absolute; top: 52%; width: 17%; height: 40%; min-width: 56px; min-height: 64px;
   border: 0; border-radius: 50%; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
+.dj-tl { left: 51%; border-radius: 50% 0 0 50%; }
+.dj-tr { left: 68%; border-radius: 0 50% 50% 0; }
+.dj-hl { opacity: 0; transition: opacity .15s; }
+.dj-hl.on { opacity: 1; animation: dj-hl .7s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.dj-bucket.rock { animation: dj-rock .55s ease-in-out; }
+.dj-spill { opacity: 0; }
+.dj-spill.go { animation: dj-splash .6s ease-out; }
+.dj-stage.kick { animation: dj-kick .3s ease-out; }
+@keyframes dj-hl { from { transform: scale(.92); } to { transform: scale(1.08); } }
+@keyframes dj-rock { 20% { transform: rotate(-7deg); } 50% { transform: rotate(5deg); } 75% { transform: rotate(-2deg); } }
+@keyframes dj-kick { 30% { transform: translateX(-4px); } 60% { transform: translateX(3px); } }
 .dj-tap:focus-visible { outline: 3px solid var(--sky); }
 .dj-tap:disabled { cursor: default; }
 .dj-tip {
@@ -399,7 +410,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 @keyframes dj-throb { 50% { transform: scale(1.06); } }
 @keyframes dj-pulse { 50% { transform: translateX(-50%) scale(1.06); } }
 @media (prefers-reduced-motion: reduce) {
-  .dj-stage.bump, .dj-pain, .dj-tip, .dj-splash.go { animation: none; }
+  .dj-stage.bump, .dj-stage.kick, .dj-pain, .dj-tip, .dj-splash.go, .dj-hl.on, .dj-bucket.rock { animation: none; }
   .dj-udder, .dj-milk, .dj-mee { transition: none; }
 }
 
