@@ -137,9 +137,9 @@ window.PD_OBCE.push({
       pozice: [49.278345, 16.880420],
       priblizne: false,
       text: [
-        "Zdravotní potíže po obědě, podnapilí hasiči, žlutá školka. Zprávy o chaosu v obci se velmi rychle dostaly na okresní výbor Komunistické strany Československa, který ve snaze zamezit dalším škodám hned následující den vydal zákaz pořádání všech společenských i sportovních akcí. Rozhodnutí se bohužel dotklo i plánovaného fotbalového turnaje.",
-        "Správce stadionu to nesl těžce. Na protest nechal celé dopoledne znít klubovou hymnu ve smyčce místním rozhlasem. Obyvatelé tuto odvetnou akci nepřijali s pochopením. Hymna se brzy stala vlezlou a nekonečně otravnou. Důkazem byl neblahý stav několika amplionů po zásazích kamenů.",
-        "Situaci po stížnosti nakonec vyřešili přivolaní příslušníci Státní bezpečnosti. Vtrhli do rozhlasovny na stadionu a magnetofonový pásek s hymnou zničili."
+        "Hořký oběd, ohořelá hasičárna a žlutá školka s podivným nápisem. Zprávy o chaosu v obci se rychle donesly až na okresní výbor Komunistické strany Československa. Ten chtěl zabránit dalším škodám, a tak hned druhý den zakázal všechny společenské i sportovní akce. Zákaz se bohužel týkal i plánovaného fotbalového turnaje.",
+        "Správce stadionu už měl hřiště posekané a čáry namalované vápnem. Rozhodnutí výboru proto nesl těžce. Na protest pustil do místního rozhlasu klubovou hymnu a nechal ji hrát dokola celé dopoledne. Sousedé pro to pochopení neměli. Hymna jim brzy lezla na nervy. Na správce i na rozezvučené ampliony házeli kameny.",
+        "Na stížnost sousedů nakonec přijeli příslušníci Státní bezpečnosti a vyřešili to po svém. Vtrhli do rozhlasovny na stadionu a magnetofonový pásek s hymnou zničili."
       ],
       hymna: {
         src: "audio/racice/hymna-kdo-je-tady-doma.mp3",
@@ -157,7 +157,7 @@ window.PD_OBCE.push({
         typ: "amplion",
         nadpis: "Umlč ampliony",
         zadani: "Hymna hraje už celé dopoledne a nikdo to nevydrží. Táhni prstem nahoru směrem k amplionu a pusť: čím delší tah, tím dál kámen doletí. Trefuj trychtýře.",
-        hotovo: "Ticho! Všechny tři ampliony jsou zmlklé a pomačkané. Sousedé za plotem tleskají. Hymnu si můžeš pustit výš, když to vydržíš.",
+        hotovo: "Ticho! Všechny tři ampliony jsou zmlklé a pomačkané. Sousedé za plotem tleskají. Hymnu si můžeš pustit znovu nahoře, jestli to vydržíš.",
         zvuk: "audio/racice/hymna-kdo-je-tady-doma.mp3"
       }
     },
