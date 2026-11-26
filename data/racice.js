@@ -170,7 +170,7 @@ window.PD_OBCE.push({
       priblizne: false,
       text: [
         "Právě tudy projížděla hlídka Státní bezpečnosti, když spěchala na stadion. Jeli v Moskviči 402 a pořádně to hnali. Na nezpevněné krajnici dostali smyk a narazili do zdejší sochy svatého Floriána. Svatý Vendelín vedle něj vyvázl bez škrábnutí.",
-        "Patron hasičů to ten týden opravdu neměl lehké. Opravy jeho pravé nohy se ochotně ujala amatérská keramička z Pístovic. Po několika pokusech ale poznala, že to vymodelovat nedokáže. Po každém pokusu měl Florián každou nohu jinou. Aby si zachránila řemeslnou pověst, tajně mu urazila i druhou nohu. Beznohého Floriána pak obula do odlitků z gumáků svého muže."
+        "Patron hasičů to ten týden opravdu neměl lehké. Opravy jeho pravé nohy se ochotně ujala amatérská keramička z Pístovic. Po několika pokusech ale poznala, že to vymodelovat nedokáže. Nová noha nikdy nevypadala jako ta původní. Aby si zachránila řemeslnou pověst, tajně mu urazila i druhou nohu. Beznohého Floriána pak obula do odlitků z gumáků svého muže."
       ],
       hra: {
         typ: "gumaky",
