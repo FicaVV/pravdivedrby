@@ -122,8 +122,7 @@
       return { z: zluta, c: cara };
     });
 
-    // kartičky stanovišť: kresba až po splnění úkolu, do té doby prázdný rámeček s otazníkem
-    // (u aktuálního cíle s názvem, u zamčených „???“)
+    // kartičky stanovišť: jen u splněných stanovišť (kresba s názvem), ostatní nemají nic
     var stitky = {};
     OBEC.body.forEach(function (b) {
       var s = (M.stitky || {})[b.id]; if (!s || !b.ilustrace) return;
@@ -173,6 +172,8 @@
         var x = stitky[id], b = x.b, i = OBEC.body.indexOf(b);
         var stav = state.done[b.id] ? "hotovo" : i === state.idx ? "cil" : "zamceno";
         if (x.stav === stav) return; x.stav = stav;
+        // nesplněná stanoviště nemají žádnou kartičku, ani prázdný rámeček
+        if (stav !== "hotovo") { x.m.setIcon(L.divIcon({ className: "", iconSize: [0, 0], html: "" })); return; }
         var rot = ((b.id * 37) % 9) - 4;
         var popis = stav === "zamceno" ? "???" : x.s.t;
         x.m.setIcon(L.divIcon({ className: "", iconSize: [0, 0],

@@ -75,26 +75,29 @@
 @keyframes am-note { from { transform: translateY(1.5px) rotate(-8deg); } to { transform: translateY(-2.5px) rotate(8deg); } }
 @keyframes am-new { from { opacity: 0; } }
 
-/* sochy */
+/* sochy: skládání boty */
 .gm-pc { cursor: grab; }
 .gm-pc.on { cursor: default; }
 .gm-pc.lift { cursor: grabbing; filter: drop-shadow(0 3px 2px rgba(22, 19, 15, .35)); }
-.gm-rot { transition: transform .2s ease-out; }
-.gm-pc.lift .gm-rot { transition: none; }
 .gm-pc.back { animation: gm-back .3s ease-out; }
-.all .gm-ghost { opacity: 0; transition: opacity .6s; }
+.gm-cut { transition: opacity .6s; }
+.gm-pc.on .gm-cut { opacity: .5; }
+.all .gm-pc .gm-cut { opacity: 0; }
 @keyframes gm-back { 30% { opacity: .4; } }
 
-/* sokolovna */
-.kr-sweat { opacity: 0; transition: opacity .3s; }
-.wobble .kr-sweat { opacity: 1; }
-.kr-power { display: none; }
-.p1 .kr-power { display: inline; }
-.p1 .kr-gauge, .landed .kr-gauge { display: none; }
-.kr-green { opacity: .55; transition: opacity .2s; }
-.calm .kr-green { opacity: 1; }
-.kr-up, .kr-judges { opacity: 0; transition: opacity .4s; }
-.landed .kr-up, .landed .kr-judges { opacity: 1; }
+/* sokolovna: tachometr a medaile */
+.kr-tacho { touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; margin-top: -4px; }
+.kr-tacho svg { display: block; width: 100%; max-width: 300px; margin: 0 auto; }
+.kr-tacho.in .kr-zone { stroke: #2f9e44; }
+.kr-tacho.miss { animation: kr-miss .3s ease-out; }
+.kr-name { opacity: 0; }
+.kr-name.on { animation: kr-name 1.6s ease-out; }
+.kr-medal { opacity: 0; pointer-events: none; transition: opacity .8s; }
+.medal .kr-medal { opacity: 1; }
+.kr-gold { transform: translateY(-60px); transition: transform 1s cubic-bezier(.3, 1.4, .5, 1) .5s; }
+.medal .kr-gold { transform: none; }
+@keyframes kr-name { 0% { opacity: 0; transform: translateY(-4px); } 15% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes kr-miss { 30% { transform: translateX(-6px); } 60% { transform: translateX(5px); } }
 
 /* úřad */
 .vy-sc { display: none; }

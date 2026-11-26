@@ -174,8 +174,8 @@ window.PD_OBCE.push({
       ],
       hra: {
         typ: "gumaky",
-        nadpis: "Slep Floriána z odlitků",
-        zadani: "Keramička pro jistotu odlila celého Floriána znovu, kus po kusu, a nohy z gumáků svého muže. Přetáhni kusy prstem na obrys sochy. Klepnutím kus otočíš. Pozor, v dílně se válí i zmetky.",
+        nadpis: "Slep Floriánovi gumák",
+        zadani: "Keramička odlila Floriánovi novou nohu z manželovy vysoké holínky. Jenže forma praskla a odlitek se rozsypal na kusy. Slep ho: přetahuj kusy prstem na obrys boty. Každý kus zapadne jen na své místo.",
         hotovo: "Sedí jako ulitý. Svatý Florián je od té doby jediný svatý v gumácích široko daleko."
       }
     },
@@ -193,10 +193,9 @@ window.PD_OBCE.push({
       ],
       hra: {
         typ: "kruhy",
-        sekund: 6,
         nadpis: "Zacvič sestavu na kruzích",
-        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Zacvič jeho sestavu. Nejdřív rychle klepej, ať se vytáhne do kříže. Pak nech prst na displeji a posouváním doleva a doprava drž ručičku v zeleném, šest vteřin. Nakonec pusť prst ve chvíli, kdy je ručička v zeleném, a Hudec seskočí.",
-        hotovo: "Šest vteřin v kříži a čistý seskok! Rozhodčí zvedají známky a louky za vsí se plní stany."
+        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Pomoz mu zacvičit celou sestavu. Pod obrázkem kmitá ručička tachometru: klepni přesně ve chvíli, kdy je v zeleném poli, a Hudec předvede další prvek. Zelené pole se pokaždé posune a zúží.",
+        hotovo: "Celá sestava a čistý seskok. Stejně jako v Berlíně v roce 1936: zlatá medaile pro Aloise Hudce. A louky za vsí se plní stany."
       }
     },
     {
