@@ -58,9 +58,7 @@ window.PD_OBCE.push({
       pozice: [49.277029, 16.871080], // RÚIAN, čp. 296 (sídlo SDH Račice)
       priblizne: false,
       text: [
-        "Z důvodu hygienických patálií nebylo doporučeno, aby se odpolední schůze hasičského sboru konala v hostinci. Každý na vsi ale ví, že „schůze“ je jen noblesní označení pro posezení u piva. Není tedy divu, že součástí plánu na provizorní uspořádání schůze v místní hasičárně bylo i propojení výčepu se zbrojnicí hasičskou hadicí. Díky důmyslnému chlazení přes nádrž s vodou bylo toto zařízení náčelníkem označeno za největší technické dílo v obci od zavedení rozhlasu.",
-        "Kdyby začalo hořet, mohlo se hasit rovnou pivem.",
-        "U piva se rozhořel spor, zda dokáže dobře vychlazená desítka hasit oheň stejně dobře jako žízeň. Chlapi se vsadili a rozhodli se to hned ověřit. Bez jednoznačného výsledku vypálili část klubovny. Opravu si museli zaplatit sami, a tak rok obnovy vytesali do zdi zbrojnice jako připomínku, že pivo už budou používat pouze k pití."
+        "Kvůli hygienickým patáliím se nedoporučovalo, aby hasiči měli odpolední schůzi v hostinci. Přesunuli se tedy do nedaleké hasičárny. Aby neměli žízeň, propojili výčep se zbrojnicí hasičskou hadicí a cestou pivo chladili v nádrži s vodou. Náčelník to zařízení prohlásil za největší technické dílo v obci od zavedení rozhlasu."
       ],
       // minihra (js/hry.js → haseni), syčení hadice: audio/racice/hadice.mp3
       hra: {
