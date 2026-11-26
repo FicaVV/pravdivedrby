@@ -122,7 +122,8 @@
       return { z: zluta, c: cara };
     });
 
-    // kartičky stanovišť (kresba: barevně po splnění, šedě „???“ dokud je zamčené)
+    // kartičky stanovišť: kresba až po splnění úkolu, do té doby prázdný rámeček s otazníkem
+    // (u aktuálního cíle s názvem, u zamčených „???“)
     var stitky = {};
     OBEC.body.forEach(function (b) {
       var s = (M.stitky || {})[b.id]; if (!s || !b.ilustrace) return;
@@ -176,7 +177,7 @@
         var popis = stav === "zamceno" ? "???" : x.s.t;
         x.m.setIcon(L.divIcon({ className: "", iconSize: [0, 0],
           html: '<figure class="pd-stitek ' + stav + '" style="--dx:' + x.s.d[0] + "px;--dy:" + x.s.d[1] + "px;--r:" + rot + 'deg">' +
-            '<img src="' + esc(img(b.ilustrace.obrazek)) + '" alt="" decoding="async">' +
+            (stav === "hotovo" ? '<img src="' + esc(img(b.ilustrace.obrazek)) + '" alt="" decoding="async">' : '<span class="pd-stitek-nic" aria-hidden="true">?</span>') +
             "<figcaption>" + esc(popis) + "</figcaption></figure>" }));
       });
     }

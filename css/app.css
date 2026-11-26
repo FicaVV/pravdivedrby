@@ -312,7 +312,6 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .quote { margin: 0; border-left: 6px solid var(--accent); padding: 4px 0 4px 14px; font-size: 18px; font-weight: 700; }
 .prayer { background: var(--surface); border: var(--stroke) solid var(--ink); border-radius: var(--r); padding: 18px; font-size: 18px; line-height: 1.55; text-align: left; }
 .prayer p { margin: 0 0 14px; }
-.prayer .cut { display: block; margin-top: 12px; color: var(--muted); font-style: italic; font-size: 15px; border-top: 2px dashed var(--line); padding-top: 10px; }
 .tts-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .hymn { background: var(--surface); border: var(--stroke) solid var(--ink); border-radius: var(--r); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .hymn .kicker { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
@@ -427,7 +426,6 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .finale-hero { background: var(--accent); border: var(--stroke) solid var(--ink); border-radius: var(--r); padding: 20px; }
 .finale-hero h2 { font-size: 30px; }
 .finale-hero p { margin: 8px 0 0; }
-.fact-list { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; font-size: 18px; }
 .stars { display: flex; gap: 6px; }
 .stars button { width: 52px; height: 52px; border: 2px solid var(--ink); border-radius: 12px; background: var(--surface); font-size: 26px; cursor: pointer; line-height: 1; }
 .stars button.on { background: var(--accent); }
@@ -519,18 +517,23 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
 .koza-bublina small { display: block; margin-top: 4px; font-weight: 700; font-size: 13px; color: var(--muted); }
 @keyframes bublina { from { transform: scale(.9); opacity: 0; } }
 
-/* ---------- rodinná fotka ---------- */
+/* ---------- společná fotka na pohlednici ---------- */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
-.foto-blok {
+.foto-vyzva {
   background: var(--surface); border: var(--stroke) dashed var(--ink); border-radius: var(--r); padding: 16px 18px;
   display: flex; flex-direction: column; gap: 10px; align-items: stretch;
 }
-.foto-blok .kicker { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+.foto-vyzva[hidden], .pohl-hotova[hidden] { display: none; }
+.foto-vyzva .kicker { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--hot); }
 .foto-ukol { margin: 0; font-size: 17px; line-height: 1.45; font-weight: 700; }
-.foto-blok .btn svg { margin-right: 8px; vertical-align: -5px; }
-.foto-blok .btn-ghost { align-self: flex-start; }
-.polaroid { margin: 4px auto; background: #fffdf8; padding: 8px 8px 22px; box-shadow: 0 2px 10px rgba(22,19,15,.22); transform: rotate(2deg); width: min(82%, 320px); }
-.polaroid img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.foto-vyzva .btn svg, .pohl-zmena .btn svg { margin-right: 8px; vertical-align: -5px; }
+.pohl-hotova { display: flex; flex-direction: column; gap: 12px; }
+.pohl-zmena { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- opakování minihry ---------- */
+.hra-wrap { display: flex; flex-direction: column; gap: 10px; }
+.hra-znovu { align-self: center; display: inline-flex; align-items: center; gap: 6px; }
+.hra-znovu[hidden] { display: none; }
 
 /* ---------- kronika: razítka, kozy, fotky ---------- */
 .razitka-rada { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -546,19 +549,20 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
 .ch-card h3 .ch-razitko { flex: none; width: 76px; height: 76px; margin: -10px -8px -14px 0; }
 .ch-fotky { display: flex; justify-content: center; align-items: flex-start; }
 .ch-fotky .ch-foto { flex: none; }
-.ch-fotky.s-fotkou .ch-foto { width: 58%; }
-.ch-fotky .ch-rodina { width: 44%; margin: 18px 0 0 -6%; transform: rotate(4deg); position: relative; z-index: 1; padding-bottom: 16px; }
 
 /* ---------- bouchnutí razítka ---------- */
 .razitko-bouch {
   position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center;
   background: rgba(250, 246, 238, .97); animation: rb-in .2s ease;
 }
-.razitko-bouch.pryc { opacity: 0; transition: opacity .25s ease; }
+.razitko-bouch.pryc { opacity: 0; transition: opacity .4s ease; }
 .rb-papir { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 24px; }
 .rb-razitko { width: min(62vw, 260px); height: auto; animation: rb-slam .55s cubic-bezier(.3, 0, .2, 1) both; }
 .rb-text { margin: 10px 0 0; font-family: var(--font-display); font-weight: 900; font-size: 28px; animation: rb-text .5s .45s ease both; }
+.rb-misto { margin: 0; font-size: 20px; font-weight: 700; animation: rb-text .5s .5s ease both; }
 .rb-sub { margin: 0; font-weight: 700; color: var(--muted); animation: rb-text .5s .55s ease both; }
+.rb-dal { margin: 18px 0 0; font-size: 15px; color: var(--muted); animation: rb-text .5s 1.6s ease both; }
+.razitko-bouch { cursor: pointer; }
 @keyframes rb-in { from { opacity: 0; } }
 @keyframes rb-slam {
   0% { transform: scale(2.6) rotate(-14deg); opacity: 0; }
@@ -585,10 +589,9 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
 .pohl-akce a[aria-disabled="true"] { opacity: .5; pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .rb-razitko, .rb-text, .rb-sub, .razitko-bouch, .koza-bublina, .zamec .koza-img, .vedle { animation: none; }
+  .rb-razitko, .rb-text, .rb-misto, .rb-sub, .rb-dal, .razitko-bouch, .koza-bublina, .zamec .koza-img, .vedle { animation: none; }
   .koza-krouzek ellipse { transition: none; }
 }
-.ch-fotky.s-fotkou .ch-foto figcaption { display: none; }
 /* ---------- kreslená mapa (js/kreslena-mapa.js) ---------- */
 #map.pd-kreslena {
   background-color: #f4eddc;
@@ -644,15 +647,19 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
   content: ""; position: absolute; left: 50%; top: -7px; width: 34px; height: 12px; transform: translateX(-50%) rotate(-3deg);
   background: rgba(245,196,0,.85);
 }
-.pd-stitek.zamceno img, .pd-stitek.cil img { filter: grayscale(1) contrast(.75); opacity: .42; }
+.pd-stitek-nic {
+  display: grid; place-items: center; height: 48px; background: #faf6ee;
+  border: 1.5px dashed rgba(47,44,40,.35); box-sizing: border-box;
+  font-family: Caveat, cursive; font-weight: 700; font-size: 30px; line-height: 1; color: #8a8170;
+}
 .pd-stitek.zamceno figcaption { color: #8a8170; letter-spacing: 2px; }
 .pd-z-pryc .pd-stitek { display: none; }
 .pd-z-dal .pd-stitek { width: 62px; padding: 3px 3px 1px; }
 .pd-z-dal .pd-stitek.zamceno { display: none; } /* v přehledu jen splněné a aktuální, zamčené „???“ až po přiblížení */
-.pd-z-dal .pd-stitek img { height: 38px; }
+.pd-z-dal .pd-stitek img, .pd-z-dal .pd-stitek-nic { height: 38px; }
 .pd-z-dal .pd-stitek figcaption { font-size: 14px; }
 .pd-z-blizko .pd-stitek { width: 92px; }
-.pd-z-blizko .pd-stitek img { height: 58px; }
+.pd-z-blizko .pd-stitek img, .pd-z-blizko .pd-stitek-nic { height: 58px; }
 .pd-stitek, .pd-popisek { will-change: auto; }
 
 /* poloha hráče s kuželem natočení telefonu */

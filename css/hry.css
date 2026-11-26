@@ -29,8 +29,8 @@
 @keyframes hs-fade { 0% { opacity: 0; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
 
 /* školka */
-.ks-blob { transition: opacity .45s, transform .45s; transform-box: fill-box; transform-origin: center; }
-.ks-blob.gone { opacity: 0; transform: scale(.85); }
+.ks-top { transition: opacity 1.2s ease-in; }
+.ks-top.pryc { opacity: 0; }
 .ks-spark { animation: ks-spark .9s ease-out forwards; }
 .ks-spark path { stroke: var(--ink); }
 @keyframes ks-spark { 0% { opacity: 0; transform: scale(.3); } 30% { opacity: 1; } 100% { opacity: 0; } }
@@ -46,16 +46,18 @@
 .sv-ring { opacity: .9; }
 
 /* stadion */
-.tl-syl { transition: fill .1s, transform .1s; transform-box: fill-box; transform-origin: center; }
-.tl-syl.on { fill: var(--hot); transform: scale(1.25); }
-.tl-ring { opacity: 0; }
-.tl-slot.demo .tl-pad, .tl-slot.hit .tl-pad { fill: var(--accent); }
-.tl-slot.hit .tl-pad { animation: tl-hit .35s ease-out; }
-.tl-slot .tl-pad { transform-box: fill-box; transform-origin: center; transition: fill .3s; }
-.all .tl-pad { fill: var(--accent); }
-.all .tl-syl { fill: var(--hot); }
-.hr-pad { left: 50%; top: 50%; width: 100%; height: 100%; border-radius: 14px; }
-@keyframes tl-hit { 40% { transform: scale(1.35); } }
+.am-horn { transform-box: view-box; transform-origin: 0 0; transition: transform .45s cubic-bezier(.3, 1.6, .5, 1); }
+.am-dent, .am-bonk { opacity: 0; }
+.am-amp.hit .am-horn { transform: rotate(32deg); }
+.am-amp.hit .am-dent { opacity: 1; }
+.am-amp.bonk .am-bonk { animation: am-bonk .6s ease-out; }
+.am-note { animation: am-note 1.1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.am-note + .am-note { animation-delay: -.55s; }
+.am-amp.hit .am-notes { opacity: 0; transition: opacity .3s; }
+.am-stone.new { animation: am-new .25s ease-out; }
+@keyframes am-bonk { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes am-note { from { transform: translateY(1.5px) rotate(-8deg); } to { transform: translateY(-2.5px) rotate(8deg); } }
+@keyframes am-new { from { opacity: 0; } }
 
 /* sochy */
 .gm-boot { cursor: grab; transition: filter .15s; }
@@ -63,25 +65,60 @@
 .gm-boot.on { cursor: default; }
 .gm-boot:focus-visible { outline: none; filter: drop-shadow(0 0 2px var(--sky)); }
 .gm-slot { transition: opacity .2s; animation: gm-blink 1.2s ease-in-out infinite; }
+.gm-p1 .gm-slot, .gm-p1 .gm-boot { animation: none; }
 @keyframes gm-blink { 50% { opacity: .35; } }
+.gm-cast { transition: opacity .6s; }
+.gm-cast.pryc { opacity: 0; }
+.gm-p1 ~ .hr-tip, .gm-p1 { cursor: pointer; }
+.gm-tilt { transform-box: fill-box; transform-origin: 0% 0%; transition: transform .25s ease-out; }
+.gm-pour .gm-tilt { transform: rotate(-48deg); }
+.gm-spill, .gm-check { opacity: 0; }
+.gm-mold.spill .gm-spill { animation: gm-spill 1.3s ease-out; }
+.gm-mold.ok .gm-check { opacity: 1; transition: opacity .3s; }
+@keyframes gm-spill { 0% { opacity: 0; transform: translateY(-4px); } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(2px); } }
 
 /* sokolovna */
 .kr-zone { opacity: .6; transition: opacity .2s; }
 .calm .kr-zone, .all .kr-zone { opacity: 1; }
 .kr-sweat { opacity: 0; transition: opacity .3s; }
 .wobble .kr-sweat { opacity: 1; }
+.kr-slide { transform: translateX(-10px); transition: transform .3s ease-out; }
+.kr-head.peek .kr-slide { transform: translateX(0); }
+.kr-head.blow .kr-slide { transform: translateX(6px); }
+.kr-cheek { transform-box: fill-box; transform-origin: center; transition: transform .15s; }
+.kr-head.blow .kr-cheek { animation: kr-puff .5s ease-out; }
+.kr-air { opacity: 0; }
+.kr-air path { stroke-dasharray: 6 4; }
+.kr-head.blow .kr-air { animation: kr-air .55s ease-out; }
+.kr-head.blow .kr-air path { animation: kr-flow .55s linear; }
+.kr-ping { opacity: 0; }
+.kr-head.peek .kr-ping { animation: kr-ping 1s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.all .kr-head .kr-slide { transform: translateX(-10px); }
+@keyframes kr-puff { 30% { transform: scale(1.7); } }
+@keyframes kr-air { 10% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes kr-flow { from { stroke-dashoffset: 20; } to { stroke-dashoffset: -10; } }
+@keyframes kr-ping { 0% { opacity: .9; transform: scale(.85); } 100% { opacity: 0; transform: scale(1.35); } }
 
 /* úřad */
-.vy-sheet { transition: transform .6s cubic-bezier(.5, 0, .7, .4), opacity .6s; transform-box: view-box; }
-.vy-sheet.gone { transform: translate(-190px, 30px) rotate(-18deg); opacity: 0; }
+.vy-sc { display: none; }
+.k1 .vy-sc1, .k2 .vy-sc2, .k3 .vy-sc3 { display: inline; animation: am-new .4s ease-out; }
+.vy-win.on path:first-child { fill: #f5c400; }
+.vy-full, .vy-cry { opacity: 0; }
+.vy-full.on { opacity: 1; transition: opacity .3s; }
+.vy-cry.on { animation: vy-cry 1.2s ease-out; }
+.vy-new-fill, .vy-new-name { opacity: 0; transition: opacity .6s; }
+.merged .vy-new-fill { opacity: .55; }
+.merged .vy-new-name { opacity: 1; }
+.merged .vy-old { opacity: 0; transition: opacity .6s; }
 .vy-imprint { opacity: 0; }
 .stamped .vy-imprint { opacity: .88; }
 .vy-imprint.pop { animation: vy-pop .3s ease-out; transform-box: fill-box; transform-origin: center; }
 @keyframes vy-pop { 0% { opacity: 0; } 30% { opacity: 1; } }
+@keyframes vy-cry { 0% { opacity: 0; } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .hs-fl > *, .sv-fl, .gm-slot, .hs-fire.puff .hs-smoke, .ks-spark { animation: none; }
-  .vy-sheet, .ks-blob { transition: opacity .2s; }
+  .hs-fl > *, .sv-fl, .gm-slot, .hs-fire.puff .hs-smoke, .ks-spark, .am-note, .kr-head.peek .kr-ping { animation: none; }
+  .ks-top { transition: opacity .2s; }
 }
 
 /* část stanoviště, která se odemkne po dohrání minihry */
