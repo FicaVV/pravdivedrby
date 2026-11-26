@@ -79,17 +79,17 @@ window.PD_OBCE.push({
       pozice: [49.279924, 16.873720], // RÚIAN, čp. 170 (sídlo MŠ Račice-Pístovice)
       priblizne: false,
       text: [
-        "Náčelník hasičů měl toho dne plné ruce práce. Hlídal tlak v hadici, teplotu v chladicí nádrži a dohlížel na provizorní vedení od výčepu ke zbrojnici. Právě proto zapomněl vyzvednout syna ze školky.",
-        "Chlapec zrovna prožíval období vzdoru. Přehlížený a znuděný kopl do kýble, v němž se od oběda povalovala hořká bramborová kaše z hostince.",
-        "Kaše se rozprskla po zdech, oknech i dveřích. Do té doby bílá školka byla během chvíle celá flekatá.",
-        "Starostliví rodiče se rozhodli postavit za stravování svých dětí. Na oplátku začali kolektivně bojkotovat sběr hluchavek. Ti odvážnější se dokonce pod rouškou noci vydali školku označit. Velký červený protestní nápis na štítu měl znít „Na kaši záleží“.",
-        "Ráno poslal národní výbor malíře, ať ostudu co nejrychleji napraví. Kaši ze zdí setřít, celou školku přetřít na žluto, ať se fleky ztratí, a nápis pořádně obnovit podle toho, co mu rodiče zdola nadiktují. Bohužel, malíř vysoko na lešení diktát špatně slyšel. Výsledek zněl skoro stejně."
+        "Náčelník hasičů měl toho dne plné ruce práce. Hlídal tlak v hadici, teplotu v chladicí nádrži a kontroloval, jestli pivo teče od výčepu až do hasičárny. Kvůli tomu úplně zapomněl vyzvednout syna ze školky.",
+        "Chlapec zrovna prožíval období vzdoru. Čekal sám a nudil se. A tak ze vzdoru kopl do kýble, ve kterém od oběda stála hořká bramborová kaše z hostince.",
+        "Kaše se rozprskla po zdech, oknech i dveřích. Bílá školka byla během chvíle celá flekatá.",
+        "Starostliví rodiče se postavili za stravování svých dětí. Na protest přestali chodit na sběr hluchavek. Ti odvážnější v noci namalovali na štít školky velký červený nápis: Na kaši záleží!",
+        "Ráno poslal národní výbor malíře, ať ostudu co nejrychleji napraví. Měl setřít kaši ze zdí a celou školku přetřít na žluto, aby se fleky ztratily. Upravil i nápis: z „Na kaši záleží“ bylo rázem „Naší mládeži“."
       ],
       // minihra (js/hry.js → kase): stírání kaše a přemalování na žluto, zvuk audio/racice/umyvani.mp3
       hra: {
         typ: "kase",
         nadpis: "Umyj a přemaluj školku",
-        zadani: "Teď jsi malíř na lešení ty. Přejížděj prstem po školce: setřeš kaši a rovnou natřeš zdi na žluto. Jenže ten kluk v období vzdoru ještě nedopil svůj vztek: když vykoukne s kýblem, klepni na něj, ať dá chvíli pokoj. Nové fleky kaše musíš setřít znovu.",
+        zadani: "Teď jsi malíř na lešení ty. Přejížděj prstem po školce: setřeš kaši a rovnou natřeš zdi na žluto. Jenže ten kluk v období vzdoru má vzteku pořád dost: když vykoukne s kýblem, klepni na něj, ať dá chvíli pokoj. Nové fleky kaše musíš setřít znovu.",
         hotovo: "Hotovo! Školka je žlutá jako kaše a na štítu svítí „NAŠÍ MLÁDEŽI“. Zní to skoro stejně, ne? Rodiče mávli rukou a nápis tam vydržel dodnes.",
         zvuk: "audio/racice/umyvani.mp3"
       }
