@@ -1,4 +1,4 @@
-/* Pravdivé drby – prototyp herní logiky (vanilla JS, bez build kroku). */
+/* Hravý kronikář – prototyp herní logiky (vanilla JS, bez build kroku). */
 (function () {
   "use strict";
 
