@@ -118,6 +118,39 @@
     }
   };
 
+  // ---------- nahrávky (b.hra.zvuk) ----------
+  // MP3 se načte a dekóduje do Web Audia (jde pak přehrávat úryvky a víckrát přes sebe).
+  // Když se nenačte (bez sítě a mimo cache, jednosouborová ukázka), hra použije syntetický zvuk.
+  var BUF = {};
+  function loadSample(src) {
+    var c = ac(); if (!src || !c || BUF[src]) return;
+    BUF[src] = "loading";
+    fetch(src).then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(function (a) { return new Promise(function (ok, ko) { c.decodeAudioData(a, ok, ko); }); })
+      .then(function (buf) { BUF[src] = buf; }, function () { delete BUF[src]; });
+  }
+  // o = { offset, dur, gain, rate, loop, fadeIn, fadeOut } → { stop() } nebo null (nahrávka není připravená)
+  function sample(src, o) {
+    var c = ac(), buf = src && BUF[src];
+    if (!c || !buf || buf === "loading") { loadSample(src); return null; }
+    o = o || {};
+    var t = c.currentTime, peak = o.gain || 1, fi = o.fadeIn || 0.015, fo = o.fadeOut || 0.12;
+    var s = c.createBufferSource(); s.buffer = buf; s.loop = !!o.loop;
+    if (o.rate) s.playbackRate.value = o.rate;
+    var gn = c.createGain();
+    gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(peak, t + fi);
+    var off = (o.offset || 0) % buf.duration;
+    s.connect(gn); gn.connect(c.destination); s.start(t, off);
+    if (o.dur) {
+      gn.gain.setValueAtTime(peak, t + Math.max(fi, o.dur - fo)); gn.gain.linearRampToValueAtTime(0, t + o.dur);
+      s.stop(t + o.dur + 0.05);
+    }
+    return { stop: function () {
+      var n = c.currentTime;
+      try { gn.gain.cancelScheduledValues(n); gn.gain.setValueAtTime(gn.gain.value, n); gn.gain.linearRampToValueAtTime(0, n + 0.15); s.stop(n + 0.2); } catch (e) {}
+    } };
+  }
+
   // ---------- společný rámeček minihry ----------
   // o = { svg, dots, tip, label } → api { box, stage, svg, set(n), say(t), finish(), finished }
   function shell(b, hotovo, o) {
@@ -197,6 +230,7 @@
       '</svg>';
     var g = shell(b, hotovo, { svg: svg, dots: F.length, tip: "Klepej na plameny", label: "Hořící zbrojnice" });
     g.onDone(onDone);
+    if (!hotovo) loadSample(b.hra.zvuk);
     var hp = F.map(function () { return hotovo ? 0 : HP; });
     var fires = g.svg.querySelectorAll(".hs-fire");
     var jets = g.svg.querySelectorAll(".hs-jet"), beer = g.svg.querySelector(".hs-beer"), foam = g.svg.querySelector(".hs-foam");
@@ -218,7 +252,8 @@
         c.setAttribute("cx", f1(tx - 4 + i * 2.7)); c.setAttribute("cy", f1(ty + 2 - (i % 2) * 3));
       });
       restart(foam, "go");
-      SFX.spray();
+      // syčení hadice: kus nahrávky b.hra.zvuk, pokaždé odjinud
+      if (!sample(b.hra.zvuk, { offset: Math.random() * 2, dur: 0.75, gain: 0.9, fadeOut: 0.25, rate: 0.95 + Math.random() * 0.1 })) SFX.spray();
     }
     F.forEach(function (p, k) {
       var btn = hotspot(p[0], p[1] - 10, 15, 19, "Uhasit plamen " + (k + 1));
@@ -246,87 +281,55 @@
   };
 
   // =====================================================================
-  // 3) Školka: setři kaši z oken a dveří
+  // 3) Školka: setři kaši a přemaluj školku na žluto (nápis NA KAŠI ZÁLEŽÍ → NAŠÍ MLÁDEŽI)
   // =====================================================================
+  // Dole je dnešní žlutá školka (3-skolka.svg), nahoře bílá s kaší (3-skolka-bila.svg, tools/skolka-kresby.mjs).
+  // Kudy hráč přejede prstem, tam se horní vrstva „setře“ a pod ní je žlutá barva i nový nápis.
   HRY.kase = function (b, hotovo, onDone) {
-    var P = "ks-", R = 9; // poloměr hadru
-    // [x, y, r] = kaše na oknech a dveřích (souřadnice kresby 3-skolka.svg)
-    var B = [[21, 81, 11], [47, 120, 11], [86, 68, 13], [117, 66, 12], [87, 119, 13], [153, 81, 11], [173, 120, 11], [117, 124, 10]];
-    var rnd = rng(42);
-    function splat(x, y, r) {
-      var n = 13, pts = [];
-      for (var i = 0; i < n; i++) {
-        var a = i / n * Math.PI * 2, rr = r * (0.72 + rnd() * 0.45) * (i % 3 === 0 ? 1.18 : 1);
-        pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
-      }
-      var d = "";
-      for (i = 0; i < n; i++) {
-        var p0 = pts[i], p1 = pts[(i + 1) % n], m = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
-        d += (i ? " Q" : "M" + f1((pts[n - 1][0] + p0[0]) / 2) + " " + f1((pts[n - 1][1] + p0[1]) / 2) + " Q") + f1(p0[0]) + " " + f1(p0[1]) + " " + f1(m[0]) + " " + f1(m[1]);
-      }
-      d += " Z";
-      // stékající kapky
-      var drips = "";
-      for (var j = 0; j < 2; j++) {
-        var dx = x + (j ? 0.35 : -0.3) * r, top = y + r * 0.6, len = 4 + rnd() * 7, w = 1.6 + rnd();
-        drips += "M" + f1(dx - w) + " " + f1(top) + " L" + f1(dx - w) + " " + f1(top + len) + " A" + f1(w) + " " + f1(w) + " 0 0 0 " + f1(dx + w) + " " + f1(top + len) + " L" + f1(dx + w) + " " + f1(top) + " Z ";
-      }
-      // hrudky
-      var lumps = "";
-      for (j = 0; j < 4; j++) {
-        var la = rnd() * Math.PI * 2, lr = rnd() * r * 0.55;
-        lumps += '<circle cx="' + f1(x + Math.cos(la) * lr) + '" cy="' + f1(y + Math.sin(la) * lr) + '" r="' + f1(0.9 + rnd() * 1.4) + '" fill="#d9a520"/>';
-      }
-      return { d: d, drips: drips, lumps: lumps };
-    }
-    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Žlutá školka s okny a dveřmi zamazanými bramborovou kaší">' +
+    var P = "ks-", R = 10, HOTOVO = 0.86; // poloměr štětce, kolik fasády stačí
+    var BILA = (b.ilustrace && b.ilustrace.predtim) || "img/racice/3-skolka-bila.svg";
+    // fasáda školky (obdélníky x0, y0, x1, y1), podle ní se měří, kolik je hotovo
+    var ZDI = [[6, 62, 64, 140], [136, 62, 194, 140], [62, 34, 138, 140]];
+    var svg = '<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bílá školka zamazaná kaší s nápisem NA KAŠI ZÁLEŽÍ">' +
       defs(P, '<mask id="' + P + 'm" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="150"><rect width="200" height="150" fill="#fff"/>' +
         '<g class="ks-rag" fill="none" stroke="#000" stroke-width="' + (R * 2) + '" stroke-linecap="round" stroke-linejoin="round"></g></mask>') +
-      backdrop("img/racice/3-skolka.svg") +
-      '<g mask="url(#' + P + 'm)">' +
-      B.map(function (q, k) {
-        var s = splat(q[0], q[1], q[2]);
-        return '<g class="ks-blob" data-k="' + k + '">' +
-          '<path d="' + s.d + ' ' + s.drips + '" fill="#f7e6a4"/>' + s.lumps +
-          ln(P, s.d, 1.1) + ln(P, s.drips, 0.8) + '</g>';
-      }).join("") + '</g>' +
+      backdrop(b.ilustrace && b.ilustrace.obrazek || "img/racice/3-skolka.svg") +
+      '<g class="ks-top" mask="url(#' + P + 'm)">' + backdrop(BILA) + '</g>' +
       '<g class="ks-shine" fill="none" stroke="' + INK + '" stroke-width="1" stroke-linecap="round"></g>' +
       '</svg>';
-    var g = shell(b, hotovo, { svg: svg, dots: B.length, tip: "Setři kaši prstem", label: "Okna a dveře školky zamazané kaší, setři je tažením prstu" });
+    var DOTS = 8;
+    var g = shell(b, hotovo, { svg: svg, dots: DOTS, tip: "Přejížděj prstem po školce", label: "Školka zamazaná kaší, setři ji a natři tažením prstu" });
     g.onDone(onDone);
-    var blobs = g.svg.querySelectorAll(".ks-blob"), rag = g.svg.querySelector(".ks-rag");
-    // body, podle kterých se měří, kolik kaše je setřené
-    var samples = B.map(function (q) {
-      var a = [];
-      for (var x = -q[2]; x <= q[2]; x += 2.5) for (var y = -q[2]; y <= q[2]; y += 2.5)
-        if (x * x + y * y <= q[2] * q[2] * 0.7) a.push([q[0] + x, q[1] + y, false]);
-      return { pts: a, left: a.length, gone: !!hotovo };
+    var rag = g.svg.querySelector(".ks-rag"), top = g.svg.querySelector(".ks-top");
+    // body na fasádě, které je potřeba přetřít
+    var pts = [];
+    ZDI.forEach(function (z) {
+      for (var x = z[0] + 2; x < z[2]; x += 4) for (var y = z[1] + 2; y < z[3]; y += 4) {
+        if (pts.some(function (p) { return Math.abs(p[0] - x) < 2 && Math.abs(p[1] - y) < 2; })) continue;
+        pts.push([x, y, false]);
+      }
     });
-    function cleared() { return samples.filter(function (s) { return s.gone; }).length; }
-    if (hotovo) Array.prototype.forEach.call(blobs, function (bl) { bl.classList.add("gone"); });
-    g.set(cleared());
+    var hit = 0, step = 0;
+    function podil() { return hit / pts.length; }
+    if (hotovo) top.style.opacity = 0;
 
-    var line = null, last = null, lastSnd = 0;
+    var line = null, last = null, sndStop = null, sndT = 0;
     function rub(p) {
-      samples.forEach(function (s, k) {
-        if (s.gone) return;
-        var q = B[k];
-        if (Math.abs(p.x - q[0]) > q[2] + R || Math.abs(p.y - q[1]) > q[2] + R) return;
-        s.pts.forEach(function (sp) {
-          if (sp[2]) return;
-          var dx = sp[0] - p.x, dy = sp[1] - p.y;
-          if (dx * dx + dy * dy < R * R) { sp[2] = true; s.left--; }
-        });
-        if (s.left <= s.pts.length * 0.25) {
-          s.gone = true;
-          blobs[k].classList.add("gone");
-          SFX.pop(); vibrate(30);
-          sparkle(q[0], q[1] - q[2] * 0.4);
-          g.set(cleared());
-          g.say("Čisté okno " + cleared() + " z " + B.length + ".");
-          if (cleared() === B.length) g.finish();
-        }
+      pts.forEach(function (sp) {
+        if (sp[2]) return;
+        var dx = sp[0] - p.x, dy = sp[1] - p.y;
+        if (dx * dx + dy * dy < R * R) { sp[2] = true; hit++; }
       });
+      var k = Math.min(DOTS, Math.floor(podil() / HOTOVO * DOTS));
+      if (k > step) {
+        step = k; g.set(k); vibrate(15);
+        if (k < DOTS) { SFX.pop(); sparkle(p.x, p.y - 6); g.say("Natřeno " + Math.round(k / DOTS * 100) + " %."); }
+      }
+      if (podil() >= HOTOVO && !g.finished) {
+        top.classList.add("pryc"); // zbytek kaše zmizí sám
+        zvuk(false);
+        g.finish();
+      }
     }
     function sparkle(x, y) {
       var sh = g.svg.querySelector(".ks-shine");
@@ -337,12 +340,23 @@
       sh.appendChild(gg);
       setTimeout(function () { gg.remove(); }, 900);
     }
+    // zvuk drhnutí hraje, dokud se prst hýbe (nahrávka b.hra.zvuk, jinak syntetický šum)
+    function zvuk(on) {
+      clearTimeout(sndT);
+      if (!on) { if (sndStop) { sndStop(); sndStop = null; } return; }
+      if (!sndStop) {
+        var h = sample(b.hra.zvuk, { loop: true, offset: Math.random() * 3, gain: 0.9, fadeIn: 0.06 });
+        sndStop = h ? h.stop : null;
+        if (!h) SFX.wipe();
+      }
+      sndT = setTimeout(function () { zvuk(false); }, 180);
+    }
     function add(p) {
       if (!line) return;
       if (last) {
         var dx = p.x - last.x, dy = p.y - last.y, dist = Math.sqrt(dx * dx + dy * dy), steps = Math.ceil(dist / 3);
         for (var i = 1; i <= steps; i++) rub({ x: last.x + dx * i / steps, y: last.y + dy * i / steps });
-        if (dist > 1.5) { var now = Date.now(); if (now - lastSnd > 130) { SFX.wipe(); lastSnd = now; } }
+        if (dist > 1.2 && !g.finished) zvuk(true);
       } else rub(p);
       line.setAttribute("points", (line.getAttribute("points") || "") + " " + f1(p.x) + "," + f1(p.y));
       last = p;
@@ -351,6 +365,7 @@
     st.addEventListener("pointerdown", function (e) {
       if (g.finished) return;
       g.hideTip();
+      loadSample(b.hra.zvuk);
       try { st.setPointerCapture(e.pointerId); } catch (x) {}
       line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
       rag.appendChild(line); last = null;
@@ -358,17 +373,17 @@
       e.preventDefault();
     });
     st.addEventListener("pointermove", function (e) { if (line && !g.finished) add(pt(g.svg, e)); });
-    function end() { line = null; last = null; }
+    function end() { line = null; last = null; zvuk(false); }
     st.addEventListener("pointerup", end);
     st.addEventListener("pointercancel", end);
-    if (!hotovo) st.classList.add("hr-draw");
-    // bez dotyku a myši (čtečka obrazovky): tlačítko setře další okno
-    var kb = E("button", { class: "hr-sr", text: "Setřít další okno" });
+    if (!hotovo) { st.classList.add("hr-draw"); loadSample(b.hra.zvuk); }
+    // bez dotyku a myši (čtečka obrazovky): tlačítko natře další kus fasády
+    var kb = E("button", { class: "hr-sr", text: "Natřít další kus školky" });
     kb.addEventListener("click", function () {
-      var k = samples.findIndex(function (s) { return !s.gone; }); if (k < 0) return;
+      var z = ZDI.filter(function (w) { return pts.some(function (p) { return !p[2] && p[0] > w[0] && p[0] < w[2] && p[1] > w[1] && p[1] < w[3]; }); })[0];
+      if (!z) return;
       line = document.createElementNS("http://www.w3.org/2000/svg", "polyline"); rag.appendChild(line); last = null;
-      var q = B[k];
-      for (var y = q[1] - q[2]; y <= q[1] + q[2]; y += 6) { add({ x: q[0] - q[2], y: y }); add({ x: q[0] + q[2], y: y + 3 }); }
+      for (var y = z[1]; y <= z[3]; y += 12) { add({ x: z[0], y: y }); add({ x: z[2], y: y + 6 }); }
       end();
     });
     if (!hotovo) g.box.appendChild(kb);
@@ -413,6 +428,7 @@
       '</svg>';
     var g = shell(b, hotovo, { svg: svg, tip: "Podrž prst na knotu", label: "Svíčka u kříže" });
     g.onDone(onDone);
+    if (!hotovo) loadSample(b.hra.zvuk);
     var s = g.svg, ring = s.querySelector(".sv-ring"), btn = hotspot(132, 96, 36, 46, "Zapálit svíčku (podrž)");
     g.stage.appendChild(btn);
     var t0 = 0, raf = 0;
@@ -432,7 +448,8 @@
       if (g.finished || t0) return;
       if (e) e.preventDefault();
       g.hideTip(); g.say("");
-      t0 = Date.now(); s.classList.add("holding"); SFX.match(); vibrate(15);
+      t0 = Date.now(); s.classList.add("holding"); vibrate(15);
+      if (!sample(b.hra.zvuk, { gain: 1 })) SFX.match(); // škrtnutí sirky
       raf = requestAnimationFrame(frame);
     }
     function stop(ok) {

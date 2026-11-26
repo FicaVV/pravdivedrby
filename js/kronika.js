@@ -1,6 +1,6 @@
 /*
- * Osobní kronika: razítka stanovišť, „Kde je koza?“, rodinné fotky a pohlednice na konec.
- * Fotky zůstávají jen v telefonu (IndexedDB), nic se neodesílá.
+ * Osobní kronika: razítka stanovišť, „Kde je koza?“ a pohlednice na konec (se společnou fotkou, nebo bez ní).
+ * Fotka zůstává jen v telefonu (IndexedDB), nic se neodesílá.
  * Použití v js/app.js: var K = window.PDK.init({ OBEC, state, save, el, toast, vibrate });
  */
 (function () {
@@ -55,9 +55,11 @@
 
     // Hlavní kresba stanoviště se schovanou kozou. hra = true: na kozu jde klepnout (stanoviště),
     // false: jen ukázat (kronika), nalezená koza je zakroužkovaná.
+    // ilustrace.predtim: podoba místa před splněním úkolu (školka: bílá s kaší), ukazuje se jen na nesplněném stanovišti.
     function kresba(b, hra, cls, onFound) {
       var ilu = b.ilustrace || {};
-      var stage = el("div", { class: "ilu-stage" }, [el("img", { class: "ilu-img", src: url(ilu.obrazek), alt: ilu.popis || "", decoding: "async" })]);
+      var src = hra && ilu.predtim && !state.done[b.id] ? ilu.predtim : ilu.obrazek;
+      var stage = el("div", { class: "ilu-stage" }, [el("img", { class: "ilu-img", src: url(src), alt: ilu.popis || "", decoding: "async" })]);
       var fig = el("figure", { class: cls }, [stage]);
       var k = b.koza;
       if (!k) return fig;
@@ -155,14 +157,21 @@
         el("div", { class: "rb-papir" }, [
           razitko(b, "rb-razitko"),
           el("p", { class: "rb-text", text: "Zapsáno do kroniky" }),
-          el("p", { class: "rb-sub", text: "Razítko " + hotovo + " z " + OBEC.body.length })
+          el("p", { class: "rb-misto", text: b.nazev }),
+          el("p", { class: "rb-sub", text: "Razítko " + hotovo + " z " + OBEC.body.length }),
+          el("p", { class: "rb-dal", text: "Klepni a pokračuj" })
         ])
       ]);
-      var zavri = function () { box.classList.add("pryc"); setTimeout(function () { box.remove(); }, 250); };
-      box.addEventListener("click", zavri);
+      // razítko zůstane na obrazovce dost dlouho, ať si ho hráč prohlédne; klepnutím zmizí dřív
+      var t = null, zavri = function () {
+        clearTimeout(t); if (box.classList.contains("pryc")) return;
+        box.classList.add("pryc"); setTimeout(function () { box.remove(); }, 400);
+      };
+      box.addEventListener("click", function () { if (Date.now() - start > 700) zavri(); });
+      var start = Date.now();
       document.body.appendChild(box);
       setTimeout(function () { zvukRazitka(); vibrate([10, 30, 60]); }, reduced ? 0 : 330);
-      setTimeout(zavri, 1900);
+      t = setTimeout(zavri, 6500);
     }
     // Řada razítek v kronice (prázdná místa čekají)
     function razitkaRada() {
@@ -181,7 +190,7 @@
       ]);
     }
 
-    // ---------- rodinné fotky (jen v telefonu) ----------
+    // ---------- společná fotka na pohlednici (jen v telefonu) ----------
     var dbP = null;
     function db() {
       if (!dbP) dbP = new Promise(function (ok, ko) {
@@ -202,16 +211,11 @@
         });
       });
     }
+    var SPOLECNA = "spolecna"; // klíč společné fotky; dřívější fotky u stanovišť měly klíč podle čísla stanoviště
     function key(id) { return OBEC.id + ":" + id; }
     function fotoGet(id) { return tx("readonly", function (st) { return st.get(key(id)); }).catch(function () { return null; }); }
     function fotoPut(id, blob) { return tx("readwrite", function (st) { st.put(blob, key(id)); }); }
     function fotoDel(id) { return tx("readwrite", function (st) { st.delete(key(id)); }).catch(function () {}); }
-    function fotkyVse() { // { idBodu: Blob }
-      var out = {};
-      return Promise.all(OBEC.body.map(function (b) {
-        return fotoGet(b.id).then(function (f) { if (f) out[b.id] = f; });
-      })).then(function () { return out; });
-    }
     // Zmenšit na max. 1400 px a uložit jako JPEG (fotka z mobilu má i 5 MB)
     function zmensit(file) {
       return new Promise(function (ok, ko) {
@@ -225,49 +229,6 @@
         };
         img.onerror = function () { URL.revokeObjectURL(u); ko(new Error("obrázek nejde načíst")); };
         img.src = u;
-      });
-    }
-    var urls = {};
-    function blobUrl(id, blob) { if (urls[id]) URL.revokeObjectURL(urls[id]); urls[id] = URL.createObjectURL(blob); return urls[id]; }
-
-    // Blok na stanovišti: zadání, tlačítko „Vyfoťte se tady“, náhled
-    function fotoBlok(b) {
-      var box = el("section", { class: "foto-blok" });
-      var input = el("input", { type: "file", accept: "image/*", class: "sr-only", tabindex: "-1", "aria-hidden": "true" });
-      var nahled = el("figure", { class: "polaroid", hidden: "" }, [el("img", { alt: "Vaše fotka u stanoviště " + b.nazev })]);
-      var btn = el("button", { class: "btn btn-block", type: "button" });
-      var del = el("button", { class: "btn btn-small btn-ghost", type: "button", text: "Smazat fotku", hidden: "" });
-      function ukaz(blob) {
-        if (blob) { nahled.querySelector("img").src = blobUrl(b.id, blob); nahled.hidden = false; del.hidden = false; }
-        else { nahled.hidden = true; del.hidden = true; }
-        btn.innerHTML = ICO_FOTO + (blob ? "Vyfotit znovu" : "Vyfoťte se tady");
-      }
-      btn.addEventListener("click", function () { input.click(); });
-      input.addEventListener("change", function () {
-        var f = input.files && input.files[0]; input.value = "";
-        if (!f) return;
-        btn.disabled = true;
-        zmensit(f).then(function (bl) { return fotoPut(b.id, bl).then(function () { return bl; }); })
-          .then(function (bl) { ukaz(bl); toast("Fotka je vlepená v kronice"); vibrate(30); },
-                function () { toast("Fotku se nepodařilo uložit"); })
-          .then(function () { btn.disabled = false; });
-      });
-      del.addEventListener("click", function () { fotoDel(b.id).then(function () { ukaz(null); toast("Fotka smazaná"); }); });
-      box.appendChild(el("span", { class: "kicker", text: "Rodinná fotka do kroniky" }));
-      if (b.fotoUkol) box.appendChild(el("p", { class: "foto-ukol", text: b.fotoUkol }));
-      box.appendChild(nahled);
-      box.appendChild(btn); box.appendChild(del); box.appendChild(input);
-      box.appendChild(el("p", { class: "draft-note", text: "Nepovinné. Fotka zůstane jen v tomhle telefonu a nikam se neodesílá." }));
-      ukaz(null);
-      fotoGet(b.id).then(function (f) { if (f) ukaz(f); });
-      return box;
-    }
-    // Fotka vlepená do kapitoly kroniky vedle kresby (když existuje)
-    function fotoDoKroniky(b, slot) {
-      fotoGet(b.id).then(function (f) {
-        if (!f) return;
-        slot.classList.add("s-fotkou");
-        slot.appendChild(el("figure", { class: "polaroid ch-rodina" }, [el("img", { src: blobUrl(b.id, f), alt: "Vaše fotka u stanoviště " + b.nazev })]));
       });
     }
 
@@ -296,20 +257,27 @@
       for (var t = -h; t < w + h; t += step) { c.moveTo(x + t, y + h); c.lineTo(x + t + h * 0.6, y); }
       c.stroke(); c.restore();
     }
-    // Vykreslí pohlednici 1500 × 1050 px; fotoId = stanoviště, jehož fotka je na přední straně (nebo null)
-    function kresliPohlednici(fotky, fotoId) {
+    // Kresby stanovišť pro pohlednici bez fotky (koláž „pozdrav z…“ jako na staré pohlednici)
+    function kolazBody() {
+      return OBEC.body.filter(function (b) { return state.done[b.id] && b.ilustrace && b.ilustrace.obrazek; }).slice(0, 6);
+    }
+    // Vykreslí pohlednici 1500 × 1050 px; fotoBlob = společná fotka (vlevo jako polaroid), bez ní koláž kreseb
+    function kresliPohlednici(fotoBlob) {
       var W = 1500, H = 1050, c = document.createElement("canvas"); c.width = W; c.height = H;
       var g = c.getContext("2d"), P = OBEC.pohlednice || {}, r = rnd(7);
       var hotove = OBEC.body.filter(function (b) { return state.done[b.id]; });
-      var fotoBlob = fotoId && fotky[fotoId];
+      var kolaz = fotoBlob ? [] : kolazBody();
       var zdroje = [fotoBlob ? URL.createObjectURL(fotoBlob) : null, url(KOZA), url((OBEC.body[0].ilustrace || {}).obrazek)]
-        .concat(OBEC.body.map(function (b) { return state.done[b.id] && b.razitko ? url(b.razitko) : null; }));
+        .concat(OBEC.body.map(function (b) { return state.done[b.id] && b.razitko ? url(b.razitko) : null; }))
+        .concat(kolaz.map(function (b) { return url(b.ilustrace.obrazek); }));
       return fontsReady().then(function () {
         return Promise.all(zdroje.map(function (s) { return s ? loadImg(s) : null; }))
           .then(function (imgs) { return state.podpis ? loadImg(state.podpis).then(function (p) { return imgs.concat([p]); }) : imgs.concat([null]); });
       }).then(function (imgs) {
         if (fotoBlob) URL.revokeObjectURL(zdroje[0]);
-        var foto = imgs[0], koza = imgs[1], kresba1 = imgs[2], raz = imgs.slice(3, 3 + OBEC.body.length), podpis = imgs[3 + OBEC.body.length];
+        var nb = OBEC.body.length;
+        var foto = imgs[0], koza = imgs[1], kresba1 = imgs[2], raz = imgs.slice(3, 3 + nb);
+        var kresby = imgs.slice(3 + nb, 3 + nb + kolaz.length), podpis = imgs[3 + nb + kolaz.length];
         // papír
         g.fillStyle = "#f7f4ec"; g.fillRect(0, 0, W, H);
         for (var i = 0; i < 2600; i++) { g.fillStyle = "rgba(90,80,60," + (r() * 0.07).toFixed(3) + ")"; g.fillRect(r() * W, r() * H, 1.6, 1.6); }
@@ -317,23 +285,47 @@
         g.strokeStyle = "#2f2c28"; g.lineWidth = 4; g.strokeRect(28, 28, W - 56, H - 56);
         g.lineWidth = 1.5; g.strokeRect(40, 40, W - 80, H - 80);
 
-        // ---- polaroid vlevo ----
-        g.save(); g.translate(400, 520); g.rotate(-3 * Math.PI / 180);
-        g.shadowColor = "rgba(22,19,15,.28)"; g.shadowBlur = 24; g.shadowOffsetY = 8;
-        g.fillStyle = "#fffdf8"; g.fillRect(-300, -380, 600, 740);
-        g.shadowColor = "transparent";
-        var fx = -270, fy = -350, fw = 540, fh = 560;
-        if (foto) cover(g, foto, fx, fy, fw, fh);
-        else if (kresba1) { g.fillStyle = "#f7f4ec"; g.fillRect(fx, fy, fw, fh); cover(g, kresba1, fx, fy + 70, fw, fh - 140); }
-        g.strokeStyle = "rgba(47,44,40,.35)"; g.lineWidth = 2; g.strokeRect(fx, fy, fw, fh);
-        // popisek polaroidu
-        g.fillStyle = "#2f2c28"; g.textAlign = "center"; g.textBaseline = "alphabetic";
         var tym = (state.tym || "").trim();
-        g.font = "800 40px " + FD; fitText(g, tym || "Neoficiální kronikáři", 0, 278, 520);
-        g.font = "400 28px " + FB; g.fillStyle = "#554c40"; g.fillText(CZ_DATE(new Date(state.konecAt || Date.now())), 0, 324);
-        g.restore();
-        // lepicí pásky (žlutá průsvitná)
-        paska(g, 175, 150, -20); paska(g, 620, 135, 16);
+        if (foto) {
+          // ---- polaroid se společnou fotkou vlevo ----
+          g.save(); g.translate(400, 520); g.rotate(-3 * Math.PI / 180);
+          g.shadowColor = "rgba(22,19,15,.28)"; g.shadowBlur = 24; g.shadowOffsetY = 8;
+          g.fillStyle = "#fffdf8"; g.fillRect(-300, -380, 600, 740);
+          g.shadowColor = "transparent";
+          var fx = -270, fy = -350, fw = 540, fh = 560;
+          cover(g, foto, fx, fy, fw, fh);
+          g.strokeStyle = "rgba(47,44,40,.35)"; g.lineWidth = 2; g.strokeRect(fx, fy, fw, fh);
+          // popisek polaroidu
+          g.fillStyle = "#2f2c28"; g.textAlign = "center"; g.textBaseline = "alphabetic";
+          g.font = "800 40px " + FD; fitText(g, tym || "Neoficiální kronikáři", 0, 278, 520);
+          g.font = "400 28px " + FB; g.fillStyle = "#554c40"; g.fillText(CZ_DATE(new Date(state.konecAt || Date.now())), 0, 324);
+          g.restore();
+          // lepicí pásky (žlutá průsvitná)
+          paska(g, 175, 150, -20); paska(g, 620, 135, 16);
+        } else {
+          // ---- bez fotky: koláž kreseb ze stanovišť (2 × 3), pod ní jméno výpravy ----
+          var cw = 290, ch = 218, pad = 12, gx = 28, gy = 26, x0 = 92, y0 = 84;
+          var mista = kresby.length ? kresby : [kresba1];
+          mista.forEach(function (im, k) {
+            if (!im) return;
+            var col = k % 2, row = Math.floor(k / 2), rot = ((k * 37) % 7 - 3) * Math.PI / 180;
+            var cx = x0 + col * (cw + gx) + cw / 2, cy = y0 + row * (ch + gy) + ch / 2;
+            g.save(); g.translate(cx, cy); g.rotate(rot);
+            g.shadowColor = "rgba(22,19,15,.25)"; g.shadowBlur = 14; g.shadowOffsetY = 5;
+            g.fillStyle = "#fffdf8"; g.fillRect(-cw / 2, -ch / 2, cw, ch);
+            g.shadowColor = "transparent";
+            g.drawImage(im, -cw / 2 + pad, -ch / 2 + pad, cw - 2 * pad, ch - 2 * pad);
+            g.strokeStyle = "rgba(47,44,40,.35)"; g.lineWidth = 2; g.strokeRect(-cw / 2 + pad, -ch / 2 + pad, cw - 2 * pad, ch - 2 * pad);
+            g.restore();
+            if (k % 3 === 0) paska(g, cx - cw / 2 + 30, cy - ch / 2 + 6, -28);
+            else if (k % 3 === 1) paska(g, cx + cw / 2 - 30, cy - ch / 2 + 6, 24);
+          });
+          var ty = y0 + 3 * (ch + gy) + 52;
+          g.textAlign = "center"; g.fillStyle = "#2f2c28"; g.font = "800 44px " + FD;
+          fitText(g, tym || "Neoficiální kronikáři", x0 + cw + gx / 2, ty, 2 * cw + gx);
+          g.font = "400 28px " + FB; g.fillStyle = "#554c40"; g.textAlign = "center";
+          g.fillText("Kronika dopsána " + CZ_DATE(new Date(state.konecAt || Date.now())), x0 + cw + gx / 2, ty + 42);
+        }
 
         // ---- pravá strana ----
         var X = 790;
@@ -400,42 +392,79 @@
       g.fillText(t, x, y);
     }
 
-    // Sekce na závěrečné stránce: jméno výpravy, výběr fotky, náhled, Sdílet / Uložit
+    // Sekce na závěrečné stránce: výzva ke společné fotce, jméno výpravy, náhled pohlednice, Sdílet / Uložit.
+    // state.pohlFoto: "spolecna" = s fotkou, "bez" = hráči fotku odmítli (pohlednice s koláží kreseb), null = ještě nevybrali.
     function pohledniceSekce() {
       if (!state.konecAt) { state.konecAt = Date.now(); save(); }
       var box = el("section", { class: "pohlednice" });
       box.appendChild(el("h3", { text: "Vaše pohlednice z výletu" }));
-      box.appendChild(el("p", { class: "draft-note", text: "Razítka, rodinná fotka a koza na jednom obrázku. Pošlete ho babičce nebo kamarádům." }));
+      var input = el("input", { type: "file", accept: "image/*", class: "sr-only", tabindex: "-1", "aria-hidden": "true" });
+      box.appendChild(input);
+
+      // výzva ke společné fotce
+      var vyzva = el("div", { class: "foto-vyzva", hidden: "" }, [
+        el("span", { class: "kicker", text: "Na závěr společná fotka" }),
+        el("p", { class: "foto-ukol", text: "Stoupněte si všichni k sobě, třeba před obecní úřad, a vyfoťte se. Fotka se vlepí do pohlednice z výletu." }),
+        el("button", { class: "btn btn-primary btn-block", type: "button", html: ICO_FOTO + "Vyfotit společnou fotku", onclick: function () { input.click(); } }),
+        el("button", { class: "btn btn-block", type: "button", text: "Raději bez fotky", onclick: function () { zvolit("bez"); } }),
+        el("p", { class: "draft-note", text: "Fotka zůstane jen v tomhle telefonu a nikam se neodesílá. Bez fotky dostanete pohlednici s kresbami ze stanovišť." })
+      ]);
+      box.appendChild(vyzva);
+
+      var hotova = el("div", { class: "pohl-hotova", hidden: "" });
       var form = el("div", { class: "form" });
       var inp = el("input", { id: "pohl-tym", maxlength: "40", placeholder: "např. Kronikáři Novotní", autocomplete: "off" });
       inp.value = state.tym || "";
       form.appendChild(el("label", { for: "pohl-tym", text: "Jméno výpravy" }));
       form.appendChild(inp);
-      box.appendChild(form);
-      var volba = el("div", { class: "pohl-volba", role: "radiogroup", "aria-label": "Fotka na pohlednici", hidden: "" });
-      box.appendChild(volba);
+      hotova.appendChild(form);
       var fig = el("figure", { class: "pohl-nahled" }, [el("div", { class: "pohl-cekej", text: "Kreslím pohlednici…" })]);
-      box.appendChild(fig);
+      hotova.appendChild(fig);
       var share = el("button", { class: "btn btn-primary btn-block", type: "button", disabled: "" });
       share.innerHTML = ICO_SHARE + "Sdílet pohlednici";
       var dl = el("a", { class: "btn btn-block", download: "pohlednice-" + OBEC.id + ".jpg", href: "#", "aria-disabled": "true" });
       dl.innerHTML = ICO_SAVE + "Uložit obrázek";
-      box.appendChild(el("div", { class: "pohl-akce" }, [share, dl]));
+      hotova.appendChild(el("div", { class: "pohl-akce" }, [share, dl]));
+      var zmena = el("div", { class: "pohl-zmena" });
+      hotova.appendChild(zmena);
+      box.appendChild(hotova);
 
-      var fotky = {}, blob = null, outUrl = null, gen = 0, t = null;
+      var foto = null, blob = null, outUrl = null, gen = 0, t = null;
       function vykresli() {
         var my = ++gen;
-        kresliPohlednici(fotky, state.pohlFoto && fotky[state.pohlFoto] ? state.pohlFoto : null).then(function (bl) {
+        share.disabled = true; dl.setAttribute("aria-disabled", "true");
+        kresliPohlednici(state.pohlFoto === SPOLECNA ? foto : null).then(function (bl) {
           if (my !== gen || !bl) return;
           blob = bl;
           if (outUrl) URL.revokeObjectURL(outUrl);
           outUrl = URL.createObjectURL(bl);
           fig.innerHTML = "";
-          fig.appendChild(el("img", { src: outUrl, alt: "Pohlednice: " + ((OBEC.pohlednice || {}).pozdrav || OBEC.nazev) + ", razítka a fotka výpravy" }));
+          fig.appendChild(el("img", { src: outUrl, alt: "Pohlednice: " + ((OBEC.pohlednice || {}).pozdrav || OBEC.nazev) + (state.pohlFoto === SPOLECNA ? ", razítka a společná fotka výpravy" : ", razítka a kresby ze stanovišť") }));
           dl.href = outUrl; dl.removeAttribute("aria-disabled");
           share.disabled = false;
         });
       }
+      function ukaz() {
+        var volba = state.pohlFoto === SPOLECNA && foto ? SPOLECNA : state.pohlFoto === "bez" ? "bez" : null;
+        vyzva.hidden = !!volba; hotova.hidden = !volba;
+        zmena.innerHTML = "";
+        if (!volba) return;
+        if (volba === SPOLECNA) {
+          zmena.appendChild(el("button", { class: "btn btn-small", type: "button", html: ICO_FOTO + "Vyfotit znovu", onclick: function () { input.click(); } }));
+          zmena.appendChild(el("button", { class: "btn btn-small btn-ghost", type: "button", text: "Pohlednice bez fotky", onclick: function () { zvolit("bez"); } }));
+        } else {
+          zmena.appendChild(el("button", { class: "btn btn-small", type: "button", html: ICO_FOTO + (foto ? "Pohlednice s naší fotkou" : "Přece jen se vyfotit"), onclick: function () { if (foto) zvolit(SPOLECNA); else input.click(); } }));
+        }
+        vykresli();
+      }
+      function zvolit(v) { state.pohlFoto = v; save(); ukaz(); }
+      input.addEventListener("change", function () {
+        var f = input.files && input.files[0]; input.value = "";
+        if (!f) return;
+        zmensit(f).then(function (bl) { return fotoPut(SPOLECNA, bl).then(function () { return bl; }); })
+          .then(function (bl) { foto = bl; toast("Fotka je na pohlednici"); vibrate(30); zvolit(SPOLECNA); },
+                function () { toast("Fotku se nepodařilo uložit, zkuste to znovu"); });
+      });
       inp.addEventListener("input", function () {
         state.tym = inp.value; save();
         clearTimeout(t); t = setTimeout(vykresli, 350);
@@ -448,37 +477,14 @@
           navigator.share(data).catch(function (e) { if (e && e.name !== "AbortError") toast("Sdílení se nepovedlo, zkus Uložit obrázek"); });
         } else { dl.click(); toast("Tenhle prohlížeč sdílení neumí, pohlednice se uloží"); }
       });
-      fotkyVse().then(function (f) {
-        fotky = f;
-        var ids = Object.keys(f);
-        if (ids.length) {
-          if (!state.pohlFoto || !f[state.pohlFoto]) { state.pohlFoto = ids[ids.length - 1]; save(); }
-          volba.hidden = false;
-          volba.appendChild(el("p", { class: "pohl-volba-h", text: "Fotka na pohlednici" }));
-          var row = el("div", { class: "pohl-thumbs" });
-          ids.forEach(function (id) {
-            var b = OBEC.body.filter(function (x) { return String(x.id) === id; })[0];
-            var bt = el("button", { type: "button", role: "radio", "aria-checked": String(state.pohlFoto === id), "aria-label": "Fotka od stanoviště " + (b ? b.nazev : id) },
-              [el("img", { src: blobUrl(id, f[id]), alt: "" })]);
-            bt.addEventListener("click", function () {
-              state.pohlFoto = id; save();
-              Array.prototype.forEach.call(row.children, function (x) { x.setAttribute("aria-checked", String(x === bt)); });
-              vykresli();
-            });
-            row.appendChild(bt);
-          });
-          volba.appendChild(row);
-        } else {
-          box.insertBefore(el("p", { class: "draft-note", text: "Tip: když se na stanovištích vyfotíte, fotka se objeví i tady na pohlednici." }), fig);
-        }
-        vykresli();
-      });
+      fotoGet(SPOLECNA).then(function (f) { foto = f || null; ukaz(); });
       return box;
     }
 
-    // Smazat postup: nalezené kozy a fotky
+    // Smazat postup: nalezené kozy a fotky (i ty starší, focené dřív u jednotlivých stanovišť)
     function smazat() {
       state.kozy = {}; state.pohlFoto = null; state.konecAt = null; save();
+      fotoDel(SPOLECNA);
       OBEC.body.forEach(function (b) { fotoDel(b.id); });
     }
 
@@ -488,7 +494,7 @@
 
     return {
       kresba: kresba, kozaRadek: kozaRadek, razitko: razitko, bouchni: bouchni, razitkaRada: razitkaRada, kozyRadek: kozyRadek,
-      fotoBlok: fotoBlok, fotoDoKroniky: fotoDoKroniky, pohledniceSekce: pohledniceSekce, smazat: smazat
+      pohledniceSekce: pohledniceSekce, smazat: smazat
     };
   }
 })();

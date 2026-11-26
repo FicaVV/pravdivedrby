@@ -1,8 +1,8 @@
 # Pravdivé drby – prototyp PWA (okruh Račice-Pístovice)
 
-Mobilní webová hra: mapa s GPS radarem, 8 stanovišť s příběhem, pozorovací úkoly
-s nápovědou a „prozradit“, postupně odkrývaná kronika, předčítání nahlas,
-závěrečná stránka s hodnocením a návrhem další obce. Postup se ukládá jen v telefonu,
+Mobilní webová hra: mapa s GPS radarem, 8 stanovišť s příběhem, na každém minihra (jde zahrát i znovu),
+postupně odkrývaná kronika s razítky, předčítání nahlas, závěrečná stránka se společnou fotkou
+na pohlednici, hodnocením a návrhem další obce. Postup se ukládá jen v telefonu,
 hodnocení, návrhy a anonymní statistiky se odesílají do Google tabulky (viz níže).
 
 ## Technologie a proč
@@ -98,36 +98,43 @@ Počítadlo je odhad z naší strany; skutečnou spotřebu ukazuje Google Cloud 
 
 ## Minihra u hospody (dojení kozy)
 
-Bod může mít místo otázky `hra: { typ: "dojeni", klepnuti, nadpis, zadani, hotovo, meceni: [mp3…] }`.
+Bod má jako úkol `hra: { typ: "dojeni", klepnuti, nadpis, zadani, hotovo, meceni: [mp3…] }`.
 Koza je `img/racice/1-dojeni-koza.svg`, vemeno, vědro a mléko kreslí a animuje `js/app.js`.
 Při každém klepnutí koza zamečí: náhodně jedna z nahrávek v `meceni`, pokaždé trochu jinou výškou.
 Nahrávky kozy jsou CC0 od uživatele Kinoton z Freesound, přehled licencí je v `audio/racice/LICENSE.md`.
 
 ## Minihry na ostatních stanovištích
 
-Ostatní minihry jsou v `js/hry.js` (styly v `css/hry.css`), bod je zapne přes `hra: { typ, nadpis, zadani, hotovo }`:
+Ostatní minihry jsou v `js/hry.js` (styly v `css/hry.css`), bod je zapne přes `hra: { typ, nadpis, zadani, hotovo, zvuk? }`:
 
-| Stanoviště | `typ` | Co se dělá | Vztah k otázce |
+| Stanoviště | `typ` | Co se dělá | Zvuk |
 |---|---|---|---|
-| Hasičárna | `haseni` | klepáním stříká pivo z hadice na 6 plamenů | před otázkou |
-| Školka | `kase` | prstem stírá kaši z 8 oken a dveří | před otázkou |
-| Kříž | `svicka` (`pred: true`) | podrží prst na knotu, svíčka se zapálí | před modlitbou i otázkou |
-| Stadion | `tleskani` (`tempo`, `tlesknuti`) | tleská do rytmu RA-ČI-CE! | místo otázky |
-| Sochy | `gumaky` | přetáhne Floriánovi gumáky na sochu | před otázkou |
-| Sokolovna | `kruhy` (`sekund`) | klepáním vlevo/vpravo drží gymnastu v klidu | před otázkou |
-| Úřad | `vynos` | orazítkuje 3 vyhotovení a podepíše originál | před poslední kapitolou |
+| Hasičárna | `haseni` | klepáním stříká pivo z hadice na 6 plamenů | `audio/racice/hadice.mp3` (úryvek na každé stříknutí) |
+| Školka | `kase` | prstem stírá kaši z bílé školky a natírá ji na žluto, nápis NA KAŠI ZÁLEŽÍ se mění na NAŠÍ MLÁDEŽI | `audio/racice/umyvani.mp3` (hraje, dokud se prst hýbe) |
+| Kříž | `svicka` (`pred: true`) | podrží prst na knotu, svíčka se zapálí, pak se odemkne modlitba | `audio/racice/sirka.mp3` (škrtnutí sirky) |
+| Stadion | `tleskani` (`tempo`, `tlesknuti`) | tleská do rytmu RA-ČI-CE! | syntetizovaný |
+| Sochy | `gumaky` | přetáhne Floriánovi gumáky na sochu | syntetizovaný |
+| Sokolovna | `kruhy` (`sekund`) | klepáním vlevo/vpravo drží gymnastu v klidu | syntetizovaný |
+| Úřad | `vynos` | orazítkuje 3 vyhotovení a podepíše originál | syntetizovaný |
 
-Když má bod i `otazka` (nebo `konec`), zbytek stanoviště se odemkne až po dohrání. Bez otázky hra
-úkol nahrazuje. Zvuky se syntetizují ve Web Audio, takže nic dalšího se nestahuje a vše jede offline.
-Kresby používají stávající obrázky stanovišť, nové kresby (svíčka, kruhy, výnos) jsou přímo v kódu.
+Minihra je úkolem stanoviště: po dohrání se kapitola zapíše do kroniky a bouchne razítko. Otázky s možnostmi
+hra už nemá (kód je pořád umí přes `otazka`, `moznosti`, `answer`, `napoveda`). Pod dohranou hrou je
+**Zahrát si znovu**: hra se rozehraje od začátku, ale nic nového se nezapisuje.
+
+Zvuk `hra.zvuk` je MP3, které se načte do Web Audia (jde pak přehrávat úryvky a přes sebe). Musí být v `SHELL`
+v `sw.js`, aby hrálo offline. Když se nenačte (třeba v jednosouborové ukázce), hra použije syntetický zvuk.
+Ostatní zvuky se syntetizují ve Web Audio. Kresby používají obrázky stanovišť, nové kresby (svíčka, kruhy, výnos)
+jsou přímo v kódu.
+
+Školka má dvě kresby: `3-skolka-bila.svg` (bílá, kaše, NA KAŠI ZÁLEŽÍ) se ukazuje, dokud úkol není splněný
+(`ilustrace.predtim`), `3-skolka.svg` je dnešní žlutá podoba s NAŠÍ MLÁDEŽI. Obě vyrábí `node tools/skolka-kresby.mjs`.
 
 ## Nahrávky u stanovišť
 
 Stanoviště může mít přehrávač s nahrávkou: v bodu v `data/racice.js` vyplňte
 `hymna: { src: "audio/racice/….mp3", nazev, popis, text: [[řádky sloky], …] }`.
 Soubor patří do `audio/racice/` a musí být i v seznamu `SHELL` v `sw.js`, aby hrál offline
-(a zvyšte tam `VERSION`). Text se ukáže až po vyřešení úkolu, protože obvykle prozrazuje odpověď.
-U stadionu takhle hraje klubová hymna „Kdo je tady doma?“.
+(a zvyšte tam `VERSION`). U stadionu takhle hraje klubová hymna „Kdo je tady doma?“.
 
 ### Zvukový podklad pod předčítáním
 
@@ -139,20 +146,15 @@ s dozvukem kostelní lodi (`audio/racice/zvony-modlitba.mp3`). Zvuk je celý syn
 Hlasitost je zapečená v souboru (podklad je asi o 10 dB tišší než hlas), protože iPhone nedovolí
 měnit hlasitost z webu.
 
-Modlitba a možnosti odpovědi můžou být zapsané po slokách (pole řádků). Mezi slokami je při
-předčítání pauza, namluvený vypravěč má každou sloku jako samostatnou nahrávku.
-
-### Předčítání otázek
-
-Každý úkol má tlačítko „Přečíst otázku a možnosti“. Předčítá úvod k otázce, otázku a možnosti
-(„Možnost A. …“) s krátkou pauzou mezi nimi. Nahrávky pro ně namluví stejný workflow jako příběhy.
+Modlitba je zapsaná po slokách (pole řádků, `modlitba` a `modlitbaKonec`, v přepisu je celá). Mezi slokami
+je při předčítání pauza, namluvený vypravěč má každou sloku jako samostatnou nahrávku.
 
 ## Kreslená mapa
 
 Hlavní mapa je „kreslená tužkou“: ulice, domy, potoky, pole a louky jsou skutečná data
 OpenStreetMap, jen nakreslená ručním stylem. Ušlá část trasy je žlutá, zbytek tečkovaný,
-u stanovišť jsou kartičky s kresbou (barevně po splnění, šedě „???“ dokud jsou zamčená;
-zamčené se ukážou až po přiblížení). V mapě se pase schovaná koza (klepnutí vyšle událost
+u stanovišť jsou kartičky (kresba se objeví až po splnění úkolu, do té doby prázdný rámeček s otazníkem;
+zamčené „???“ se ukážou až po přiblížení). V mapě se pase schovaná koza (klepnutí vyšle událost
 `pd:koza`). Přepínač **Kreslená / Skutečná** vpravo nahoře přepne na dlaždice OSM.
 
 - `tools/osm/racice-osm.json` je výřez OSM (API `/api/0.6/map`, okolí trasy, jen potřebné tagy).
@@ -225,8 +227,6 @@ na místě, s GPS) a tlačítkem **Zkopírovat souřadnice** získáte hodnoty d
 
 ## Co v obsahu chybí (hra s tím počítá)
 
-- Bod 2 a 3: neověřená správná odpověď. Hra zatím uzná jakoukoli volbu (`answer: null`).
-- Bod 8: závěrečná stránka s fakty je pracovní návrh.
 - Bod 4: „nahrávku“ modlitby zatím čte syntetický hlas.
 
 ## Jednosouborová ukázka
@@ -241,23 +241,23 @@ Stanoviště mají kresby tužkou se žlutou pastelkou (`img/racice/*.svg`). V `
 a zároveň „vlepená fotka“ v kronice po dopsání kapitoly, `mezi` jsou menší kresby vložené za odstavec
 s indexem `po` (0 = za první odstavec). Nová kresba se musí přidat i do seznamu v `sw.js`, aby fungovala offline.
 
-## Osobní kronika: razítka, „Kde je koza?“, rodinné fotky, pohlednice
+## Osobní kronika: razítka, „Kde je koza?“, společná fotka, pohlednice
 
 Logika je v `js/kronika.js`, nastavení stanovišť v `data/racice-kronika.js` (doplňuje body z `data/racice.js` podle `id`).
 
 - **Razítka.** Po dokončení stanoviště se přes obrazovku „bouchne“ razítko (animace, zvuk složený ve WebAudio, vibrace)
-  a objeví se v kronice v řadě razítek a u kapitoly. Kresby `img/racice/razitko-1…8.svg` (tužka + žlutá) vyrábí
+  s názvem místa. Zůstane 6,5 s (klepnutím zmizí dřív) a objeví se v kronice v řadě razítek a u kapitoly. Kresby `img/racice/razitko-1…8.svg` (tužka + žlutá) vyrábí
   `node tools/kronika-kresby.mjs`; ikony jsou převzaté z návrhů razítek.
 - **Kde je koza?** V hlavní kresbě každého stanoviště je schovaná strakatá koza (`img/racice/koza-schovana.svg`,
   vyrábí ji stejný skript z kozy na dojení). Klepnutím ji hráč najde, koza zamečí a v bublině něco utrousí.
   Pozice je v `koza: { x, y, s, otoc, orez, hlaska }` v jednotkách kresby 200 × 150; `orez` je výřez, mimo který
   je koza „za“ něčím (sudem, rámem okna, rohem budovy). Když už koza v kresbě je, stačí `jenKlik: [x0, y0, x1, y1]`.
   Při změně kresby stanoviště je potřeba souřadnice kozy zkontrolovat. Hláška nesmí prozradit odpověď na úkol.
-- **Rodinná fotka.** Na každém stanovišti je nepovinné „Vyfoťte se tady“ se zábavným zadáním (`fotoUkol`).
-  Fotka se zmenší na 1400 px a uloží jen v telefonu (IndexedDB `pd-kronika`), nikam se neodesílá.
-  V kronice je vlepená jako polaroid vedle kresby. Smazání postupu smaže i fotky.
-- **Pohlednice.** Na závěrečné stránce se z jména výpravy, vybrané fotky, razítek a počtu nalezených koz nakreslí
-  obrázek 1500 × 1050 (canvas, JPEG). Tlačítko Sdílet použije systémové sdílení telefonu, jinak se obrázek uloží.
+- **Společná fotka.** Po posledním úkolu závěrečná stránka vyzve ke společné fotce („Vyfotit společnou fotku“
+  nebo „Raději bez fotky“, volba jde později změnit). Fotka se zmenší na 1400 px a uloží jen v telefonu
+  (IndexedDB `pd-kronika`, klíč `…:spolecna`), nikam se neodesílá. Smazání postupu ji smaže.
+- **Pohlednice.** Na závěrečné stránce se z jména výpravy, společné fotky, razítek a počtu nalezených koz nakreslí
+  obrázek 1500 × 1050 (canvas, JPEG). Bez fotky je vlevo koláž kreseb ze stanovišť. Tlačítko Sdílet použije systémové sdílení telefonu, jinak se obrázek uloží.
   Texty jsou v `OBEC.pohlednice`. Když minihra na úřadě uloží podpis do `state.podpis` (data URL obrázku),
   pohlednice ho sama přidá.
 
@@ -267,13 +267,13 @@ Logika je v `js/kronika.js`, nastavení stanovišť v `data/racice-kronika.js` (
 index.html              obrazovky (úvod, mapa s radarem, listy stanoviště/kroniky/nastavení)
 css/app.css             vzhled (světlé kontrastní téma pro čitelnost na slunci)
 js/app.js               herní logika, radar, simulace, kronika, TTS
-js/kronika.js           razítka, „Kde je koza?“, rodinné fotky, pohlednice
+js/kronika.js           razítka, „Kde je koza?“, společná fotka, pohlednice
 
 js/odesilani.js         odesílání hodnocení, návrhů a statistik s frontou pro offline
 js/config.js            adresa pro odesílání (při nasazení ji doplní workflow)
 server/apps-script.gs   příjem dat do Google tabulky
 data/racice.js          obsah okruhu
-data/racice-kronika.js  razítka, schovaná koza a zadání fotek pro okruh
+data/racice-kronika.js  razítka a schovaná koza pro okruh
 data/racice-mapa.js     kreslená mapa (vygenerovaná z OSM, ODbL)
 js/kreslena-mapa.js     vykreslení kreslené mapy v Leafletu
 tools/kreslena-mapa.py  generátor kreslené mapy z tools/osm/racice-osm.json

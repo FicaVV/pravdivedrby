@@ -664,21 +664,37 @@
     if (hra && !rec && (pred || !hraJeUkol)) poHre.hidden = true;
     function odemkni() {
       if (hraJeUkol) { markDone(b, { ok: true }); dalsi.appendChild(nextButton(b, i, true)); }
+      // kresba „před“ (školka s kaší) se po splnění vymění za dnešní podobu
+      var im = ilu.predtim && body.querySelector(".ilu-hlavni .ilu-img");
+      if (im) setTimeout(function () { im.src = (window.PD_IMG && window.PD_IMG[ilu.obrazek]) || ilu.obrazek; }, 2400);
       poHre.hidden = false;
       setTimeout(function () { (hraJeUkol ? dalsi : poHre).scrollIntoView({ behavior: "smooth", block: hraJeUkol ? "center" : "start" }); }, 900);
     }
-    if (pred) body.appendChild(hra(b, !!rec, odemkni));
+    // Hra jde zahrát znovu (i po splnění); opakování už nic nezapisuje, jen se hraje pro radost.
+    function hraBlok() {
+      var wrap = el("div", { class: "hra-wrap" });
+      var znovu = el("button", { class: "btn btn-small hra-znovu", type: "button", html: ICO_ZNOVU + "Zahrát si znovu" });
+      wrap.appendChild(znovu);
+      var cur = hra(b, !!rec, function () { odemkni(); znovu.hidden = false; });
+      wrap.insertBefore(cur, znovu);
+      znovu.hidden = !rec;
+      znovu.addEventListener("click", function () {
+        var n = hra(b, false, function () { znovu.hidden = false; });
+        wrap.replaceChild(n, cur); cur = n; znovu.hidden = true;
+        n.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      return wrap;
+    }
+    if (pred) body.appendChild(hraBlok());
     var media = pred ? poHre : body;
     if (b.modlitba) {
       var pr = el("div", { class: "prayer" });
-      pr.innerHTML = b.modlitba.map(function (sl) { return "<p>" + [].concat(sl).map(esc).join("<br>") + "</p>"; }).join("") +
-        '<span class="cut">…zbytek přepisu se tady na místě nedochoval.</span>';
+      pr.innerHTML = b.modlitba.concat(b.modlitbaKonec || []).map(function (sl) { return "<p>" + [].concat(sl).map(esc).join("<br>") + "</p>"; }).join("");
       media.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return prayerSegs(b); }, true, { bg: b.podklad, gap: 1.4 })]));
       media.appendChild(pr);
     }
     if (b.hymna) media.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
-    media.appendChild(K.fotoBlok(b)); // rodinná fotka u zastávky (js/kronika.js)
-    if (hra && !pred) body.appendChild(hra(b, !!rec, odemkni));
+    if (hra && !pred) body.appendChild(hraBlok());
     body.appendChild(poHre);
 
     if (hraJeUkol) { if (rec) dalsi.appendChild(nextButton(b, i, true)); poHre.appendChild(dalsi); }
@@ -1013,6 +1029,7 @@
   }
 
   // ---------- kronika ----------
+  var ICO_ZNOVU = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
   var ICO_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#16130f"/><path d="M7 12l3.5 3.5L17 9" fill="none" stroke="#f5c400" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ICO_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   function openChronicle() {
@@ -1036,13 +1053,12 @@
         if (b.razitko) h.appendChild(K.razitko(b, "ch-razitko"));
         else h.insertAdjacentHTML("beforeend", ICO_CHECK);
         var card = el("section", { class: "ch-card done" }, [h]);
-        // odměna: kresba stanoviště „vlepená“ do kroniky jako fotka s popiskem, vedle ní rodinná fotka
+        // odměna: kresba stanoviště „vlepená“ do kroniky jako fotka s popiskem
         if (b.ilustrace && b.ilustrace.obrazek) {
           var fotky = el("div", { class: "ch-fotky" });
           var pol = K.kresba(b, false, "ch-foto");
           if (b.ilustrace.popis) pol.appendChild(el("figcaption", { text: b.ilustrace.popis }));
           fotky.appendChild(pol);
-          K.fotoDoKroniky(b, fotky);
           card.appendChild(fotky);
         }
         b.text.forEach(function (t) { card.appendChild(el("p", { text: t })); });
@@ -1072,17 +1088,11 @@
     var sheet = $("#finale"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;
     sheet.appendChild(sheetHead("Konec okruhu", function () { closeSheet("finale"); }));
     var body = el("div", { class: "sheet-body" });
-    var good = Object.keys(state.done).filter(function (k) { return state.done[k].ok; }).length;
     body.appendChild(el("div", { class: "finale-hero" }, [
       el("h2", { text: "Kronika je dopsaná" }),
-      el("p", { text: "Prošli jste celý okruh " + OBEC.nazev + ". Bez nápovědy jste zvládli " + good + " z " + OBEC.body.length + " stanovišť. Teď už víte, proč jsou od roku 1960 obě obce jednou." })
+      el("p", { text: "Prošli jste celý okruh " + OBEC.nazev + " a splnili všech " + OBEC.body.length + " úkolů. Teď už víte, proč jsou od roku 1960 obě obce jednou." })
     ]));
     body.appendChild(K.pohledniceSekce());
-    body.appendChild(el("h3", { text: "A teď vážně: co je pravda" }));
-    var ul = el("ul", { class: "fact-list" });
-    OBEC.fakta.forEach(function (f) { ul.appendChild(el("li", { text: f })); });
-    body.appendChild(ul);
-    body.appendChild(el("p", { class: "draft-note", text: "Pracovní verze faktické stránky, obsah se ještě doplní." }));
     body.appendChild(el("button", { class: "btn btn-block", text: "Přečíst celou kroniku", onclick: function () { closeSheet("finale"); openChronicle(); } }));
 
     body.appendChild(el("h3", { text: "Jak se vám okruh líbil?" }));

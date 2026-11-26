@@ -9,7 +9,8 @@
  *    (ta potvrzuje i body 2, 3, 5–8 s odchylkou do 5 m).
  * Dolaďte je v aplikaci: Nastavení → Režim úprav bodů → přetáhněte značky → Zkopírovat souřadnice.
  *
- * answer: index správné možnosti (0 = A), nebo null = zatím neověřeno (hra přijme jakoukoli odpověď).
+ * Úkolem na každém stanovišti je minihra (hra: { typ, … }, viz js/hry.js). Otázky s možnostmi už hra nemá,
+ * ale kód je pořád umí (otazka, moznosti, answer, napoveda), kdyby se k nim někdy vracelo.
  * foto (nepovinné): fotka místa nahoře na stanovišti, např. foto: { src: "img/racice/1.jpg", autor: "Vojta" }.
  *   Používejte vlastní fotky nebo fotky s volnou licencí (ne snímky ze Street View, ty podmínky Googlu nedovolují ukládat).
  */
@@ -57,44 +58,41 @@ window.PD_OBCE.push({
       priblizne: false,
       text: [
         "Z důvodu hygienických patálií nebylo doporučeno, aby se odpolední schůze hasičského sboru konala v hostinci. Každý na vsi ale ví, že „schůze“ je jen noblesní označení pro posezení u piva. Není tedy divu, že součástí plánu na provizorní uspořádání schůze v místní hasičárně bylo i propojení výčepu se zbrojnicí hasičskou hadicí. Díky důmyslnému chlazení přes nádrž s vodou bylo toto zařízení náčelníkem označeno za největší technické dílo v obci od zavedení rozhlasu.",
-        "Kdyby začalo hořet, mohlo se hasit rovnou pivem."
+        "Kdyby začalo hořet, mohlo se hasit rovnou pivem.",
+        "U piva se rozhořel spor, zda dokáže dobře vychlazená desítka hasit oheň stejně dobře jako žízeň. Chlapi se vsadili a rozhodli se to hned ověřit. Bez jednoznačného výsledku vypálili část klubovny. Opravu si museli zaplatit sami, a tak rok obnovy vytesali do zdi zbrojnice jako připomínku, že pivo už budou používat pouze k pití."
       ],
-      // minihra před otázkou (js/hry.js → haseni)
+      // minihra (js/hry.js → haseni), syčení hadice: audio/racice/hadice.mp3
       hra: {
         typ: "haseni",
         nadpis: "Uhas klubovnu pivem",
         zadani: "Chlapi se vsadili, že vychlazená desítka hasí stejně dobře jako žízeň. Klubovna hoří! Klepej na plameny a stříkej na ně pivo z hadice.",
-        hotovo: "Uhašeno! Sud je prázdný, klubovna ohořelá a sázka nerozhodnutá. Co na to chlapi vytesali do zdi, zjistíš venku."
-      },
-      predOtazkou: "U piva se rozhořel spor, zda dokáže dobře vychlazená desítka hasit oheň stejně dobře jako žízeň. Chlapi se vsadili a rozhodli se to hned ověřit. Bez jednoznačného výsledku vypálili část klubovny. Opravu si museli zaplatit sami, a tak rok obnovy vytesali do zdi zbrojnice jako připomínku, že pivo už budou používat pouze k pití.",
-      otazka: "Na zdi hasičárny najdi vytesaný rok. Který to je?",
-      moznosti: ["1948", "1958", "1968"],
-      answer: null, // TODO ověřit na místě
-      napoveda: "Číslo je dole hned vedle bílých vrat."
+        hotovo: "Uhašeno! Sud je prázdný, klubovna ohořelá a sázka nerozhodnutá. Rok opravy chlapi vytesali do zdi, tak se po něm venku rozhlédni.",
+        zvuk: "audio/racice/hadice.mp3"
+      }
     },
     {
       id: 3,
       nazev: "Mateřská škola",
-      ilustrace: { obrazek: "img/racice/3-skolka.svg", popis: "Školka postříkaná žlutou bramborovou kaší", mezi: [{ po: 1, src: "img/racice/3-kybl.svg", popis: "Převržený kýbl s kaší" }] },
+      // predtim: bílá školka s kaší a nápisem NA KAŠI ZÁLEŽÍ, ukazuje se, dokud hráč úkol nesplní
+      ilustrace: { obrazek: "img/racice/3-skolka.svg", predtim: "img/racice/3-skolka-bila.svg", popis: "Žlutá školka s nápisem NAŠÍ MLÁDEŽI", mezi: [{ po: 1, src: "img/racice/3-kybl.svg", popis: "Převržený kýbl s kaší" }] },
       adresa: "Račice 170",
       pozice: [49.279924, 16.873720], // RÚIAN, čp. 170 (sídlo MŠ Račice-Pístovice)
       priblizne: false,
       text: [
         "Náčelník hasičů měl toho dne plné ruce práce. Hlídal tlak v hadici, teplotu v chladicí nádrži a dohlížel na provizorní vedení od výčepu ke zbrojnici. Právě proto zapomněl vyzvednout syna ze školky.",
         "Chlapec zrovna prožíval období vzdoru. Přehlížený a znuděný kopl do kýble, v němž se od oběda povalovala hořká bramborová kaše z hostince.",
-        "Kaše se rozprskla po zdech, oknech i dveřích a budova byla během chvíle celá žlutá. Místním se to vlastně docela zalíbilo, a proto je školka žlutá dodnes."
+        "Kaše se rozprskla po zdech, oknech i dveřích. Do té doby bílá školka byla během chvíle celá flekatá.",
+        "Starostliví rodiče se rozhodli postavit za stravování svých dětí. Na oplátku začali kolektivně bojkotovat sběr hluchavek. Ti odvážnější se dokonce pod rouškou noci vydali školku označit. Velký červený protestní nápis na štítu měl znít „Na kaši záleží“.",
+        "Ráno poslal národní výbor malíře, ať ostudu co nejrychleji napraví. Kaši ze zdí setřít, celou školku přetřít na žluto, ať se fleky ztratí, a nápis pořádně obnovit podle toho, co mu rodiče zdola nadiktují. Bohužel, malíř vysoko na lešení diktát špatně slyšel. Výsledek zněl skoro stejně."
       ],
+      // minihra (js/hry.js → kase): stírání kaše a přemalování na žluto, zvuk audio/racice/umyvani.mp3
       hra: {
         typ: "kase",
-        nadpis: "Setři kaši z oken",
-        zadani: "Hořká kaše z kýble je na oknech i dveřích školky. Setři ji prstem, ať děti zase vidí ven.",
-        hotovo: "Okna jsou čistá a děti zase vidí na hřiště. Zdi ale zůstaly žluté a to už nikdo měnit nechtěl."
-      },
-      predOtazkou: "Starostliví rodiče se rozhodli postavit za stravování svých dětí. Na oplátku začali kolektivně bojkotovat sběr hluchavek. Ti odvážnější se dokonce pod rouškou noci vydali školku označit. Velký červený protestní nápis měl znít „Na kaši záleží“. Bohužel, malíř vysoko na lešení diktát špatně slyšel. Výsledek zněl skoro stejně.",
-      otazka: "Najdi na budově, co tam doopravdy stojí.",
-      moznosti: ["Našim dětem", "Naší mládeži", "Naší budoucnosti"],
-      answer: null, // TODO ověřit na místě
-      napoveda: "Nápis je úplně nahoře, v horním patře. Nehledej kaši."
+        nadpis: "Umyj a přemaluj školku",
+        zadani: "Teď jsi malíř na lešení ty. Přejížděj prstem po školce: setřeš kaši a rovnou natřeš zdi na žluto. A nápis? Ten ti rodiče diktují zdola, tak dobře poslouchej.",
+        hotovo: "Hotovo! Školka je žlutá jako kaše a na štítu svítí „NAŠÍ MLÁDEŽI“. Zní to skoro stejně, ne? Rodiče mávli rukou a nápis tam vydržel dodnes.",
+        zvuk: "audio/racice/umyvani.mp3"
+      }
     },
     {
       id: 4,
@@ -105,15 +103,16 @@ window.PD_OBCE.push({
       priblizne: false,
       typ: "modlitba",
       text: [
-        "Zastav se u kříže a pusť si nahrávku modlitby. Pozor, přepis tady na místě končí dřív než nahrávka."
+        "Zastav se u kříže, zapal svíčku a pusť si nahrávku modlitby."
       ],
-      // nejdřív svíčka, pak se odemkne modlitba a otázka
+      // nejdřív svíčka (škrtnutí sirky: audio/racice/sirka.mp3), pak se odemkne modlitba
       hra: {
         typ: "svicka",
         pred: true,
         nadpis: "Zapal svíčku",
         zadani: "U kříže se nejdřív zapaluje svíčka. Polož prst na knot a chvíli ho podrž, než se chytí.",
-        hotovo: "Svíčka hoří. Teď si v klidu pusť modlitbu."
+        hotovo: "Svíčka hoří. Teď si v klidu pusť modlitbu.",
+        zvuk: "audio/racice/sirka.mp3"
       },
       // sloky modlitby (každá sloka = pole řádků); mezi slokami je při předčítání pauza
       modlitba: [
@@ -124,18 +123,11 @@ window.PD_OBCE.push({
       ],
       // zvony a tiché varhany pod modlitbou (vygenerované přes tools/zvony.mjs), hlas nastoupí po úvodním vyzvánění
       podklad: { src: "audio/racice/zvony-modlitba.mp3", uvod: 5 },
+      // závěr modlitby (dřív skrytý jako odpověď na otázku), v přepisu je teď celý
       modlitbaKonec: [
         ["Ať nikdo nehasí, co nezapálil,", "nevaří, co sám neochutnal,", "a nestěžuje si jinde než u výčepu."],
         ["Amen."]
-      ],
-      otazka: "Přepis modlitby končí dřív než nahrávka. Jak nahrávka končí?",
-      moznosti: [
-        ["Ať nás mine mlha na silnici,", "tužka ať se nezlomí při písemce", "a dopis ať dojde dřív než jeho pisatel."],
-        ["Ať nikdo nehasí, co nezapálil,", "nevaří, co sám neochutnal,", "a nestěžuje si jinde než u výčepu."],
-        ["Ať nám hodiny jdou správně,", "berní úředník ať je mírný", "a kominík ať přijde dřív než sníh."]
-      ],
-      answer: 1,
-      napoveda: "Přepis končí slovy „svou váhu“. Nahrávka pokračuje ještě jednou slokou. Poslouchej, jestli se v ní mluví o něčem, co jsi dnes slyšel."
+      ]
     },
     {
       id: 5,
@@ -186,11 +178,7 @@ window.PD_OBCE.push({
         nadpis: "Obuj Floriána",
         zadani: "Florián přišel o obě nohy. Přetáhni mu na sochu gumáky manžela keramičky (nebo na gumák jen klepni).",
         hotovo: "Sedí jako ulité. Svatý Florián je od té doby jediný svatý v gumácích široko daleko."
-      },
-      otazka: "Sv. Florián je patronem všech hasičů. Čím je patronem druhá socha, sv. Vendelín?",
-      moznosti: ["horníků", "pastýřů a dobytka", "hostinských"],
-      answer: 1,
-      napoveda: "Podívej se na sochu sv. Vendelína. Co nebo koho drží nebo má u nohou?"
+      }
     },
     {
       id: 7,
@@ -210,11 +198,7 @@ window.PD_OBCE.push({
         nadpis: "Udrž kříž na kruzích",
         zadani: "Alois Hudec vyhrál olympiádu na kruzích. Udrž ho šest vteřin v klidu: když se rozhoupe na jednu stranu, klepni na tutéž stranu a postrč ho zpátky.",
         hotovo: "Šest vteřin bez hnutí! Rozhodčí by dali desítku a louky za vsí by se plnily stany."
-      },
-      otazka: "Dle informací na budově zjisti, kde Alois Hudec zvítězil na olympiádě.",
-      moznosti: ["Paříž", "Berlín", "Los Angeles"],
-      answer: 1,
-      napoveda: "Najdi na budově sokolovny pamětní desku. Text pod zlatým gymnastou říká, kde bratr Alois Hudec zvítězil."
+      }
     },
     {
       id: 8,
@@ -234,14 +218,7 @@ window.PD_OBCE.push({
         zadani: "Výnos o sloučení obcí je ve třech vyhotoveních. Každé orazítkuj klepnutím na M. P. a originál nakonec podepiš prstem na čáru.",
         hotovo: "Úředně potvrzeno a podepsáno. Od roku 1960 jsou Račice a Pístovice jedna obec."
       },
-      otazka: null,
       konec: true
     }
-  ],
-  // Závěrečná stránka – PRACOVNÍ NÁVRH, obsah v podkladech zatím chybí.
-  fakta: [
-    "Račice a Pístovice jsou opravdu jednou obcí od roku 1960.",
-    "Alois Hudec, rodák z Račic, vyhrál na olympijských hrách v Berlíně v roce 1936 zlatou medaili na kruzích. Pamětní deska na sokolovně je skutečná.",
-    "Koza, hořká kaše, pivní hadice ani gumové nohy sv. Floriána v oficiální kronice nejsou. To ale ještě neznamená, že se nestaly."
   ]
 });
