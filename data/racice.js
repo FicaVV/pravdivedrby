@@ -187,9 +187,9 @@ window.PD_OBCE.push({
       pozice: [49.275736, 16.874337], // RÚIAN, čp. 44
       priblizne: false,
       text: [
-        "Zatímco keramička u cesty pracovala na Floriánových nohách, roznesla se po kraji mylná fáma, že obec staví sochu k 50. narozeninám slavného rodáka.",
-        "V Račicích se totiž narodil olympijský vítěz Alois Hudec a cvičil v místní sokolovně. I k němu se šuškanda o nové soše dostala a zpráva ho potěšila. Při plánované cestě na Moravu pro okurky se proto rozhodl rodnou obec navštívit.",
-        "Říkalo se, že má ramena jako Bivoj, který podle pověsti chytil divokého kance za uši, hodil si ho na záda a odnesl na Vyšehrad. To je ale jiný příběh. Mladí muži i ženy se sjížděli z širokého okolí, aby slavného olympionika spatřili. Několik dní s nadějí stanovali na okolních loukách."
+        "Keramička u cesty pracovala na Floriánových nohách tak dlouho, že si toho všimlo celé okolí. Po kraji se rozneslo, že obec staví sochu k padesátým narozeninám slavného rodáka. Byla to ale jen fáma.",
+        "V Račicích se totiž narodil olympijský vítěz Alois Hudec a cvičil právě tady v sokolovně. Fáma o nové soše se donesla i k němu a moc ho potěšila. Stejně se chystal na Moravu pro okurky, a tak se rozhodl zastavit se i v rodné obci.",
+        "Říkalo se o něm, že má ramena jako Bivoj. Ten podle pověsti chytil divokého kance za uši a na zádech ho odnesl na Vyšehrad. To je ale jiný příběh. Slavného olympionika chtěl vidět každý. Mladí muži i ženy se sjížděli z širokého okolí a několik dní s nadějí stanovali na loukách za vsí."
       ],
       hra: {
         typ: "kruhy",
