@@ -11,7 +11,7 @@ for (const f of readdirSync(new URL("../img/racice/", import.meta.url))) {
 const markup = html.split("<!--APP-->")[1].split("<!--/APP-->")[0];
 const out = `<title>Hravý kronikář</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Fraunces:opsz,wght@9..144,800;9..144,900&family=Caveat:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Fraunces:opsz,wght@9..144,800;9..144,900&family=Caveat:wght@600;700&family=Special+Elite&display=swap">
 <style>
 ${r("vendor/leaflet/leaflet.css")}
 ${r("css/app.css")}
@@ -30,6 +30,7 @@ ${r("js/kreslena-mapa.js")}
 ${r("js/hry.js")}
 </script>
 <script>
+${r("js/listiny.js")}
 ${r("js/kronika.js")}
 ${r("js/app.js")}
 </script>

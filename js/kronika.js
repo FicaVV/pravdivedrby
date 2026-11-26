@@ -159,6 +159,7 @@
           el("p", { class: "rb-text", text: "Zapsáno do kroniky" }),
           el("p", { class: "rb-misto", text: b.nazev }),
           el("p", { class: "rb-sub", text: "Razítko " + hotovo + " z " + OBEC.body.length }),
+          b.listina ? el("p", { class: "rb-listina", text: "+ do kroniky přibyla listina: " + b.listina.nazev }) : null,
           el("p", { class: "rb-dal", text: "Klepni a pokračuj" })
         ])
       ]);

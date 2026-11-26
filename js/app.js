@@ -1119,6 +1119,8 @@
           fotky.appendChild(pol);
           card.appendChild(fotky);
         }
+        // dobová listina ze spisu (js/listiny.js)
+        if (b.listina && window.PDL) card.appendChild(window.PDL.nahled(b.listina));
         b.text.forEach(function (t) { card.appendChild(el("p", { text: t })); });
         if (b.id !== 4) all = all.concat(b.text);
         body.appendChild(card);
