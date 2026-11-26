@@ -184,13 +184,35 @@ Stanoviště mají kresby tužkou se žlutou pastelkou (`img/racice/*.svg`). V `
 a zároveň „vlepená fotka“ v kronice po dopsání kapitoly, `mezi` jsou menší kresby vložené za odstavec
 s indexem `po` (0 = za první odstavec). Nová kresba se musí přidat i do seznamu v `sw.js`, aby fungovala offline.
 
+## Osobní kronika: razítka, „Kde je koza?“, rodinné fotky, pohlednice
+
+Logika je v `js/kronika.js`, nastavení stanovišť v `data/racice-kronika.js` (doplňuje body z `data/racice.js` podle `id`).
+
+- **Razítka.** Po dokončení stanoviště se přes obrazovku „bouchne“ razítko (animace, zvuk složený ve WebAudio, vibrace)
+  a objeví se v kronice v řadě razítek a u kapitoly. Kresby `img/racice/razitko-1…8.svg` (tužka + žlutá) vyrábí
+  `node tools/kronika-kresby.mjs`; ikony jsou převzaté z návrhů razítek.
+- **Kde je koza?** V hlavní kresbě každého stanoviště je schovaná strakatá koza (`img/racice/koza-schovana.svg`,
+  vyrábí ji stejný skript z kozy na dojení). Klepnutím ji hráč najde, koza zamečí a v bublině něco utrousí.
+  Pozice je v `koza: { x, y, s, otoc, orez, hlaska }` v jednotkách kresby 200 × 150; `orez` je výřez, mimo který
+  je koza „za“ něčím (sudem, rámem okna, rohem budovy). Když už koza v kresbě je, stačí `jenKlik: [x0, y0, x1, y1]`.
+  Při změně kresby stanoviště je potřeba souřadnice kozy zkontrolovat. Hláška nesmí prozradit odpověď na úkol.
+- **Rodinná fotka.** Na každém stanovišti je nepovinné „Vyfoťte se tady“ se zábavným zadáním (`fotoUkol`).
+  Fotka se zmenší na 1400 px a uloží jen v telefonu (IndexedDB `pd-kronika`), nikam se neodesílá.
+  V kronice je vlepená jako polaroid vedle kresby. Smazání postupu smaže i fotky.
+- **Pohlednice.** Na závěrečné stránce se z jména výpravy, vybrané fotky, razítek a počtu nalezených koz nakreslí
+  obrázek 1500 × 1050 (canvas, JPEG). Tlačítko Sdílet použije systémové sdílení telefonu, jinak se obrázek uloží.
+  Texty jsou v `OBEC.pohlednice`. Když minihra na úřadě uloží podpis do `state.podpis` (data URL obrázku),
+  pohlednice ho sama přidá.
+
 ## Struktura
 
 ```
 index.html              obrazovky (úvod, mapa s radarem, listy stanoviště/kroniky/nastavení)
 css/app.css             vzhled (světlé kontrastní téma pro čitelnost na slunci)
 js/app.js               herní logika, radar, simulace, kronika, TTS
+js/kronika.js           razítka, „Kde je koza?“, rodinné fotky, pohlednice
 data/racice.js          obsah okruhu
+data/racice-kronika.js  razítka, schovaná koza a zadání fotek pro okruh
 data/racice-mapa.js     kreslená mapa (vygenerovaná z OSM, ODbL)
 js/kreslena-mapa.js     vykreslení kreslené mapy v Leafletu
 tools/kreslena-mapa.py  generátor kreslené mapy z tools/osm/racice-osm.json

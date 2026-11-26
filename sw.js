@@ -1,7 +1,8 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.5.0";
+const VERSION = "pd-0.5.1";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/app.js", "data/racice.js", "audio/audio.js",
+  "js/kronika.js", "data/racice-kronika.js",
   "data/racice-mapa.js", "js/kreslena-mapa.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
@@ -11,7 +12,11 @@ const SHELL = [
   "img/racice/1-cedule.svg", "img/racice/1-koza.svg", "img/racice/1-dojeni-koza.svg", "img/racice/2-pullitr.svg", "img/racice/2-zbrojnice.svg",
   "img/racice/3-kybl.svg", "img/racice/3-skolka.svg", "img/racice/4-kriz.svg", "img/racice/5-amplion.svg",
   "img/racice/5-stadion.svg", "img/racice/6-florian.svg", "img/racice/6-moskvic.svg", "img/racice/7-sokolovna.svg",
-  "img/racice/7-stany.svg", "img/racice/8-kocarky.svg", "img/racice/8-urad.svg"
+  "img/racice/7-stany.svg", "img/racice/8-kocarky.svg", "img/racice/8-urad.svg",
+  // osobní kronika: razítka a schovaná koza
+  "img/racice/koza-schovana.svg",
+  "img/racice/razitko-1.svg", "img/racice/razitko-2.svg", "img/racice/razitko-3.svg", "img/racice/razitko-4.svg",
+  "img/racice/razitko-5.svg", "img/racice/razitko-6.svg", "img/racice/razitko-7.svg", "img/racice/razitko-8.svg"
 ];
 const TILES = "pd-tiles-v1";
 const TRASA = "pd-trasa-v1"; // dlaždice stažené tlačítkem „Stáhnout na cestu“ (neprořezávají se)

@@ -21,10 +21,12 @@ ${markup}
 <script>window.PD_ARTIFACT = true; window.PD_NO_TILES = true; window.PD_IMG = ${JSON.stringify(img)};</script>
 <script>
 ${r("data/racice.js")}
+${r("data/racice-kronika.js")}
 ${r("data/racice-mapa.js")}
 ${r("js/kreslena-mapa.js")}
 </script>
 <script>
+${r("js/kronika.js")}
 ${r("js/app.js")}
 </script>
 `;
