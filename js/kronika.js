@@ -365,7 +365,7 @@
         }
         // adresa dole
         g.font = "700 26px " + FB; g.fillStyle = "#16130f"; g.textAlign = "left";
-        g.fillText("Pravdivé drby", X, H - 96);
+        g.fillText("Hravý kronikář", X, H - 96);
         g.font = "400 24px " + FB; g.fillStyle = "#554c40";
         g.fillText(P.adresa || location.host, X, H - 64);
         // koza vykukuje zpravého dolního rohu
@@ -472,7 +472,7 @@
       share.addEventListener("click", function () {
         if (!blob) return;
         var file = new File([blob], "pohlednice-" + OBEC.id + ".jpg", { type: "image/jpeg" });
-        var data = { files: [file], title: "Pravdivé drby", text: "Dopsali jsme neoficiální kroniku obce " + OBEC.nazev + "! https://" + ((OBEC.pohlednice || {}).adresa || location.host) };
+        var data = { files: [file], title: "Hravý kronikář", text: "Dopsali jsme neoficiální kroniku obce " + OBEC.nazev + "! https://" + ((OBEC.pohlednice || {}).adresa || location.host) };
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           navigator.share(data).catch(function (e) { if (e && e.name !== "AbortError") toast("Sdílení se nepovedlo, zkus Uložit obrázek"); });
         } else { dl.click(); toast("Tenhle prohlížeč sdílení neumí, pohlednice se uloží"); }

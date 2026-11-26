@@ -9,7 +9,7 @@ for (const f of readdirSync(new URL("../img/racice/", import.meta.url))) {
   if (f.endsWith(".svg")) img["img/racice/" + f] = "data:image/svg+xml;base64," + Buffer.from(r("img/racice/" + f)).toString("base64");
 }
 const markup = html.split("<!--APP-->")[1].split("<!--/APP-->")[0];
-const out = `<title>Pravdivé drby</title>
+const out = `<title>Hravý kronikář</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Fraunces:opsz,wght@9..144,800;9..144,900&family=Caveat:wght@600;700&display=swap">
 <style>

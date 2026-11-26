@@ -1,5 +1,5 @@
 /**
- * Pravdivé drby – příjem hodnocení, návrhů obcí a anonymních statistik.
+ * Hravý kronikář – příjem hodnocení, návrhů obcí a anonymních statistik.
  *
  * Běží jako Google Apps Script webová aplikace nad jednou Google tabulkou.
  * Zdarma, bez serveru, data zůstávají ve vašem Google Disku.
@@ -113,7 +113,7 @@ function upozornit(radky) {
     var komu = Session.getEffectiveUser().getEmail();
     if (!komu) return;
     var text = radky.map(function (r) { return "Obec: " + r[4] + "\nCo se šušká: " + (r[5] || "–") + "\nE-mail: " + (r[6] || "–"); }).join("\n\n");
-    MailApp.sendEmail(komu, "Pravdivé drby: nový návrh obce", text + "\n\n" + SpreadsheetApp.getActiveSpreadsheet().getUrl());
+    MailApp.sendEmail(komu, "Hravý kronikář: nový návrh obce", text + "\n\n" + SpreadsheetApp.getActiveSpreadsheet().getUrl());
   } catch (e) { /* bez e-mailu */ }
 }
 

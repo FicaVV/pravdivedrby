@@ -1,4 +1,6 @@
-# Pravdivé drby – prototyp PWA (okruh Račice-Pístovice)
+# Hravý kronikář – prototyp PWA (okruh Račice-Pístovice)
+
+*Co se do kroniky nevešlo.* (Dřív se hra jmenovala Pravdivé drby, repozitář i adresa zůstávají.)
 
 Mobilní webová hra: mapa s GPS radarem, 8 stanovišť s příběhem, na každém minihra (jde zahrát i znovu),
 postupně odkrývaná kronika s razítky, předčítání nahlas, závěrečná stránka se společnou fotkou
@@ -197,7 +199,7 @@ v návrhu obce, ten hráč vyplní sám.
 
 ### Zapnutí (jednou, asi 5 minut)
 
-1. Založte novou Google tabulku (sheets.new), třeba „Pravdivé drby – data“.
+1. Založte novou Google tabulku (sheets.new), třeba „Hravý kronikář – data“.
 2. V ní **Rozšíření → Apps Script**, smažte ukázkový kód a vložte celý `server/apps-script.gs`. Uložte.
 3. Nahoře vyberte funkci `pripravit` a klikněte **Spustit**. Google se zeptá na oprávnění
    (k tabulce a k posílání e-mailu o novém návrhu), povolte. Vzniknou listy Souhrn, Statistiky,
