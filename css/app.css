@@ -589,3 +589,103 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
   .koza-krouzek ellipse { transition: none; }
 }
 .ch-fotky.s-fotkou .ch-foto figcaption { display: none; }
+/* ---------- kreslená mapa (js/kreslena-mapa.js) ---------- */
+#map.pd-kreslena {
+  background-color: #f4eddc;
+  background-image:
+    radial-gradient(rgba(120,100,70,.07) 1px, transparent 1.2px),
+    radial-gradient(rgba(120,100,70,.05) 1px, transparent 1.2px);
+  background-size: 7px 7px, 11px 11px; background-position: 0 0, 3px 5px;
+}
+.pd-popisek {
+  position: absolute; white-space: nowrap; font-family: Caveat, "Segoe Print", "Comic Sans MS", cursive;
+  font-weight: 700; font-size: 18px; color: #6f6550; pointer-events: none; line-height: 1;
+}
+.pd-popisek.voda { color: #3f6f93; }
+.pd-z-dal .pd-popisek { font-size: 14px; }
+.pd-kartus {
+  margin: 10px 0 0 10px !important; padding: 4px 10px 6px; background: #fffdf6; border: 2px solid var(--ink);
+  border-radius: 6px 10px 7px 12px; transform: rotate(-2.5deg); box-shadow: 3px 3px 0 rgba(22,19,15,.18); pointer-events: none;
+}
+.pd-kartus small { display: block; font-family: Caveat, cursive; font-weight: 700; font-size: 15px; line-height: 1; color: #3a352e; }
+.pd-kartus strong {
+  display: block; font-family: var(--font-display); font-weight: 900; font-size: 16px; line-height: 1.1;
+  background: linear-gradient(transparent 62%, var(--accent) 62%, var(--accent) 90%, transparent 90%);
+}
+#map:not(.pd-kreslena) .pd-kartus, #map:not(.pd-kreslena) .pd-ruzice { display: none; }
+.pd-podklad {
+  margin: 10px 10px 0 0 !important; display: flex; border: 2.5px solid var(--ink); border-radius: 999px; overflow: hidden;
+  background: var(--surface); box-shadow: 0 2px 8px rgba(22,19,15,.15);
+}
+.pd-podklad button {
+  border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; padding: 0 12px; min-height: 40px;
+  color: var(--ink); cursor: pointer;
+}
+.pd-podklad button[aria-pressed="true"] { background: var(--ink); color: var(--accent); }
+.pd-ruzice { margin: 0 0 6px 10px !important; pointer-events: none; }
+.pd-ruzice svg { width: 34px; height: 44px; display: block; }
+.pd-ruzice text { font-family: Caveat, cursive; font-weight: 700; font-size: 13px; fill: #2f2c28; }
+#map.pd-kreslena .leaflet-control-scale-line {
+  background: transparent; border: 1.5px solid #2f2c28; border-top: 0; color: #2f2c28;
+  font-family: Caveat, cursive; font-weight: 700; font-size: 15px; line-height: 1.1; padding: 0 4px;
+}
+#map.pd-kreslena .leaflet-control-attribution { background: rgba(244,237,220,.85); }
+.pd-koza { all: unset; display: block; cursor: pointer; opacity: .9; }
+.pd-koza:focus-visible { outline: 3px solid var(--sky); border-radius: 8px; }
+.pd-z-dal .pd-koza { opacity: 0; pointer-events: none; }
+.pd-stitek {
+  position: absolute; margin: 0; width: 76px; padding: 4px 4px 2px; background: #fff; border: 1.5px solid #2f2c28;
+  box-shadow: 2px 3px 0 rgba(22,19,15,.15); text-align: center; pointer-events: none;
+  transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--r));
+}
+.pd-stitek img { display: block; width: 100%; height: 48px; object-fit: cover; object-position: 50% 40%; background: #faf6ee; }
+.pd-stitek figcaption { font-family: Caveat, cursive; font-weight: 700; font-size: 16px; line-height: 1.1; color: var(--ink); }
+.pd-stitek.hotovo::before {
+  content: ""; position: absolute; left: 50%; top: -7px; width: 34px; height: 12px; transform: translateX(-50%) rotate(-3deg);
+  background: rgba(245,196,0,.85);
+}
+.pd-stitek.zamceno img, .pd-stitek.cil img { filter: grayscale(1) contrast(.75); opacity: .42; }
+.pd-stitek.zamceno figcaption { color: #8a8170; letter-spacing: 2px; }
+.pd-z-pryc .pd-stitek { display: none; }
+.pd-z-dal .pd-stitek { width: 62px; padding: 3px 3px 1px; }
+.pd-z-dal .pd-stitek.zamceno { display: none; } /* v přehledu jen splněné a aktuální, zamčené „???“ až po přiblížení */
+.pd-z-dal .pd-stitek img { height: 38px; }
+.pd-z-dal .pd-stitek figcaption { font-size: 14px; }
+.pd-z-blizko .pd-stitek { width: 92px; }
+.pd-z-blizko .pd-stitek img { height: 58px; }
+.pd-stitek, .pd-popisek { will-change: auto; }
+
+/* poloha hráče s kuželem natočení telefonu */
+.me-wrap { position: relative; width: 20px; height: 20px; }
+.me-wrap .me { position: relative; }
+.me-cone {
+  position: absolute; left: -20px; top: -20px; width: 60px; height: 60px; border-radius: 50%;
+  background: conic-gradient(from -28deg, rgba(31,95,191,.38) 0deg 56deg, transparent 56deg);
+  -webkit-mask: radial-gradient(circle, #000 55%, transparent 72%); mask: radial-gradient(circle, #000 55%, transparent 72%);
+}
+.me-cone[hidden] { display: none; }
+
+/* kompas v radaru: tlačítko (na iPhonu se kompas zapíná klepnutím) */
+button.compass { font: inherit; color: var(--ink); cursor: pointer; padding: 0; }
+.compass .rose { position: absolute; inset: 0; transition: transform .25s linear; pointer-events: none; }
+.compass .rose .n { left: 50%; transform: translateX(-50%); }
+.compass.live .rose .n { color: var(--hot); }
+.compass.live svg, .compass.live .rose { transition-duration: .15s; }
+.compass-lbl { position: absolute; bottom: 3px; left: 0; right: 0; font-size: 11px; font-weight: 700; line-height: 1.1; color: var(--muted); }
+#play.map-full .compass-lbl { display: none; }
+
+/* Stáhnout na cestu */
+.map-chip {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px;
+  border: 2px solid var(--ink); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+}
+.map-chip svg, .btn-stahnout svg { width: 18px; height: 18px; flex: none; }
+.map-chip.ok, .btn-stahnout.ok { background: var(--field-soft); }
+.map-chip[hidden], .btn-stahnout[hidden] { display: none; }
+.btn-stahnout { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+/* ovládání mapy pod horní lištou (lišta leží přes mapu) */
+#map .leaflet-top { top: calc(env(safe-area-inset-top, 0px) + 64px); }
+#play.map-full .leaflet-bottom { bottom: calc(var(--toggle-bottom, 300px) - 6px); }
+.gps-status .map-chip { white-space: nowrap; flex: none; }
+.gps-status #gps-text { min-width: 0; }
+.setting.setting-col { flex-direction: column; align-items: stretch; gap: 10px; }

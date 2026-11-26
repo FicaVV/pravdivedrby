@@ -10,7 +10,8 @@ závěrečná stránka s hodnocením a návrhem další obce. Postup se ukládá
 |---|---|---|
 | Aplikace | Čisté HTML + CSS + JavaScript, bez build kroku | Prototyp jde nahrát na jakýkoli statický hosting a upravovat bez nástrojů. Až poroste (víc obcí, administrace), přejít na Vite + TypeScript. |
 | Mapa | Leaflet 1.9.4 (přibalený ve `vendor/`) | Malý (40 kB), osvědčený, funguje na všech telefonech. |
-| Mapové podklady | OpenStreetMap dlaždice | Zdarma, pro prototyp ideální. **Pro ostrý provoz** buď Mapy.com API (česká turistická mapa, má bezplatný tarif), nebo vlastní balík dlaždic Protomaps/PMTiles pro každou obec, který jde legálně stáhnout offline. Pravidla OSM zakazují hromadné stahování dlaždic předem. |
+| Kreslená mapa | Vektorová data z OpenStreetMap (`data/racice-mapa.js`), kreslí je `js/kreslena-mapa.js` | Hlavní mapa hry. Je součástí aplikace, takže funguje bez signálu a bez cizího serveru. |
+| Mapové podklady | OpenStreetMap dlaždice (přepínač „Skutečná“) | Zdarma, pro prototyp ideální. **Pro ostrý provoz** buď Mapy.com API (česká turistická mapa, má bezplatný tarif), nebo vlastní balík dlaždic Protomaps/PMTiles pro každou obec, který jde legálně stáhnout offline. Pravidla OSM zakazují hromadné stahování dlaždic předem. |
 | Poloha | Geolocation API (`watchPosition`, vysoká přesnost) | Standard prohlížeče, vyžaduje HTTPS. |
 | Offline | Service worker (`sw.js`) | Aplikace a obsah trasy se uloží při prvním otevření, prohlédnuté dlaždice se ukládají průběžně (max. 1500). |
 | Předčítání | Web Speech API (`speechSynthesis`, cs-CZ) | Funguje bez serveru. Pro hezčí hlas později nahrané MP3 od vypravěče. |
@@ -127,6 +128,38 @@ předčítání pauza, namluvený vypravěč má každou sloku jako samostatnou 
 Každý úkol má tlačítko „Přečíst otázku a možnosti“. Předčítá úvod k otázce, otázku a možnosti
 („Možnost A. …“) s krátkou pauzou mezi nimi. Nahrávky pro ně namluví stejný workflow jako příběhy.
 
+## Kreslená mapa
+
+Hlavní mapa je „kreslená tužkou“: ulice, domy, potoky, pole a louky jsou skutečná data
+OpenStreetMap, jen nakreslená ručním stylem. Ušlá část trasy je žlutá, zbytek tečkovaný,
+u stanovišť jsou kartičky s kresbou (barevně po splnění, šedě „???“ dokud jsou zamčená;
+zamčené se ukážou až po přiblížení). V mapě se pase schovaná koza (klepnutí vyšle událost
+`pd:koza`). Přepínač **Kreslená / Skutečná** vpravo nahoře přepne na dlaždice OSM.
+
+- `tools/osm/racice-osm.json` je výřez OSM (API `/api/0.6/map`, okolí trasy, jen potřebné tagy).
+- `python3 tools/kreslena-mapa.py` z něj vyrobí `data/racice-mapa.js`: zjednoduší a „rozvlní“ čáry
+  (pevné semínko, výstup je stabilní), spočítá pěší trasu po ulicích mezi stanovišti (nejkratší
+  cesta, teď 2,4 km) a přidá popisky, místo kozy a umístění kartiček (`stitky`, posun v px).
+- Po přesunu stanoviště v `data/racice.js` skript spusťte znovu, ať trasa vede ke správným bodům.
+
+**Licence:** data © přispěvatelé OpenStreetMap pod ODbL 1.0. Kreslená mapa je odvozená databáze,
+proto je pod ní v mapě atribuce „Kresba podle dat © přispěvatelé OpenStreetMap (ODbL)“ a soubory
+`tools/osm/racice-osm.json` a `data/racice-mapa.js` jsou pod stejnou licencí ODbL.
+
+## Navigace: kompas a stažení na cestu
+
+- **Šipka podle kompasu telefonu.** Na Androidu se kompas zapne sám (`deviceorientationabsolute`),
+  na iPhonu je potřeba klepnout na kompas v radaru („Zapnout kompas“) a povolit pohyb a orientaci.
+  Pak šipka ukazuje směr vzhledem k tomu, kam je telefon natočený, text říká „rovně / doprava /
+  doleva / za tebou“ a modrá tečka na mapě má kužel natočení. Bez kompasu ukazuje šipka podle severu
+  jako dřív (písmeno S nahoře).
+- **Stáhnout na cestu** (úvod, radar, nastavení). Service worker stáhne celou aplikaci, kresby,
+  nahrávky a okolí trasy na skutečné mapě (zoomy 14–17/18, **nejvýš 250 dlaždic**, víc
+  [pravidla tile.openstreetmap.org](https://operations.osmfoundation.org/policies/tiles/) pro offline
+  použití nedovolují) do samostatné cache `pd-trasa-v1`, která se neprořezává. Kreslená mapa
+  je v telefonu vždycky, stažení ji jen pojistí. Hra zároveň požádá o trvalé úložiště
+  (`navigator.storage.persist`), ať telefon data nesmaže.
+
 ## Doladění souřadnic
 
 Přesné souřadnice mají jen **stadion a sochy**. Ostatní body jsou umístěné odhadem.
@@ -180,6 +213,9 @@ js/app.js               herní logika, radar, simulace, kronika, TTS
 js/kronika.js           razítka, „Kde je koza?“, rodinné fotky, pohlednice
 data/racice.js          obsah okruhu
 data/racice-kronika.js  razítka, schovaná koza a zadání fotek pro okruh
+data/racice-mapa.js     kreslená mapa (vygenerovaná z OSM, ODbL)
+js/kreslena-mapa.js     vykreslení kreslené mapy v Leafletu
+tools/kreslena-mapa.py  generátor kreslené mapy z tools/osm/racice-osm.json
 img/racice/             kresby stanovišť (SVG)
 sw.js, manifest.webmanifest, icons/   PWA
 vendor/leaflet/         mapová knihovna
