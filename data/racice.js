@@ -59,8 +59,7 @@ window.PD_OBCE.push({
       priblizne: false,
       text: [
         "Kvůli hygienickým patáliím se nedoporučovalo, aby hasiči měli odpolední schůzi v hostinci. Přesunuli se tedy do nedaleké hasičárny. Aby neměli žízeň, propojili výčep se zbrojnicí hasičskou hadicí a cestou pivo chladili v nádrži s vodou. Náčelník to zařízení prohlásil za největší technické dílo v obci od zavedení rozhlasu.",
-        "Kdyby začalo hořet, mohlo se hasit rovnou pivem.",
-        "U piva se rozhořel spor, zda dokáže dobře vychlazená desítka hasit oheň stejně dobře jako žízeň. Chlapi se vsadili a rozhodli se to hned ověřit. Bez jednoznačného výsledku vypálili část klubovny. Opravu si museli zaplatit sami, a tak rok obnovy vytesali do zdi zbrojnice jako připomínku, že pivo už budou používat pouze k pití."
+        "Později se rozhořel spor, jestli dobře vychlazená desítka uhasí oheň stejně spolehlivě jako žízeň. Chlapi se vsadili a hned to šli vyzkoušet."
       ],
       // minihra (js/hry.js → haseni), syčení hadice: audio/racice/hadice.mp3
       hra: {
