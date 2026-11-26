@@ -34,9 +34,10 @@ window.PD_OBCE.push({
       pozice: [49.276466, 16.872248], // z Vojtovy trasy na mapy.com
       priblizne: false,
       text: [
-        "V obecní kronice Račic dnes nalistujeme paměti z léta roku 1958, tedy první zmínky o událostech, které o dva roky později vedly ke sloučení Račic a Pístovic.",
-        "Vše začalo docela nevinně. Bylo krásné počasí, slunce svítilo a ve vesnici byl klid. Jenom koza hostinského se u plotu za hospodou tak přejedla kopřiv, že jí nateklo vemeno a mléko v něm zhořklo. Vinou hospodářské neobratnosti se i přesto dostalo do bramborové kaše. Ta se toho dne podávala k oblíbené uzené krkovici. Jídlo díky tomu bylo nepoživatelné. Někteří hosté si stěžovali hned. Jiní neodolali vůni uzeného a s nespokojeností se ozvali až po výplachu žaludku.",
-        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal do ešusu nabrat čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu."
+        "Otevíráme obecní kroniku Račic na létě roku 1958. Právě tady začínají události, které o dva roky později vedly ke sloučení Račic a Pístovic.",
+        "Všechno začalo docela nevinně. Svítilo slunce a ve vsi byl klid. Jen koza hostinského se u plotu za hospodou přejedla kopřiv. Nateklo jí vemeno a mléko v něm zhořklo.",
+        "Vinou hospodářské neobratnosti to hořké mléko přesto skončilo v bramborové kaši. A ta se ten den podávala k oblíbené uzené krkovici. Oběd byl rázem nepoživatelný. Někteří hosté si stěžovali hned. Jiní neodolali vůni uzeného a ozvali se až po výplachu žaludku.",
+        "Na místo dorazil okresní hygienik. Mával protokolem a hrozil všem okolo. Nakonec si jako polehčující okolnost nechal do ešusu nabrat čtyři poctivé plátky krkovice a pořádnou dávku okurkového salátu. Kaši si nevzal."
       ],
       // minihra místo otázky (js/app.js → dojeni)
       hra: {
@@ -57,16 +58,15 @@ window.PD_OBCE.push({
       pozice: [49.277029, 16.871080], // RÚIAN, čp. 296 (sídlo SDH Račice)
       priblizne: false,
       text: [
-        "Z důvodu hygienických patálií nebylo doporučeno, aby se odpolední schůze hasičského sboru konala v hostinci. Každý na vsi ale ví, že „schůze“ je jen noblesní označení pro posezení u piva. Není tedy divu, že součástí plánu na provizorní uspořádání schůze v místní hasičárně bylo i propojení výčepu se zbrojnicí hasičskou hadicí. Díky důmyslnému chlazení přes nádrž s vodou bylo toto zařízení náčelníkem označeno za největší technické dílo v obci od zavedení rozhlasu.",
-        "Kdyby začalo hořet, mohlo se hasit rovnou pivem.",
-        "U piva se rozhořel spor, zda dokáže dobře vychlazená desítka hasit oheň stejně dobře jako žízeň. Chlapi se vsadili a rozhodli se to hned ověřit. Bez jednoznačného výsledku vypálili část klubovny. Opravu si museli zaplatit sami, a tak rok obnovy vytesali do zdi zbrojnice jako připomínku, že pivo už budou používat pouze k pití."
+        "Kvůli hygienickým patáliím se nedoporučovalo, aby hasiči měli odpolední schůzi v hostinci. Přesunuli se tedy do nedaleké hasičárny. Aby neměli žízeň, propojili výčep se zbrojnicí hasičskou hadicí a cestou pivo chladili v nádrži s vodou. Náčelník to zařízení prohlásil za největší technické dílo v obci od zavedení rozhlasu.",
+        "Později se rozhořel spor, jestli dobře vychlazená desítka uhasí oheň stejně spolehlivě jako žízeň. Chlapi se vsadili a hned to šli vyzkoušet."
       ],
       // minihra (js/hry.js → haseni), syčení hadice: audio/racice/hadice.mp3
       hra: {
         typ: "haseni",
-        nadpis: "Uhas klubovnu pivem",
-        zadani: "Chlapi se vsadili, že vychlazená desítka hasí stejně dobře jako žízeň. Klubovna hoří! Klepej na plameny a stříkej na ně pivo z hadice. Pozor: neuhašený plamen přeskočí na vedlejší okno a piva v sudu moc není.",
-        hotovo: "Uhašeno! Sud je prázdný, klubovna ohořelá a sázka nerozhodnutá. Rok opravy chlapi vytesali do zdi, tak se po něm venku rozhlédni.",
+        nadpis: "Uhas hasičárnu pivem",
+        zadani: "Hasičárna hoří! Klepej na plameny a stříkej na ně pivo z hadice. Pozor: neuhašený plamen přeskočí na vedlejší okno a piva v sudu moc není.",
+        hotovo: "Uhašeno! Sud je prázdný, hasičárna ohořelá a sázka nerozhodnutá. Opravu si chlapi zaplatili ze svého a rok opravy vytesali do zdi, aby nezapomněli, že pivo je jen k pití. Rozhlédni se po něm venku.",
         zvuk: "audio/racice/hadice.mp3"
       }
     },
@@ -79,17 +79,17 @@ window.PD_OBCE.push({
       pozice: [49.279924, 16.873720], // RÚIAN, čp. 170 (sídlo MŠ Račice-Pístovice)
       priblizne: false,
       text: [
-        "Náčelník hasičů měl toho dne plné ruce práce. Hlídal tlak v hadici, teplotu v chladicí nádrži a dohlížel na provizorní vedení od výčepu ke zbrojnici. Právě proto zapomněl vyzvednout syna ze školky.",
-        "Chlapec zrovna prožíval období vzdoru. Přehlížený a znuděný kopl do kýble, v němž se od oběda povalovala hořká bramborová kaše z hostince.",
-        "Kaše se rozprskla po zdech, oknech i dveřích. Do té doby bílá školka byla během chvíle celá flekatá.",
-        "Starostliví rodiče se rozhodli postavit za stravování svých dětí. Na oplátku začali kolektivně bojkotovat sběr hluchavek. Ti odvážnější se dokonce pod rouškou noci vydali školku označit. Velký červený protestní nápis na štítu měl znít „Na kaši záleží“.",
-        "Ráno poslal národní výbor malíře, ať ostudu co nejrychleji napraví. Kaši ze zdí setřít, celou školku přetřít na žluto, ať se fleky ztratí, a nápis pořádně obnovit podle toho, co mu rodiče zdola nadiktují. Bohužel, malíř vysoko na lešení diktát špatně slyšel. Výsledek zněl skoro stejně."
+        "Náčelník hasičů měl toho dne plné ruce práce. Hlídal tlak v hadici, teplotu v chladicí nádrži a kontroloval, jestli pivo teče od výčepu až do hasičárny. Kvůli tomu úplně zapomněl vyzvednout syna ze školky.",
+        "Chlapec zrovna prožíval období vzdoru. Čekal sám a nudil se. A tak ze vzdoru kopl do kýble, ve kterém od oběda stála hořká bramborová kaše z hostince.",
+        "Kaše se rozprskla po zdech, oknech i dveřích. Bílá školka byla během chvíle celá flekatá.",
+        "Starostliví rodiče se postavili za stravování svých dětí. Na protest přestali chodit na sběr hluchavek. Ti odvážnější v noci namalovali na štít školky velký červený nápis: Na kaši záleží!",
+        "Ráno poslal národní výbor malíře, ať ostudu co nejrychleji napraví. Měl setřít kaši ze zdí a celou školku přetřít na žluto, aby se fleky ztratily. Upravil i nápis: z „Na kaši záleží“ bylo rázem „Naší mládeži“."
       ],
       // minihra (js/hry.js → kase): stírání kaše a přemalování na žluto, zvuk audio/racice/umyvani.mp3
       hra: {
         typ: "kase",
         nadpis: "Umyj a přemaluj školku",
-        zadani: "Teď jsi malíř na lešení ty. Přejížděj prstem po školce: setřeš kaši a rovnou natřeš zdi na žluto. Jenže ten kluk v období vzdoru ještě nedopil svůj vztek: když vykoukne s kýblem, klepni na něj, ať dá chvíli pokoj. Nové fleky kaše musíš setřít znovu.",
+        zadani: "Teď jsi malíř na lešení ty. Přejížděj prstem po školce: setřeš kaši a rovnou natřeš zdi na žluto. Jenže ten kluk v období vzdoru má vzteku pořád dost: když vykoukne s kýblem, klepni na něj, ať dá chvíli pokoj. Nové fleky kaše musíš setřít znovu.",
         hotovo: "Hotovo! Školka je žlutá jako kaše a na štítu svítí „NAŠÍ MLÁDEŽI“. Zní to skoro stejně, ne? Rodiče mávli rukou a nápis tam vydržel dodnes.",
         zvuk: "audio/racice/umyvani.mp3"
       }
@@ -103,7 +103,7 @@ window.PD_OBCE.push({
       priblizne: false,
       typ: "modlitba",
       text: [
-        "Zastav se u kříže, zapal svíčku a pusť si nahrávku modlitby."
+        "Po tolika patáliích za jediný den je čas se na chvíli zastavit. Zapal u kříže svíčku a pak si v klidu poslechni modlitbu."
       ],
       // nejdřív svíčka (škrtnutí sirky: audio/racice/sirka.mp3), pak se odemkne modlitba
       hra: {
@@ -117,7 +117,7 @@ window.PD_OBCE.push({
       // sloky modlitby (každá sloka = pole řádků); mezi slokami je při předčítání pauza
       modlitba: [
         ["Pane,", "stojíme na místě, kde se člověk zastaví,", "když neví, kudy dál."],
-        ["Nehledáme viníka,", "protože každému z nás se někdy", "něco nepovedlo."],
+        ["Nehledáme viníka,", "vždyť každému z nás se někdy", "něco nepovede."],
         ["Prosíme tě o klid v myšlenkách", "a o rozvahu v činech,", "aby drobné chyby nezanechaly velké stopy."],
         ["Ať si pamatujeme,", "že věci mají své místo,", "čas svůj řád", "a odpovědnost svou váhu."]
       ],
@@ -137,9 +137,9 @@ window.PD_OBCE.push({
       pozice: [49.278345, 16.880420],
       priblizne: false,
       text: [
-        "Zdravotní potíže po obědě, podnapilí hasiči, žlutá školka. Zprávy o chaosu v obci se velmi rychle dostaly na okresní výbor Komunistické strany Československa, který ve snaze zamezit dalším škodám hned následující den vydal zákaz pořádání všech společenských i sportovních akcí. Rozhodnutí se bohužel dotklo i plánovaného fotbalového turnaje.",
-        "Správce stadionu to nesl těžce. Na protest nechal celé dopoledne znít klubovou hymnu ve smyčce místním rozhlasem. Obyvatelé tuto odvetnou akci nepřijali s pochopením. Hymna se brzy stala vlezlou a nekonečně otravnou. Důkazem byl neblahý stav několika amplionů po zásazích kamenů.",
-        "Situaci po stížnosti nakonec vyřešili přivolaní příslušníci Státní bezpečnosti. Vtrhli do rozhlasovny na stadionu a magnetofonový pásek s hymnou zničili."
+        "Hořký oběd, ohořelá hasičárna a žlutá školka s podivným nápisem. Zprávy o chaosu v obci se rychle donesly až na okresní výbor Komunistické strany Československa. Ten chtěl zabránit dalším škodám, a tak hned druhý den zakázal všechny společenské i sportovní akce. Zákaz se bohužel týkal i plánovaného fotbalového turnaje.",
+        "Správce stadionu už měl hřiště posekané a čáry namalované vápnem. Rozhodnutí výboru proto nesl těžce. Na protest pustil do místního rozhlasu klubovou hymnu a nechal ji hrát dokola celé dopoledne. Sousedé pro to pochopení neměli. Hymna jim brzy lezla na nervy. Na správce i na rozezvučené ampliony házeli kameny.",
+        "Na stížnost sousedů nakonec přijeli příslušníci Státní bezpečnosti a vyřešili to po svém. Vtrhli do rozhlasovny na stadionu a magnetofonový pásek s hymnou zničili."
       ],
       hymna: {
         src: "audio/racice/hymna-kdo-je-tady-doma.mp3",
@@ -157,7 +157,7 @@ window.PD_OBCE.push({
         typ: "amplion",
         nadpis: "Umlč ampliony",
         zadani: "Hymna hraje už celé dopoledne a nikdo to nevydrží. Táhni prstem nahoru směrem k amplionu a pusť: čím delší tah, tím dál kámen doletí. Trefuj trychtýře.",
-        hotovo: "Ticho! Všechny tři ampliony jsou zmlklé a pomačkané. Sousedé za plotem tleskají. Hymnu si můžeš pustit výš, když to vydržíš.",
+        hotovo: "Ticho! Všechny tři ampliony jsou zmlklé a pomačkané. Sousedé za plotem tleskají. Hymnu si můžeš pustit znovu nahoře, jestli to vydržíš.",
         zvuk: "audio/racice/hymna-kdo-je-tady-doma.mp3"
       }
     },
@@ -169,8 +169,8 @@ window.PD_OBCE.push({
       pozice: [49.275762, 16.876519],
       priblizne: false,
       text: [
-        "Nacházíme se v místě, kudy projížděla hlídka příslušníků Státní bezpečnosti při zásahu na stadionu. Při rychlé jízdě vozem Moskvič 402 najeli na nezpevněnou krajnici a následným smykem poškodili zdejší sochu sv. Floriána.",
-        "Opravy Floriánovy pravé nohy se ochotně ujala amatérská keramička z Pístovic. Po několika pokusech se ale ukázalo, že vymodelovat napuchlý nárt bude nad její síly. Aby zachránila svou řemeslnou pověst, tajně Floriánovi urazila i druhou nohu. Obě původní nohy pak nahradila odlitkem z gumáků svého muže, zaměstnance místního jednotného zemědělského družstva."
+        "Právě tudy projížděla hlídka Státní bezpečnosti, když spěchala na stadion. Jeli v Moskviči 402 a pořádně to hnali. Na nezpevněné krajnici dostali smyk a narazili do zdejší sochy svatého Floriána. Svatý Vendelín vedle něj vyvázl bez škrábnutí.",
+        "Patron hasičů to ten týden opravdu neměl lehké. Opravy jeho pravé nohy se ochotně ujala amatérská keramička z Pístovic. Po několika pokusech ale poznala, že to vymodelovat nedokáže. Nová noha nikdy nevypadala jako ta původní. Aby si zachránila řemeslnou pověst, tajně mu urazila i druhou nohu. Beznohého Floriána pak obula do odlitků z gumáků svého muže."
       ],
       hra: {
         typ: "gumaky",
@@ -187,9 +187,9 @@ window.PD_OBCE.push({
       pozice: [49.275736, 16.874337], // RÚIAN, čp. 44
       priblizne: false,
       text: [
-        "Zatímco keramička u cesty pracovala na Floriánových nohách, roznesla se po kraji mylná fáma, že obec staví sochu k 50. narozeninám slavného rodáka.",
-        "V Račicích se totiž narodil olympijský vítěz Alois Hudec a cvičil v místní sokolovně. I k němu se šuškanda o nové soše dostala a zpráva ho potěšila. Při plánované cestě na Moravu pro okurky se proto rozhodl rodnou obec navštívit.",
-        "Říkalo se, že má ramena jako Bivoj, který podle pověsti chytil divokého kance za uši, hodil si ho na záda a odnesl na Vyšehrad. To je ale jiný příběh. Mladí muži i ženy se sjížděli z širokého okolí, aby slavného olympionika spatřili. Několik dní s nadějí stanovali na okolních loukách."
+        "Keramička u cesty pracovala na Floriánových nohách tak dlouho, že si toho všimlo celé okolí. Po kraji se rozneslo, že obec staví sochu k padesátým narozeninám slavného rodáka. Byla to ale jen fáma.",
+        "V Račicích se totiž narodil olympijský vítěz Alois Hudec a cvičil právě tady v sokolovně. Fáma o nové soše se donesla i k němu a moc ho potěšila. Stejně se chystal na Moravu pro okurky, a tak se rozhodl zastavit se i v rodné obci.",
+        "Říkalo se o něm, že má ramena jako Bivoj. Ten podle pověsti chytil divokého kance za uši a na zádech ho odnesl na Vyšehrad. To je ale jiný příběh. Slavného olympionika chtěl vidět každý. Mladí muži i ženy se sjížděli z širokého okolí a několik dní s nadějí stanovali na loukách za vsí."
       ],
       hra: {
         typ: "kruhy",
@@ -206,9 +206,10 @@ window.PD_OBCE.push({
       pozice: [49.275929, 16.872666], // RÚIAN, čp. 72 (oficiální adresa OÚ)
       priblizne: false,
       text: [
-        "Ostudu s chybějící sochou se na místním národním výboru pokusili odvrátit příslibem pamětní desky na stěně místní sokolovny. (Ta nakonec přibyla až v roce 1992.) Mnohem větším problémem se ale ukázala výrazně zvýšená očekávání v oblasti porodnosti. Stanování na loukách za vsí při čekání na slavného olympionika mělo totiž nečekané následky: kromě květů pampelišek tu hojně bujela i láska mezi místními. Ukázalo se, že jeden obecní rozpočet na předvoj husákových dětí stačit nebude.",
-        "Rozpočtová komise ve svém odborném stanovisku konstatovala, že očekávaný přírůstek obyvatelstva přesahuje únosnou kapacitu jedné obce, zejména v oblasti školských a kojeneckých potřeb.",
-        "Úřady tentokrát jednaly s neobvyklou svižností. Okresní národní výbor neprodleně odsouhlasil návrh na sloučení obcí Račice a Pístovice za účelem společného a hospodárného zajištění péče o nastupující generaci. Od roku 1960 jsou obě obce jednou."
+        "Ostudu s chybějící sochou se na místním národním výboru pokusili odvrátit aspoň příslibem pamětní desky na sokolovně. Mnohem větší starost ale úřadu brzy udělalo něco jiného. Stanování na loukách za vsí mělo nečekané následky. Kromě pampelišek tu totiž hojně bujela i láska. Hodně lásky. A kde bují hodně lásky, tam se za devět měsíců rodí hodně dětí.",
+        "Rozpočtová komise ve svém odborném stanovisku konstatovala, že očekávaný přírůstek obyvatelstva přesahuje únosnou kapacitu jedné obce. Zejména v oblasti školských a kojeneckých potřeb.",
+        "A když na něco nestačí obec jedna, musejí být dvě. Okresní národní výbor tak neprodleně odsouhlasil návrh na sloučení obcí Račice a Pístovice za účelem společného a hospodárného zajištění péče o nastupující generaci. Od roku 1960 jsou obě obce jednou.",
+        "A ty teď už víš proč. Protože koza!"
       ],
       hra: {
         typ: "vynos",
