@@ -206,9 +206,10 @@ window.PD_OBCE.push({
       pozice: [49.275929, 16.872666], // RÚIAN, čp. 72 (oficiální adresa OÚ)
       priblizne: false,
       text: [
-        "Ostudu s chybějící sochou se na místním národním výboru pokusili odvrátit příslibem pamětní desky na stěně místní sokolovny. (Ta nakonec přibyla až v roce 1992.) Mnohem větším problémem se ale ukázala výrazně zvýšená očekávání v oblasti porodnosti. Stanování na loukách za vsí při čekání na slavného olympionika mělo totiž nečekané následky: kromě květů pampelišek tu hojně bujela i láska mezi místními. Ukázalo se, že jeden obecní rozpočet na předvoj husákových dětí stačit nebude.",
-        "Rozpočtová komise ve svém odborném stanovisku konstatovala, že očekávaný přírůstek obyvatelstva přesahuje únosnou kapacitu jedné obce, zejména v oblasti školských a kojeneckých potřeb.",
-        "Úřady tentokrát jednaly s neobvyklou svižností. Okresní národní výbor neprodleně odsouhlasil návrh na sloučení obcí Račice a Pístovice za účelem společného a hospodárného zajištění péče o nastupující generaci. Od roku 1960 jsou obě obce jednou."
+        "Ostudu s chybějící sochou se na místním národním výboru pokusili odvrátit aspoň příslibem pamětní desky na sokolovně. Mnohem větší starost ale úřadu brzy udělalo něco jiného. Stanování na loukách za vsí mělo nečekané následky. Kromě pampelišek tu totiž hojně bujela i láska. Hodně lásky. A kde bují hodně lásky, tam se za devět měsíců rodí hodně dětí.",
+        "Rozpočtová komise ve svém odborném stanovisku konstatovala, že očekávaný přírůstek obyvatelstva přesahuje únosnou kapacitu jedné obce. Zejména v oblasti školských a kojeneckých potřeb.",
+        "A když na něco nestačí obec jedna, musejí být dvě. Okresní národní výbor tak neprodleně odsouhlasil návrh na sloučení obcí Račice a Pístovice za účelem společného a hospodárného zajištění péče o nastupující generaci. Od roku 1960 jsou obě obce jednou.",
+        "A ty teď už víš proč. Protože koza!"
       ],
       hra: {
         typ: "vynos",
