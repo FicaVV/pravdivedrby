@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<defs>
+<filter id="rz7-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="1" seed="49"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.2 1.55"/><feComposite in="SourceGraphic" operator="in"/></filter>
+<filter id="rz7-wob"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="1.6"/></filter>
+<pattern id="rz7-yel" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(51)"><path d="M0 0 V3" stroke="#f0b800" stroke-width="1.7"/></pattern>
+<path id="rz7-a" d="M20 60 A40 40 0 0 1 100 60"/>
+<path id="rz7-b" d="M24 64 A36 36 0 0 0 96 64"/>
+</defs>
+<g transform="rotate(-6 60 60)">
+<circle cx="60" cy="60" r="53" fill="url(#rz7-yel)" opacity=".75" filter="url(#rz7-wob)"/>
+<g filter="url(#rz7-ink)">
+<circle cx="60" cy="60" r="56" fill="none" stroke="#2f2c28" stroke-width="3.6"/>
+<circle cx="60" cy="60" r="49" fill="none" stroke="#2f2c28" stroke-width="1.6"/>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="12" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz7-a" startOffset="50%" text-anchor="middle">ZAPSÁNO · 7</textPath></text>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz7-b" startOffset="50%" text-anchor="middle">NEOFICIÁLNĚ</textPath></text>
+<g transform="translate(27 33) scale(.55)" fill="none" stroke="#2f2c28" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 82 H112"/><path d="M20 50 H100" stroke-width="3.5"/><rect x="14" y="36" width="10" height="28" rx="3" fill="#f5c400"/><rect x="96" y="36" width="10" height="28" rx="3" fill="#f5c400"/><rect x="26" y="40" width="6" height="20" rx="2" fill="none"/><rect x="88" y="40" width="6" height="20" rx="2" fill="none"/><path d="M30 8 H90" stroke-width="3"/><path d="M48 8 V24 M72 8 V24"/><circle cx="48" cy="31" r="7" fill="none"/><circle cx="72" cy="31" r="7" fill="none"/><path d="M30 76 H90 M40 76 V82 M80 76 V82"/></g>
+</g>
+</g>
+</svg>

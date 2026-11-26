@@ -129,7 +129,38 @@ předčítání pauza, namluvený vypravěč má každou sloku jako samostatnou 
 Každý úkol má tlačítko „Přečíst otázku a možnosti“. Předčítá úvod k otázce, otázku a možnosti
 („Možnost A. …“) s krátkou pauzou mezi nimi. Nahrávky pro ně namluví stejný workflow jako příběhy.
 
-<<<<<<< HEAD
+## Kreslená mapa
+
+Hlavní mapa je „kreslená tužkou“: ulice, domy, potoky, pole a louky jsou skutečná data
+OpenStreetMap, jen nakreslená ručním stylem. Ušlá část trasy je žlutá, zbytek tečkovaný,
+u stanovišť jsou kartičky s kresbou (barevně po splnění, šedě „???“ dokud jsou zamčená;
+zamčené se ukážou až po přiblížení). V mapě se pase schovaná koza (klepnutí vyšle událost
+`pd:koza`). Přepínač **Kreslená / Skutečná** vpravo nahoře přepne na dlaždice OSM.
+
+- `tools/osm/racice-osm.json` je výřez OSM (API `/api/0.6/map`, okolí trasy, jen potřebné tagy).
+- `python3 tools/kreslena-mapa.py` z něj vyrobí `data/racice-mapa.js`: zjednoduší a „rozvlní“ čáry
+  (pevné semínko, výstup je stabilní), spočítá pěší trasu po ulicích mezi stanovišti (nejkratší
+  cesta, teď 2,4 km) a přidá popisky, místo kozy a umístění kartiček (`stitky`, posun v px).
+- Po přesunu stanoviště v `data/racice.js` skript spusťte znovu, ať trasa vede ke správným bodům.
+
+**Licence:** data © přispěvatelé OpenStreetMap pod ODbL 1.0. Kreslená mapa je odvozená databáze,
+proto je pod ní v mapě atribuce „Kresba podle dat © přispěvatelé OpenStreetMap (ODbL)“ a soubory
+`tools/osm/racice-osm.json` a `data/racice-mapa.js` jsou pod stejnou licencí ODbL.
+
+## Navigace: kompas a stažení na cestu
+
+- **Šipka podle kompasu telefonu.** Na Androidu se kompas zapne sám (`deviceorientationabsolute`),
+  na iPhonu je potřeba klepnout na kompas v radaru („Zapnout kompas“) a povolit pohyb a orientaci.
+  Pak šipka ukazuje směr vzhledem k tomu, kam je telefon natočený, text říká „rovně / doprava /
+  doleva / za tebou“ a modrá tečka na mapě má kužel natočení. Bez kompasu ukazuje šipka podle severu
+  jako dřív (písmeno S nahoře).
+- **Stáhnout na cestu** (úvod, radar, nastavení). Service worker stáhne celou aplikaci, kresby,
+  nahrávky a okolí trasy na skutečné mapě (zoomy 14–17/18, **nejvýš 250 dlaždic**, víc
+  [pravidla tile.openstreetmap.org](https://operations.osmfoundation.org/policies/tiles/) pro offline
+  použití nedovolují) do samostatné cache `pd-trasa-v1`, která se neprořezává. Kreslená mapa
+  je v telefonu vždycky, stažení ji jen pojistí. Hra zároveň požádá o trvalé úložiště
+  (`navigator.storage.persist`), ať telefon data nesmaže.
+
 ## Hodnocení, návrhy a statistiky
 
 Hodnocení hvězdičkami, návrhy dalších obcí a anonymní statistiky hry se posílají do **Google tabulky**
@@ -167,39 +198,6 @@ Bez `PD_ENDPOINT` hra funguje dál, jen nic neodesílá a položky čekají ve f
 **Souhrn** v tabulce ukazuje počet rozehraných a dohraných her, podíl dohraných, průměrnou délku,
 průměrné hodnocení a pro každé stanoviště, kolik hráčů k němu došlo a kolikrát potřebovali nápovědu.
 Hodnocení se odesílá pár vteřin po klepnutí, takže překlepnutí se nepočítá dvakrát.
-=======
-## Kreslená mapa
-
-Hlavní mapa je „kreslená tužkou“: ulice, domy, potoky, pole a louky jsou skutečná data
-OpenStreetMap, jen nakreslená ručním stylem. Ušlá část trasy je žlutá, zbytek tečkovaný,
-u stanovišť jsou kartičky s kresbou (barevně po splnění, šedě „???“ dokud jsou zamčená;
-zamčené se ukážou až po přiblížení). V mapě se pase schovaná koza (klepnutí vyšle událost
-`pd:koza`). Přepínač **Kreslená / Skutečná** vpravo nahoře přepne na dlaždice OSM.
-
-- `tools/osm/racice-osm.json` je výřez OSM (API `/api/0.6/map`, okolí trasy, jen potřebné tagy).
-- `python3 tools/kreslena-mapa.py` z něj vyrobí `data/racice-mapa.js`: zjednoduší a „rozvlní“ čáry
-  (pevné semínko, výstup je stabilní), spočítá pěší trasu po ulicích mezi stanovišti (nejkratší
-  cesta, teď 2,4 km) a přidá popisky, místo kozy a umístění kartiček (`stitky`, posun v px).
-- Po přesunu stanoviště v `data/racice.js` skript spusťte znovu, ať trasa vede ke správným bodům.
-
-**Licence:** data © přispěvatelé OpenStreetMap pod ODbL 1.0. Kreslená mapa je odvozená databáze,
-proto je pod ní v mapě atribuce „Kresba podle dat © přispěvatelé OpenStreetMap (ODbL)“ a soubory
-`tools/osm/racice-osm.json` a `data/racice-mapa.js` jsou pod stejnou licencí ODbL.
-
-## Navigace: kompas a stažení na cestu
-
-- **Šipka podle kompasu telefonu.** Na Androidu se kompas zapne sám (`deviceorientationabsolute`),
-  na iPhonu je potřeba klepnout na kompas v radaru („Zapnout kompas“) a povolit pohyb a orientaci.
-  Pak šipka ukazuje směr vzhledem k tomu, kam je telefon natočený, text říká „rovně / doprava /
-  doleva / za tebou“ a modrá tečka na mapě má kužel natočení. Bez kompasu ukazuje šipka podle severu
-  jako dřív (písmeno S nahoře).
-- **Stáhnout na cestu** (úvod, radar, nastavení). Service worker stáhne celou aplikaci, kresby,
-  nahrávky a okolí trasy na skutečné mapě (zoomy 14–17/18, **nejvýš 250 dlaždic**, víc
-  [pravidla tile.openstreetmap.org](https://operations.osmfoundation.org/policies/tiles/) pro offline
-  použití nedovolují) do samostatné cache `pd-trasa-v1`, která se neprořezává. Kreslená mapa
-  je v telefonu vždycky, stažení ji jen pojistí. Hra zároveň požádá o trvalé úložiště
-  (`navigator.storage.persist`), ať telefon data nesmaže.
->>>>>>> origin/main
 
 ## Doladění souřadnic
 
@@ -225,16 +223,39 @@ Stanoviště mají kresby tužkou se žlutou pastelkou (`img/racice/*.svg`). V `
 a zároveň „vlepená fotka“ v kronice po dopsání kapitoly, `mezi` jsou menší kresby vložené za odstavec
 s indexem `po` (0 = za první odstavec). Nová kresba se musí přidat i do seznamu v `sw.js`, aby fungovala offline.
 
+## Osobní kronika: razítka, „Kde je koza?“, rodinné fotky, pohlednice
+
+Logika je v `js/kronika.js`, nastavení stanovišť v `data/racice-kronika.js` (doplňuje body z `data/racice.js` podle `id`).
+
+- **Razítka.** Po dokončení stanoviště se přes obrazovku „bouchne“ razítko (animace, zvuk složený ve WebAudio, vibrace)
+  a objeví se v kronice v řadě razítek a u kapitoly. Kresby `img/racice/razitko-1…8.svg` (tužka + žlutá) vyrábí
+  `node tools/kronika-kresby.mjs`; ikony jsou převzaté z návrhů razítek.
+- **Kde je koza?** V hlavní kresbě každého stanoviště je schovaná strakatá koza (`img/racice/koza-schovana.svg`,
+  vyrábí ji stejný skript z kozy na dojení). Klepnutím ji hráč najde, koza zamečí a v bublině něco utrousí.
+  Pozice je v `koza: { x, y, s, otoc, orez, hlaska }` v jednotkách kresby 200 × 150; `orez` je výřez, mimo který
+  je koza „za“ něčím (sudem, rámem okna, rohem budovy). Když už koza v kresbě je, stačí `jenKlik: [x0, y0, x1, y1]`.
+  Při změně kresby stanoviště je potřeba souřadnice kozy zkontrolovat. Hláška nesmí prozradit odpověď na úkol.
+- **Rodinná fotka.** Na každém stanovišti je nepovinné „Vyfoťte se tady“ se zábavným zadáním (`fotoUkol`).
+  Fotka se zmenší na 1400 px a uloží jen v telefonu (IndexedDB `pd-kronika`), nikam se neodesílá.
+  V kronice je vlepená jako polaroid vedle kresby. Smazání postupu smaže i fotky.
+- **Pohlednice.** Na závěrečné stránce se z jména výpravy, vybrané fotky, razítek a počtu nalezených koz nakreslí
+  obrázek 1500 × 1050 (canvas, JPEG). Tlačítko Sdílet použije systémové sdílení telefonu, jinak se obrázek uloží.
+  Texty jsou v `OBEC.pohlednice`. Když minihra na úřadě uloží podpis do `state.podpis` (data URL obrázku),
+  pohlednice ho sama přidá.
+
 ## Struktura
 
 ```
 index.html              obrazovky (úvod, mapa s radarem, listy stanoviště/kroniky/nastavení)
 css/app.css             vzhled (světlé kontrastní téma pro čitelnost na slunci)
 js/app.js               herní logika, radar, simulace, kronika, TTS
+js/kronika.js           razítka, „Kde je koza?“, rodinné fotky, pohlednice
+
 js/odesilani.js         odesílání hodnocení, návrhů a statistik s frontou pro offline
 js/config.js            adresa pro odesílání (při nasazení ji doplní workflow)
 server/apps-script.gs   příjem dat do Google tabulky
 data/racice.js          obsah okruhu
+data/racice-kronika.js  razítka, schovaná koza a zadání fotek pro okruh
 data/racice-mapa.js     kreslená mapa (vygenerovaná z OSM, ODbL)
 js/kreslena-mapa.js     vykreslení kreslené mapy v Leafletu
 tools/kreslena-mapa.py  generátor kreslené mapy z tools/osm/racice-osm.json

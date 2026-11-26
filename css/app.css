@@ -473,6 +473,122 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
 }
 .field input[type=range] { width: 100%; accent-color: var(--ink); min-height: 32px; }
 
+/* ---------- osobní kronika: kresba se schovanou kozou (js/kronika.js) ---------- */
+/* Kresba má 4 : 3 (200 × 150). V široké kresbě 16 : 10 je oříznutá stejně jako dřív (object-position 80 %). */
+.ilu-hlavni { position: relative; }
+.ilu-hlavni .ilu-stage { position: absolute; left: 0; top: -16%; width: 100%; aspect-ratio: 4 / 3; }
+.ch-foto .ilu-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; }
+.ilu-stage .ilu-img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; }
+.koza-orez { position: absolute; overflow: hidden; pointer-events: none; }
+.ilu .koza-orez .koza-img, .ch-foto .koza-orez .koza-img { position: absolute; height: auto; max-width: none; object-fit: fill; transform-origin: 50% 60%; }
+.koza-hit {
+  position: absolute; padding: 0; margin: 0; border: 0; border-radius: 40%; background: transparent; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.koza-hit:focus-visible { outline: 3px solid var(--sky); }
+.koza-krouzek { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.koza-krouzek ellipse { fill: none; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .7s ease; }
+.koza-krouzek ellipse:first-child { stroke: #f5c400; stroke-width: 3.2; opacity: .9; }
+.koza-krouzek ellipse:last-child { stroke: var(--ink); stroke-width: 1; transition-delay: .15s; }
+.nalezena .koza-krouzek ellipse { stroke-dashoffset: 0; }
+.hned .koza-krouzek ellipse { transition: none; }
+.zamec .koza-img { animation: koza-zamec .6s ease; }
+@keyframes koza-zamec { 20% { transform: rotate(-6deg) translateY(-2%); } 50% { transform: rotate(5deg); } 80% { transform: rotate(-2deg); } }
+.zamec .koza-img[style*="scaleX(-1)"] { animation-name: koza-zamec-otoc; }
+@keyframes koza-zamec-otoc { 0%, 100% { transform: scaleX(-1); } 20% { transform: scaleX(-1) rotate(-6deg) translateY(-2%); } 50% { transform: scaleX(-1) rotate(5deg); } }
+.ilu-hlavni.vedle, .vedle { animation: kresba-vedle .3s ease; }
+@keyframes kresba-vedle { 30% { transform: translateX(-3px); } 70% { transform: translateX(3px); } }
+
+.koza-radek { display: flex; gap: 12px; align-items: center; margin-top: -6px; }
+.koza-radek > p { margin: 0; font-size: 16px; line-height: 1.4; }
+.koza-radek.ok { align-items: flex-start; }
+.koza-hlava {
+  flex: none; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; position: relative;
+  background: #f7f4ec; border: 2px solid var(--ink);
+}
+.koza-hlava img { position: absolute; width: 160px; max-width: none; left: -13px; top: -13px; }
+.koza-bublina {
+  position: relative; background: var(--surface); border: 2px solid var(--ink); border-radius: 16px; padding: 10px 14px;
+  animation: bublina .35s ease;
+}
+.koza-bublina::before {
+  content: ""; position: absolute; left: -9px; top: 18px; width: 14px; height: 14px; background: var(--surface);
+  border-left: 2px solid var(--ink); border-bottom: 2px solid var(--ink); transform: rotate(45deg);
+}
+.koza-bublina p { margin: 0; font-size: 17px; line-height: 1.45; }
+.koza-bublina small { display: block; margin-top: 4px; font-weight: 700; font-size: 13px; color: var(--muted); }
+@keyframes bublina { from { transform: scale(.9); opacity: 0; } }
+
+/* ---------- rodinná fotka ---------- */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+.foto-blok {
+  background: var(--surface); border: var(--stroke) dashed var(--ink); border-radius: var(--r); padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px; align-items: stretch;
+}
+.foto-blok .kicker { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+.foto-ukol { margin: 0; font-size: 17px; line-height: 1.45; font-weight: 700; }
+.foto-blok .btn svg { margin-right: 8px; vertical-align: -5px; }
+.foto-blok .btn-ghost { align-self: flex-start; }
+.polaroid { margin: 4px auto; background: #fffdf8; padding: 8px 8px 22px; box-shadow: 0 2px 10px rgba(22,19,15,.22); transform: rotate(2deg); width: min(82%, 320px); }
+.polaroid img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+
+/* ---------- kronika: razítka, kozy, fotky ---------- */
+.razitka-rada { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.rz-slot { aspect-ratio: 1; display: grid; place-items: center; }
+.rz-slot img { width: 100%; height: 100%; display: block; }
+.rz-slot span {
+  width: 84%; aspect-ratio: 1; border-radius: 50%; border: 2.5px dashed var(--line); display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 900; font-size: 22px; color: var(--muted);
+}
+.koza-souhrn { display: flex; gap: 12px; align-items: center; margin: 0; font-size: 16px; line-height: 1.4; }
+.koza-souhrn .koza-hlava { width: 46px; height: 46px; }
+.koza-souhrn .koza-hlava img { width: 132px; left: -11px; top: -11px; }
+.ch-card h3 .ch-razitko { flex: none; width: 76px; height: 76px; margin: -10px -8px -14px 0; }
+.ch-fotky { display: flex; justify-content: center; align-items: flex-start; }
+.ch-fotky .ch-foto { flex: none; }
+.ch-fotky.s-fotkou .ch-foto { width: 58%; }
+.ch-fotky .ch-rodina { width: 44%; margin: 18px 0 0 -6%; transform: rotate(4deg); position: relative; z-index: 1; padding-bottom: 16px; }
+
+/* ---------- bouchnutí razítka ---------- */
+.razitko-bouch {
+  position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center;
+  background: rgba(250, 246, 238, .97); animation: rb-in .2s ease;
+}
+.razitko-bouch.pryc { opacity: 0; transition: opacity .25s ease; }
+.rb-papir { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 24px; }
+.rb-razitko { width: min(62vw, 260px); height: auto; animation: rb-slam .55s cubic-bezier(.3, 0, .2, 1) both; }
+.rb-text { margin: 10px 0 0; font-family: var(--font-display); font-weight: 900; font-size: 28px; animation: rb-text .5s .45s ease both; }
+.rb-sub { margin: 0; font-weight: 700; color: var(--muted); animation: rb-text .5s .55s ease both; }
+@keyframes rb-in { from { opacity: 0; } }
+@keyframes rb-slam {
+  0% { transform: scale(2.6) rotate(-14deg); opacity: 0; }
+  55% { transform: scale(2.2) rotate(-10deg); opacity: .9; }
+  70% { transform: scale(.9) rotate(0); opacity: 1; }
+  85% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes rb-text { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- pohlednice ---------- */
+.pohlednice { display: flex; flex-direction: column; gap: 12px; }
+.pohlednice h3 { font-size: 24px; }
+.pohl-nahled { margin: 0; min-height: 120px; display: grid; place-items: center; }
+.pohl-nahled img { width: 100%; height: auto; display: block; box-shadow: 0 4px 18px rgba(22,19,15,.25); transform: rotate(-1deg); }
+.pohl-cekej { color: var(--muted); font-weight: 700; }
+.pohl-volba-h { margin: 0 0 6px; font-weight: 700; font-size: 15px; }
+.pohl-thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.pohl-thumbs button { width: 64px; height: 64px; padding: 0; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; background: none; cursor: pointer; }
+.pohl-thumbs button[aria-checked="true"] { border: 4px solid var(--ink); box-shadow: 0 0 0 3px var(--accent); }
+.pohl-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pohl-akce { display: flex; flex-direction: column; gap: 10px; }
+.pohl-akce .btn svg { margin-right: 8px; vertical-align: -5px; }
+.pohl-akce a[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-razitko, .rb-text, .rb-sub, .razitko-bouch, .koza-bublina, .zamec .koza-img, .vedle { animation: none; }
+  .koza-krouzek ellipse { transition: none; }
+}
+.ch-fotky.s-fotkou .ch-foto figcaption { display: none; }
 /* ---------- kreslená mapa (js/kreslena-mapa.js) ---------- */
 #map.pd-kreslena {
   background-color: #f4eddc;

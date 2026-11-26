@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<defs>
+<filter id="rz4-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="1" seed="28"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.2 1.55"/><feComposite in="SourceGraphic" operator="in"/></filter>
+<filter id="rz4-wob"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="1.6"/></filter>
+<pattern id="rz4-yel" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(42)"><path d="M0 0 V3" stroke="#f0b800" stroke-width="1.7"/></pattern>
+<path id="rz4-a" d="M20 60 A40 40 0 0 1 100 60"/>
+<path id="rz4-b" d="M24 64 A36 36 0 0 0 96 64"/>
+</defs>
+<g transform="rotate(9 60 60)">
+<circle cx="60" cy="60" r="53" fill="url(#rz4-yel)" opacity=".75" filter="url(#rz4-wob)"/>
+<g filter="url(#rz4-ink)">
+<circle cx="60" cy="60" r="56" fill="none" stroke="#2f2c28" stroke-width="3.6"/>
+<circle cx="60" cy="60" r="49" fill="none" stroke="#2f2c28" stroke-width="1.6"/>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="12" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz4-a" startOffset="50%" text-anchor="middle">ZAPSÁNO · 4</textPath></text>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz4-b" startOffset="50%" text-anchor="middle">NEOFICIÁLNĚ</textPath></text>
+<g transform="translate(27 33) scale(.55)" fill="none" stroke="#2f2c28" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 82 H106"/><path d="M44 82 V70 H76 V82"/><path d="M48 70 V62 H72 V70"/><path d="M56 62 V30 H46 V22 H56 V10 H64 V22 H74 V30 H64 V62Z" fill="none"/><path d="M57 38 L63 38 M57 44 H63" stroke-width="1.6"/><rect x="82" y="70" width="8" height="12" rx="1" fill="#f5c400"/><path d="M86 70 V66"/><path d="M86 66 C84 62 86 59 86 57 C88 60 89 63 86 66Z" fill="#f5c400"/><path d="M26 82 C25 77 22 75 20 74 M26 82 C27 77 30 75 32 75 M26 79 V72"/><path d="M84 24 C88 28 88 34 84 38 M90 20 C96 26 96 36 90 42" stroke-width="2"/><path d="M36 24 C32 28 32 34 36 38 M30 20 C24 26 24 36 30 42" stroke-width="2"/></g>
+</g>
+</g>
+</svg>

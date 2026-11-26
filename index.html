@@ -83,7 +83,7 @@
         <button class="btn btn-stahnout" data-stahnout hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl">Stáhnout na cestu</span></button>
         <button class="btn btn-ghost" id="btn-reset" hidden>Začít okruh znovu</button>
         <div class="reset-confirm" id="reset-confirm" role="alertdialog" aria-labelledby="reset-q" hidden>
-          <p id="reset-q">Smazat postup a začít znovu od prvního stanoviště? Kronika se zase zamkne.</p>
+          <p id="reset-q">Smazat postup a začít znovu od prvního stanoviště? Kronika se zase zamkne a smažou se i vaše fotky v ní.</p>
           <div class="task-tools">
             <button class="btn btn-small" id="reset-yes">Ano, začít znovu</button>
             <button class="btn btn-small btn-ghost" id="reset-no">Nechat být</button>
@@ -158,6 +158,8 @@
 <!--/APP-->
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="data/racice.js"></script>
+<script src="data/racice-kronika.js"></script>
+<script src="js/kronika.js"></script>
 <script src="data/racice-mapa.js"></script>
 <script src="js/kreslena-mapa.js"></script>
 <script src="audio/audio.js"></script>
