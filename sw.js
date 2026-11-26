@@ -1,10 +1,12 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
 const VERSION = "pd-0.5.1";
 const SHELL = [
-  "./", "index.html", "css/app.css", "css/hry.css", "js/hry.js", "js/app.js", "data/racice.js", "audio/audio.js",
+  "./", "index.html", "css/app.css", "js/app.js", "data/racice.js", "audio/audio.js",
   "data/racice-mapa.js", "js/kreslena-mapa.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
+  // minihry na stanovištích
+  "css/hry.css", "js/hry.js",
   "audio/racice/hymna-kdo-je-tady-doma.mp3", "audio/racice/zvony-modlitba.mp3",
   "audio/racice/koza-1.mp3", "audio/racice/koza-2.mp3",
   // kresby tužkou
