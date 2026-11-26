@@ -1,0 +1,89 @@
+/* ---------- minihry na stanovištích (js/hry.js) ---------- */
+.hr-stage { touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.hr-stage.hr-draw { touch-action: none; }
+.hr-hot {
+  position: absolute; transform: translate(-50%, -50%); min-width: 44px; min-height: 44px;
+  border: 0; border-radius: 50%; background: transparent; cursor: pointer; padding: 0;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.hr-hot:focus-visible { outline: 3px solid var(--sky); }
+.hr-hot:disabled { cursor: default; }
+.hr-tip { left: 50%; top: auto; bottom: 6%; }
+.hr-tip.hr-tip-top { top: 4%; bottom: auto; }
+.hr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; padding: 0; }
+.hr-sr:focus { position: static; width: auto; height: auto; clip: auto; align-self: center; }
+.hr-start { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: var(--shadow); white-space: nowrap; }
+
+/* hasičárna */
+.hs-fl { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .35s cubic-bezier(.3, 1.6, .5, 1); }
+.hs-fl > * { animation: hs-flick .5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+.hs-fire.puff .hs-smoke { animation: hs-smoke 1.1s ease-out; }
+.hs-beer { opacity: 0; }
+.hs-beer.go { animation: hs-fade .55s ease-out; }
+.hs-beer.go .hs-jet { stroke-dasharray: 100; animation: hs-jet .3s ease-out both; }
+.hs-foam { opacity: 0; }
+.hs-foam.go { animation: hs-fade .6s ease-out .2s; }
+@keyframes hs-flick { from { transform: scale(1, 1) skewX(-3deg); } to { transform: scale(.94, 1.08) skewX(4deg); } }
+@keyframes hs-smoke { 0% { opacity: .9; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
+@keyframes hs-jet { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes hs-fade { 0% { opacity: 0; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* školka */
+.ks-blob { transition: opacity .45s, transform .45s; transform-box: fill-box; transform-origin: center; }
+.ks-blob.gone { opacity: 0; transform: scale(.85); }
+.ks-spark { animation: ks-spark .9s ease-out forwards; }
+.ks-spark path { stroke: var(--ink); }
+@keyframes ks-spark { 0% { opacity: 0; transform: scale(.3); } 30% { opacity: 1; } 100% { opacity: 0; } }
+
+/* kříž */
+.sv-flame, .sv-glow { opacity: 0; transition: opacity .8s; }
+.sv-fl { transform-box: fill-box; transform-origin: 50% 100%; animation: hs-flick .7s ease-in-out infinite alternate; }
+.lit .sv-flame, .lit .sv-glow { opacity: 1; }
+.sv-match { opacity: 0; transition: opacity .2s; }
+.sv-mf { opacity: 0; }
+.holding .sv-match, .holding .sv-mf { opacity: 1; }
+.lit .sv-match, .lit .sv-ring { opacity: 0; transition: opacity .6s; }
+.sv-ring { opacity: .9; }
+
+/* stadion */
+.tl-syl { transition: fill .1s, transform .1s; transform-box: fill-box; transform-origin: center; }
+.tl-syl.on { fill: var(--hot); transform: scale(1.25); }
+.tl-ring { opacity: 0; }
+.tl-slot.demo .tl-pad, .tl-slot.hit .tl-pad { fill: var(--accent); }
+.tl-slot.hit .tl-pad { animation: tl-hit .35s ease-out; }
+.tl-slot .tl-pad { transform-box: fill-box; transform-origin: center; transition: fill .3s; }
+.all .tl-pad { fill: var(--accent); }
+.all .tl-syl { fill: var(--hot); }
+.hr-pad { left: 50%; top: 50%; width: 100%; height: 100%; border-radius: 14px; }
+@keyframes tl-hit { 40% { transform: scale(1.35); } }
+
+/* sochy */
+.gm-boot { cursor: grab; transition: filter .15s; }
+.gm-boot.lift { cursor: grabbing; filter: drop-shadow(0 3px 2px rgba(22, 19, 15, .3)); }
+.gm-boot.on { cursor: default; }
+.gm-boot:focus-visible { outline: none; filter: drop-shadow(0 0 2px var(--sky)); }
+.gm-slot { transition: opacity .2s; animation: gm-blink 1.2s ease-in-out infinite; }
+@keyframes gm-blink { 50% { opacity: .35; } }
+
+/* sokolovna */
+.kr-zone { opacity: .6; transition: opacity .2s; }
+.calm .kr-zone, .all .kr-zone { opacity: 1; }
+.kr-sweat { opacity: 0; transition: opacity .3s; }
+.wobble .kr-sweat { opacity: 1; }
+
+/* úřad */
+.vy-sheet { transition: transform .6s cubic-bezier(.5, 0, .7, .4), opacity .6s; transform-box: view-box; }
+.vy-sheet.gone { transform: translate(-190px, 30px) rotate(-18deg); opacity: 0; }
+.vy-imprint { opacity: 0; }
+.stamped .vy-imprint { opacity: .88; }
+.vy-imprint.pop { animation: vy-pop .3s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes vy-pop { 0% { opacity: 0; } 30% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hs-fl > *, .sv-fl, .gm-slot, .hs-fire.puff .hs-smoke, .ks-spark { animation: none; }
+  .vy-sheet, .ks-blob { transition: opacity .2s; }
+}
+
+/* část stanoviště, která se odemkne po dohrání minihry */
+.po-hre { display: flex; flex-direction: column; gap: inherit; }
+.po-hre[hidden] { display: none; }
