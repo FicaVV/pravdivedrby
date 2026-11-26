@@ -152,14 +152,13 @@ window.PD_OBCE.push({
           ["Ještě jednou! – RA-ČI-CE!", "Ještě jednou! – RA-ČI-CE!", "RA-ČI-CE!"]
         ]
       },
-      // minihra místo otázky „které slovo zazní nejčastěji“ (tleskání RA-ČI-CE odpověď stejně prozradí)
+      // minihra (js/hry.js → amplion): kamenem umlčet tři ampliony, z nich hraje hymna
       hra: {
-        typ: "tleskani",
-        tempo: 108,       // dob za minutu
-        tlesknuti: 9,     // kolik trefených tlesknutí stačí
-        nadpis: "Tleskej s celým stadionem",
-        zadani: "Když amplion zahřmí RA-ČI-CE!, celý stadion třikrát tleskne. Klepni přesně, když se kroužek stáhne na dlaně. První kolo jen poslouchej.",
-        hotovo: "Stadion šílí a správce je dojatý. Sousedé za plotem už méně. Text hymny si teď můžeš zobrazit výš."
+        typ: "amplion",
+        nadpis: "Umlč ampliony",
+        zadani: "Hymna hraje už celé dopoledne a nikdo to nevydrží. Táhni prstem nahoru směrem k amplionu a pusť: čím delší tah, tím dál kámen doletí. Trefuj trychtýře.",
+        hotovo: "Ticho! Všechny tři ampliony jsou zmlklé a pomačkané. Sousedé za plotem tleskají. Hymnu si můžeš pustit výš, když to vydržíš.",
+        zvuk: "audio/racice/hymna-kdo-je-tady-doma.mp3"
       }
     },
     {
@@ -175,8 +174,8 @@ window.PD_OBCE.push({
       ],
       hra: {
         typ: "gumaky",
-        nadpis: "Obuj Floriána",
-        zadani: "Florián přišel o obě nohy. Přetáhni mu na sochu gumáky manžela keramičky (nebo na gumák jen klepni).",
+        nadpis: "Odlij Floriánovi nohy",
+        zadani: "Keramička odlévá nové nohy z gumáků svého muže. Drž prst a lij sádru do formy. Pusť přesně u rysky, sádra ještě chvilku dotéká. Pak hotové odlitky přetáhni na sochu.",
         hotovo: "Sedí jako ulité. Svatý Florián je od té doby jediný svatý v gumácích široko daleko."
       }
     },
@@ -196,7 +195,7 @@ window.PD_OBCE.push({
         typ: "kruhy",
         sekund: 6,
         nadpis: "Udrž kříž na kruzích",
-        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Udrž ho šest vteřin v klidu: když se rozhoupe na jednu stranu, klepni na tutéž stranu a postrč ho zpátky.",
+        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Udrž ho šest vteřin v klidu. Když se rozhoupe na jednu stranu, klepni na tu stranu: vykoukne soused nebo babička a sfoukne ho zpátky.",
         hotovo: "Šest vteřin bez hnutí! Rozhodčí by dali desítku a louky za vsí by se plnily stany."
       }
     },
@@ -214,8 +213,8 @@ window.PD_OBCE.push({
       ],
       hra: {
         typ: "vynos",
-        nadpis: "Orazítkuj a podepiš výnos",
-        zadani: "Výnos o sloučení obcí je ve třech vyhotoveních. Každé orazítkuj klepnutím na M. P. a originál nakonec podepiš prstem na čáru.",
+        nadpis: "Projdi úřední kolečko",
+        zadani: "Nejdřív rozvez kočárky do jeslí v Račicích a v Pístovicích (táhni je, nebo klepni na jesle). Až nebude kam, obtáhni prstem jednu hranici kolem obou obcí. Nakonec výnos orazítkuj a podepiš.",
         hotovo: "Úředně potvrzeno a podepsáno. Od roku 1960 jsou Račice a Pístovice jedna obec."
       },
       konec: true
