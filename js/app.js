@@ -85,22 +85,62 @@
       setMapFull(state.mapFull, true);
       setTimeout(function () { map.invalidateSize(); if (first) fitRoute(); placeMapToggle(); }, 50);
       startGeo(); update();
+      startCompass(false);
+      renderCompass(); setDlButtons();
     }
   }
 
   // ---------- mapa ----------
   var map, meMarker, accCircle, pins = {}, routeLine, tileOk = 0, tileErr = 0, schematic = false;
+  var osmTiles = null, kresba = null, kresbaAttr = false;
+  var MAPA = (window.PD_MAPA || {})[OBEC.id] || null;
+  var OSM_ATTR = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">přispěvatelé OpenStreetMap</a>';
+  var KRESBA_ATTR = 'Kresba podle dat © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">přispěvatelé OpenStreetMap</a> (ODbL)';
   function initMap() {
     if (map) return;
-    map = L.map("map", { zoomControl: false, attributionControl: true }).setView(OBEC.stred, 16);
+    map = L.map("map", { zoomControl: false, attributionControl: true, zoomSnap: 0.25, maxZoom: 19 }).setView(OBEC.stred, 16);
+    map.attributionControl.setPrefix(false);
     if (!window.PD_NO_TILES) {
-      var tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19, attribution: "© přispěvatelé OpenStreetMap"
-      }).addTo(map);
-      tiles.on("tileload", function () { tileOk++; });
-      tiles.on("tileerror", function () { tileErr++; if (tileErr > 4 && !tileOk) goSchematic(); });
-    } else goSchematic();
-    routeLine = L.polyline([], { color: "#142019", weight: 3, dashArray: "6 8", opacity: .55 }).addTo(map);
+      osmTiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: OSM_ATTR });
+      osmTiles.on("tileload", function () { tileOk++; });
+      osmTiles.on("tileerror", function () {
+        tileErr++;
+        if (tileErr > 4 && !tileOk) { if (kresba) { setPodklad("kresba", true); toast("Skutečná mapa se bez signálu nenačte, ukazuji kreslenou."); } else goSchematic(); }
+      });
+    }
+    if (MAPA && window.PD_KRESBA) {
+      kresba = PD_KRESBA.vytvor(map, MAPA, OBEC, { onKoza: function () { toast("Mééé! Koza se ti schovávala v mapě."); vibrate(60); } });
+      kresba.trasa.addTo(map);
+      L.control.scale({ imperial: false, maxWidth: 90, position: "bottomleft" }).addTo(map);
+      var rose = L.control({ position: "bottomleft" });
+      rose.onAdd = function () {
+        return el("div", { class: "pd-ruzice", "aria-hidden": "true", html: '<svg viewBox="0 0 40 52"><text x="20" y="11" text-anchor="middle">S</text><path d="M20 15 L26 33 L20 30 L14 33 Z" fill="#16130f"/><path d="M20 51 L26 33 L20 36 L14 33 Z" fill="#fff" stroke="#16130f" stroke-width="1.4" stroke-linejoin="round"/><circle cx="20" cy="33" r="17" fill="none" stroke="#2f2c28" stroke-width="1.3" stroke-dasharray="3 3"/></svg>' });
+      };
+      rose.addTo(map);
+      var kartus = L.control({ position: "topleft" });
+      kartus.onAdd = function () {
+        return el("div", { class: "pd-kartus", "aria-hidden": "true" }, [el("small", { text: "Neoficiální mapa" }), el("strong", { text: OBEC.nazev })]);
+      };
+      kartus.addTo(map);
+    }
+    if (!kresba && !osmTiles) goSchematic();
+    if (kresba && osmTiles) {
+      var sw = L.control({ position: "topright" });
+      sw.onAdd = function () {
+        var box = el("div", { class: "pd-podklad", role: "group", "aria-label": "Podklad mapy" }, [
+          el("button", { "data-p": "kresba", text: "Kreslená" }),
+          el("button", { "data-p": "osm", text: "Skutečná" })
+        ]);
+        L.DomEvent.disableClickPropagation(box);
+        box.addEventListener("click", function (e) { var p = e.target.getAttribute("data-p"); if (p) setPodklad(p); });
+        return box;
+      };
+      sw.addTo(map);
+    }
+    if (kresba) setPodklad(state.podklad === "osm" && osmTiles ? "osm" : "kresba", true);
+    else if (osmTiles) osmTiles.addTo(map);
+    routeLine = L.polyline([], { color: "#142019", weight: 3, dashArray: "6 8", opacity: .55 });
+    if (!kresba) routeLine.addTo(map);
     OBEC.body.forEach(function (b, i) {
       var m = L.marker(b.pozice, { icon: pinIcon(b, i), keyboard: true, title: b.nazev }).addTo(map);
       m.on("click", function () { onPinClick(i); });
@@ -116,9 +156,23 @@
       setSim([e.latlng.lat, e.latlng.lng]);
     });
     fitRoute();
+    refreshPins();
+  }
+  // Kreslená mapa (výchozí, je celá v telefonu) nebo skutečná mapa z dlaždic OpenStreetMap
+  function setPodklad(p, quiet) {
+    if (!kresba) return;
+    var osm = p === "osm" && !!osmTiles;
+    state.podklad = osm ? "osm" : "kresba"; if (!quiet) save();
+    kresba.zobrazit(!osm);
+    if (osmTiles) { if (osm) osmTiles.addTo(map); else osmTiles.remove(); }
+    // kresba je odvozená z dat OSM (ODbL), proto uvádíme zdroj i licenci; dlaždice mají vlastní atribuci
+    if (osm !== !kresbaAttr) { kresbaAttr = !osm; if (osm) map.attributionControl.removeAttribution(KRESBA_ATTR); else map.attributionControl.addAttribution(KRESBA_ATTR); }
+    document.querySelectorAll(".pd-podklad button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-p") === state.podklad ? "true" : "false"); });
   }
   function fitRoute() {
-    map.fitBounds(OBEC.body.map(function (b) { return b.pozice; }), { paddingTopLeft: [24, 90], paddingBottomRight: [24, 40] });
+    // u kreslené mapy víc okraje: kartičky stanovišť vyčnívají ze značek do stran
+    var k = kresba && state.podklad !== "osm";
+    map.fitBounds(OBEC.body.map(function (b) { return b.pozice; }), { paddingTopLeft: [k ? 70 : 24, k ? 150 : 90], paddingBottomRight: [k ? 50 : 24, k ? 90 : 40] });
   }
   function goSchematic() {
     if (schematic) return; schematic = true;
@@ -136,6 +190,7 @@
   function refreshPins() {
     $("#edit-bar").hidden = !state.edit;
     if (!map) return;
+    if (kresba) kresba.update(state);
     OBEC.body.forEach(function (b, i) {
       var m = pins[b.id];
       if (!m) return; // značky ještě nevznikly (schematická mapa se zapne dřív)
@@ -200,11 +255,16 @@
   }
   function drawMe() {
     if (!map || !pos) return;
-    var icon = L.divIcon({ className: "", html: '<div class="me' + (pos.src === "sim" ? " sim" : "") + '"></div>', iconSize: [20, 20], iconAnchor: [10, 10] });
+    var icon = L.divIcon({ className: "", html: '<div class="me-wrap"><div class="me-cone" hidden></div><div class="me' + (pos.src === "sim" ? " sim" : "") + '"></div></div>', iconSize: [20, 20], iconAnchor: [10, 10] });
     if (!meMarker) {
       meMarker = L.marker(pos.ll, { icon: icon, interactive: false, zIndexOffset: 1000 }).addTo(map);
       accCircle = L.circle(pos.ll, { radius: pos.acc, color: "#1f5fbf", weight: 1, fillOpacity: .08 }).addTo(map);
-    } else { meMarker.setLatLng(pos.ll); meMarker.setIcon(icon); accCircle.setLatLng(pos.ll); accCircle.setRadius(pos.acc); }
+    } else {
+      meMarker.setLatLng(pos.ll); accCircle.setLatLng(pos.ll); accCircle.setRadius(pos.acc);
+      if (meMarker._pdSim !== pos.src) meMarker.setIcon(icon);
+    }
+    meMarker._pdSim = pos.src;
+    drawHeading();
   }
 
   // ---------- mapa přes celý displej (volitelně) ----------
@@ -224,6 +284,134 @@
     play.style.setProperty("--toggle-bottom", Math.round(gap + 12) + "px");
   }
   window.addEventListener("resize", placeMapToggle);
+
+  // ---------- kompas telefonu: šipka míří tam, kam jít, vzhledem k tomu, kam je telefon natočený ----------
+  // Android/Chrome: deviceorientationabsolute (alpha vůči severu). iPhone: webkitCompassHeading,
+  // ale až po povolení (DeviceOrientationEvent.requestPermission), a to jde jen po klepnutí.
+  var heading = null, lastBearing = null, arrowRot = 0, roseRot = 0, compassOn = false, compassRaf = 0, hx = 0, hy = 0;
+  var NEEDS_PERM = typeof window.DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function";
+  function screenAngle() {
+    var a = (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (window.orientation || 0);
+    return +a || 0;
+  }
+  function onOrient(e) {
+    var h = null;
+    if (typeof e.webkitCompassHeading === "number" && !isNaN(e.webkitCompassHeading)) h = e.webkitCompassHeading; // iOS: už je vůči severu
+    else if (e.absolute && typeof e.alpha === "number") h = 360 - e.alpha;
+    if (h === null) return;
+    h = (h + screenAngle() + 360) % 360;
+    // vyhlazení přes jednotkový vektor (ať šipka neposkakuje a nepřetáčí se přes 0°/360°)
+    var r = h * Math.PI / 180;
+    if (heading === null) { hx = Math.cos(r); hy = Math.sin(r); } else { hx += (Math.cos(r) - hx) * .25; hy += (Math.sin(r) - hy) * .25; }
+    heading = (Math.atan2(hy, hx) * 180 / Math.PI + 360) % 360;
+    if (!compassRaf) compassRaf = requestAnimationFrame(function () { compassRaf = 0; pointArrow(); drawHeading(); });
+    if (!$("#compass").classList.contains("live")) { $("#compass").classList.add("live"); renderCompass(); update(); }
+  }
+  function listenCompass() {
+    if (compassOn) return; compassOn = true;
+    if ("ondeviceorientationabsolute" in window) window.addEventListener("deviceorientationabsolute", onOrient);
+    else window.addEventListener("deviceorientation", onOrient);
+  }
+  function startCompass(fromTap) {
+    if (!("DeviceOrientationEvent" in window)) { if (fromTap) toast("Tenhle telefon kompas prohlížeči nepůjčí. Šipka ukazuje podle severu."); return; }
+    if (NEEDS_PERM) {
+      if (!fromTap) { listenCompass(); renderCompass(); return; } // povolení z minula může ještě platit
+      DeviceOrientationEvent.requestPermission().then(function (r) {
+        state.kompas = r === "granted"; save();
+        if (state.kompas) { listenCompass(); toast("Kompas zapnutý. Drž telefon naplocho před sebou."); }
+        else toast("Bez kompasu ukazuje šipka podle severu (S nahoře).");
+        renderCompass();
+      }, function () { toast("Kompas se nepodařilo zapnout."); });
+      return;
+    }
+    listenCompass();
+    if (fromTap && heading === null) toast("Kompas nereaguje. Šipka zatím ukazuje podle severu (S nahoře).");
+  }
+  function renderCompass() {
+    var c = $("#compass"), live = heading !== null;
+    c.classList.toggle("live", live);
+    var ask = !live && NEEDS_PERM;
+    $("#compass-lbl").textContent = live ? "" : ask ? "Zapnout kompas" : "S nahoře";
+    c.setAttribute("aria-label", live ? "Šipka podle kompasu telefonu" : ask ? "Zapnout kompas telefonu" : "Šipka podle severu");
+  }
+  function turn(cur, target) { var d = ((target - cur) % 360 + 540) % 360 - 180; return cur + d; }
+  function pointArrow() {
+    if (lastBearing === null) return;
+    var rel = heading === null ? lastBearing : lastBearing - heading;
+    arrowRot = turn(arrowRot, rel); roseRot = turn(roseRot, heading === null ? 0 : -heading);
+    $("#arrow").style.transform = "rotate(" + arrowRot + "deg)";
+    $("#rose").style.transform = "rotate(" + roseRot + "deg)";
+  }
+  function relWords(a) {
+    a = ((a % 360) + 540) % 360 - 180;
+    var x = Math.abs(a);
+    return x < 25 ? "rovně před tebou" : x < 70 ? (a > 0 ? "mírně doprava" : "mírně doleva") : x < 135 ? (a > 0 ? "doprava" : "doleva") : "za tebou";
+  }
+  function drawHeading() {
+    var n = meMarker && meMarker.getElement && meMarker.getElement();
+    var cone = n && n.querySelector(".me-cone");
+    if (!cone) return;
+    cone.hidden = heading === null;
+    if (heading !== null) cone.style.transform = "rotate(" + heading + "deg)";
+  }
+
+  // ---------- Stáhnout na cestu: vše pro okruh do telefonu (aplikace, kresby, nahrávky, mapa) ----------
+  // Kreslená mapa je součástí aplikace. Ze skutečné mapy OSM se stáhne jen okolí trasy, nejvýš
+  // 250 dlaždic (víc pravidla tile.openstreetmap.org pro offline použití nedovolují).
+  var OSM_MAX = 250;
+  function routeTiles() {
+    var pts = OBEC.body.map(function (b) { return b.pozice; });
+    if (MAPA && MAPA.meze) pts = pts.concat(MAPA.meze);
+    var la = pts.map(function (p) { return p[0]; }), ln = pts.map(function (p) { return p[1]; });
+    var s = Math.min.apply(null, la), n = Math.max.apply(null, la), w = Math.min.apply(null, ln), e = Math.max.apply(null, ln);
+    var out = [];
+    function tx(lng, z) { return Math.floor((lng + 180) / 360 * Math.pow(2, z)); }
+    function ty(lat, z) { var r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * Math.pow(2, z)); }
+    for (var z = 14; z <= 18; z++) {
+      var list = [];
+      for (var x = tx(w, z); x <= tx(e, z); x++) for (var y = ty(n, z); y <= ty(s, z); y++)
+        list.push("https://tile.openstreetmap.org/" + z + "/" + x + "/" + y + ".png");
+      if (out.length + list.length > OSM_MAX) break;
+      out = out.concat(list);
+    }
+    return out;
+  }
+  function canDownload() { return !IN_ARTIFACT && "serviceWorker" in navigator && "caches" in window && location.protocol !== "file:"; }
+  var dl = null, dlJust = false;
+  function downloadTrip(btn) {
+    if (dl) return;
+    if (!canDownload()) { toast("Stažení funguje jen v nainstalované hře (přes https)."); return; }
+    if (navigator.onLine === false) { toast("Teď jsi bez signálu. Stáhni trasu, až budeš na Wi-Fi."); return; }
+    dl = { done: 0, total: 1 };
+    setDlButtons();
+    try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+    navigator.serviceWorker.ready.then(function (reg) {
+      var ch = new MessageChannel();
+      ch.port1.onmessage = function (ev) {
+        var m = ev.data || {};
+        if (m.typ === "prubeh") { dl.done = m.hotovo; dl.total = m.celkem; setDlButtons(); }
+        if (m.typ === "hotovo") {
+          dl = null;
+          state.stazeno = { t: Date.now(), v: m.verze, chybi: m.chyby || 0 }; save();
+          dlJust = true; setDlButtons(); setTimeout(function () { dlJust = false; setDlButtons(); }, 4000);
+          var mb = m.bajty ? " (" + (m.bajty / 1048576).toFixed(1).replace(".", ",") + " MB)" : "";
+          toast(m.chyby ? "Staženo, jen " + m.chyby + " souborů se nepovedlo. Zkus to znovu na Wi-Fi." : "Hotovo, trasa je v telefonu" + mb + ". Mapa, příběhy i nahrávky půjdou i bez signálu.", 5000);
+        }
+      };
+      (reg.active || navigator.serviceWorker.controller).postMessage({ typ: "stahni", dlazdice: routeTiles(), obec: OBEC.id }, [ch.port2]);
+    }).catch(function () { dl = null; setDlButtons(); toast("Stažení se nepovedlo, zkus to znovu."); });
+  }
+  function setDlButtons() {
+    document.querySelectorAll("[data-stahnout]").forEach(function (b) {
+      var ok = !!state.stazeno && !state.stazeno.chybi && !dl, part = !!state.stazeno && !!state.stazeno.chybi && !dl;
+      // na mapě tlačítko po stažení zmizí (zůstane na úvodu), ať nezaclání
+      b.hidden = !canDownload() || (b.classList.contains("map-chip") && ok && !dlJust);
+      b.disabled = !!dl;
+      b.classList.toggle("ok", ok);
+      var t = dl ? "Stahuji… " + Math.round(100 * dl.done / Math.max(1, dl.total)) + " %" : ok ? "Trasa je v telefonu" : part ? "Dostáhnout na cestu" : "Stáhnout na cestu";
+      var lbl = b.querySelector(".lbl"); if (lbl) lbl.textContent = t; else b.textContent = t;
+    });
+  }
 
   // ---------- radar ----------
   function update() {
@@ -249,9 +437,9 @@
       var dir = DIRS[Math.round(br / 45) % 8];
       var reach = OBEC.radius + Math.min(pos.acc || 0, 40);
       $("#dist-num").innerHTML = fmtDist(d);
-      $("#arrow").style.transform = "rotate(" + br + "deg)";
+      lastBearing = br; pointArrow();
       var lbl = d > 400 ? "Ještě kus cesty" : d > 150 ? "Přihřívá se" : d > 60 ? "Už jsi blízko" : d > reach ? "Skoro tam!" : "Jsi na místě!";
-      $("#dist-lbl").textContent = lbl + (d > reach ? ", " + DIR_WORDS[dir] : "");
+      $("#dist-lbl").textContent = lbl + (d > reach ? ", " + (heading !== null ? relWords(br - heading) : DIR_WORDS[dir]) : "");
       level = d > 600 ? 1 : d > 300 ? 2 : d > 120 ? 3 : d > reach ? 4 : 5;
       var arrived = d <= reach;
       $("#btn-open").hidden = !arrived;
@@ -453,11 +641,11 @@
     var num = el("div", { class: "stop-num" }, [el("b", { text: "Zápis " + b.id }), b.adresa || null]);
     body.appendChild(el("div", {}, [num, el("h2", { class: "stop-title", text: b.nazev })]));
     var ilu = b.ilustrace || {};
-    if (ilu.obrazek) body.appendChild(kresba(ilu.obrazek, ilu.popis, "ilu ilu-hlavni"));
+    if (ilu.obrazek) body.appendChild(obrazekKresby(ilu.obrazek, ilu.popis, "ilu ilu-hlavni"));
     var story = el("div", { class: "story" });
     b.text.forEach(function (t, i) {
       story.appendChild(el("p", { text: t }));
-      (ilu.mezi || []).forEach(function (m) { if (m.po === i) story.appendChild(kresba(m.src, m.popis, "ilu ilu-mezi")); });
+      (ilu.mezi || []).forEach(function (m) { if (m.po === i) story.appendChild(obrazekKresby(m.src, m.popis, "ilu ilu-mezi")); });
     });
     body.appendChild(story);
 
@@ -498,7 +686,7 @@
     sheet.appendChild(body);
   }
   // Kresba tužkou (img/<obec>/*.svg). V jednosouborové ukázce jsou kresby vložené jako data URI v PD_IMG.
-  function kresba(src, popis, cls) {
+  function obrazekKresby(src, popis, cls) {
     var url = (window.PD_IMG && window.PD_IMG[src]) || src;
     return el("figure", { class: cls }, [el("img", { src: url, alt: popis || "", loading: "lazy", decoding: "async" })]);
   }
@@ -832,7 +1020,7 @@
         var card = el("section", { class: "ch-card done" }, [h]);
         // odměna: kresba stanoviště „vlepená“ do kroniky jako fotka s popiskem
         if (b.ilustrace && b.ilustrace.obrazek) {
-          var pol = kresba(b.ilustrace.obrazek, b.ilustrace.popis, "ch-foto");
+          var pol = obrazekKresby(b.ilustrace.obrazek, b.ilustrace.popis, "ch-foto");
           if (b.ilustrace.popis) pol.appendChild(el("figcaption", { text: b.ilustrace.popis }));
           card.appendChild(pol);
         }
@@ -966,6 +1154,14 @@
     sheet.appendChild(sheetHead("Nastavení", function () { closeSheet("settings"); }));
     var body = el("div", { class: "sheet-body" });
     if (canSpeak()) body.appendChild(voiceSettings());
+    if (canDownload()) {
+      var st = state.stazeno ? "Staženo " + new Date(state.stazeno.t).toLocaleDateString("cs-CZ") + ". Kreslená mapa, příběhy, kresby a nahrávky fungují i bez signálu." :
+        "Před cestou na Wi-Fi stáhni celý okruh: příběhy, kresby, nahrávky a okolí trasy na skutečné mapě. Kreslená mapa je v telefonu vždycky.";
+      var db = el("button", { class: "btn btn-small btn-stahnout", "data-stahnout": "" }, [el("span", { class: "lbl", text: "Stáhnout na cestu" })]);
+      db.addEventListener("click", function () { downloadTrip(db); });
+      body.appendChild(el("div", { class: "setting setting-col" }, [el("div", {}, [el("strong", { text: "Na cestu bez signálu" }), el("p", { text: st })]), db]));
+      setDlButtons();
+    }
     body.appendChild(el("div", { class: "setting" }, [
       el("div", {}, [el("strong", { text: "Simulace polohy" }), el("p", { text: IN_ARTIFACT ? "V této ukázce je zapnutá vždy, protože stránka nemá přístup k GPS." : "Pro zkoušení doma. Poloha se nastaví klepnutím do mapy nebo tlačítkem „Krok k cíli“." })]),
       sw("set-sim", state.sim, function (v) {
@@ -1001,7 +1197,7 @@
     body.appendChild(el("h3", { text: "Postup" }));
     body.appendChild(el("button", { class: "btn btn-small", text: "Smazat postup v tomto telefonu", onclick: function () { confirmBox.hidden = false; } }));
     body.appendChild(confirmBox);
-    body.appendChild(el("p", { class: "draft-note", text: "Prototyp 0.1 · mapa © přispěvatelé OpenStreetMap" }));
+    body.appendChild(el("p", { class: "draft-note", text: "Prototyp 0.1 · mapová data © přispěvatelé OpenStreetMap (ODbL), kreslená mapa je z nich odvozená" }));
     sheet.appendChild(body);
     renderCoords();
   }
@@ -1026,6 +1222,13 @@
   $("#btn-chronicle").addEventListener("click", openChronicle);
   $("#btn-settings").addEventListener("click", openSettings);
   $("#btn-mapfull").addEventListener("click", function () { setMapFull(!state.mapFull); });
+  $("#compass").addEventListener("click", function () { if (heading === null) startCompass(true); else toast("Šipka ukazuje podle kompasu telefonu. Drž ho naplocho, daleko od magnetů."); });
+  document.querySelectorAll("[data-stahnout]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (state.stazeno && !dl) toast("Trasa už je v telefonu. Stahuji znovu, ať je všechno čerstvé.");
+      downloadTrip(b);
+    });
+  });
   $("#btn-open").addEventListener("click", function () { if (current()) openStop(state.idx); else openFinale(); });
   $("#btn-here").addEventListener("click", function () { if (current()) { lastAuto = state.idx; openStop(state.idx); } });
   $("#sim-step").addEventListener("click", function () {
@@ -1042,4 +1245,5 @@
 
   renderHome();
   refreshPins();
+  setDlButtons();
 })();

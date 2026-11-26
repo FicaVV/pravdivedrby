@@ -1,7 +1,8 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.4.9";
+const VERSION = "pd-0.5.1";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/config.js", "js/odesilani.js", "js/app.js", "data/racice.js", "audio/audio.js",
+  "data/racice-mapa.js", "js/kreslena-mapa.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
   "audio/racice/hymna-kdo-je-tady-doma.mp3", "audio/racice/zvony-modlitba.mp3",
@@ -13,6 +14,7 @@ const SHELL = [
   "img/racice/7-stany.svg", "img/racice/8-kocarky.svg", "img/racice/8-urad.svg"
 ];
 const TILES = "pd-tiles-v1";
+const TRASA = "pd-trasa-v1"; // dlaždice stažené tlačítkem „Stáhnout na cestu“ (neprořezávají se)
 const AUDIO = "pd-audio-v1";
 // seznam namluvených nahrávek (audio/audio.js nastaví self.PD_AUDIO)
 try { importScripts("audio/audio.js"); } catch (e) { /* bez nahrávek */ }
@@ -26,7 +28,7 @@ self.addEventListener("install", (e) => {
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(
-    keys.filter((k) => k !== VERSION && k !== TILES && k !== AUDIO).map((k) => caches.delete(k))
+    keys.filter((k) => k !== VERSION && k !== TILES && k !== AUDIO && k !== TRASA).map((k) => caches.delete(k))
   )).then(() => self.clients.claim()));
 });
 
@@ -35,6 +37,45 @@ async function cacheAudio() {
   const want = new Set(AUDIO_FILES.map((f) => new URL(f, self.registration.scope).href));
   for (const k of await c.keys()) if (!want.has(k.url)) await c.delete(k);
   for (const u of want) if (!(await c.match(u))) { try { await c.add(u); } catch (e) { /* zkusí se příště */ } }
+}
+
+// „Stáhnout na cestu“: aplikace, kresby, nahrávky a okolí trasy na skutečné mapě (max. 250 dlaždic).
+// Stránka pošle seznam dlaždic a port, sem posíláme průběh.
+self.addEventListener("message", (e) => {
+  const m = e.data || {};
+  if (m.typ !== "stahni" || !e.ports[0]) return;
+  const port = e.ports[0];
+  e.waitUntil(stahni(m, port).catch(() => port.postMessage({ typ: "hotovo", verze: VERSION, chyby: -1 })));
+});
+async function stahni(m, port) {
+  const scope = self.registration.scope;
+  const shell = SHELL.map((u) => new URL(u, scope).href);
+  const audio = AUDIO_FILES.map((u) => new URL(u, scope).href);
+  const tiles = (m.dlazdice || []).filter((u) => /^https:\/\/tile\.openstreetmap\.org\/\d+\/\d+\/\d+\.png$/.test(u)).slice(0, 250);
+  const jobs = [].concat(shell.map((u) => [VERSION, u]), audio.map((u) => [AUDIO, u]), tiles.map((u) => [TRASA, u]));
+  let hotovo = 0, chyby = 0, bajty = 0;
+  const celkem = jobs.length;
+  const open = {};
+  async function one([name, url]) {
+    const c = open[name] || (open[name] = await caches.open(name));
+    let hit = await c.match(url);
+    if (!hit || name === VERSION) {
+      try {
+        const r = name === TRASA
+          ? await fetch(url, { mode: "cors", credentials: "omit" }).catch(() => fetch(url, { mode: "no-cors" }))
+          : await fetch(url, { cache: "no-cache" });
+        if (r.ok || r.type === "opaque") { await c.put(url, r.clone()); hit = r; } else chyby++;
+      } catch (err) { if (!hit) chyby++; }
+    }
+    if (hit) { try { bajty += (await hit.clone().blob()).size; } catch (err) {} }
+    hotovo++;
+    if (hotovo % 4 === 0 || hotovo === celkem) port.postMessage({ typ: "prubeh", hotovo, celkem });
+  }
+  // po dvou souběžně: šetrné k serveru OSM i k telefonu
+  let i = 0;
+  async function worker() { while (i < jobs.length) await one(jobs[i++]); }
+  await Promise.all([worker(), worker()]);
+  port.postMessage({ typ: "hotovo", verze: VERSION, chyby, bajty });
 }
 
 async function trimTiles() {
@@ -50,7 +91,7 @@ self.addEventListener("fetch", (e) => {
   // Mapové dlaždice a fonty: z cache, na pozadí obnovit
   if (url.hostname.endsWith("tile.openstreetmap.org") || url.hostname.includes("fonts.g")) {
     e.respondWith(caches.open(TILES).then(async (c) => {
-      const hit = await c.match(e.request);
+      const hit = (await c.match(e.request)) || (await caches.match(e.request.url, { cacheName: TRASA }));
       const net = fetch(e.request).then((r) => {
         if (r.ok || r.type === "opaque") { c.put(e.request, r.clone()); trimTiles(); }
         return r;
