@@ -213,7 +213,7 @@ window.PD_OBCE.push({
       hra: {
         typ: "vynos",
         nadpis: "Projdi úřední kolečko",
-        zadani: "Rozděl děti do jeslí a školek podle pravidel národního výboru. Klepni na dítě a pak na budovu (nebo ho tam přetáhni). Až budou všichni rozdělení, předlož to komisi. Pak přijde hranice obce, razítko a podpis.",
+        zadani: "Fronta maminek před jeslemi nemá konce. Dítě se veze na jeřábu: klepni, a pustíš ho na hromadu na střeše jeslí. Čím přesněji ho položíš na to horní, tím rychleji hromada roste (přesná trefa jsou dvojčata). Až jesle prasknou, zatluč hraniční kameny nové obce a výnos orazítkuj a podepiš.",
         hotovo: "Úředně potvrzeno a podepsáno. Od roku 1960 jsou Račice a Pístovice jedna obec."
       },
       konec: true
