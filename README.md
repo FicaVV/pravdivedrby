@@ -263,12 +263,21 @@ Logika je v `js/kronika.js`, nastavení stanovišť v `data/racice-kronika.js` (
   Texty jsou v `OBEC.pohlednice`. Když minihra na úřadě uloží podpis do `state.podpis` (data URL obrázku),
   pohlednice ho sama přidá.
 
+## Dobové listiny
+
+Kapitola může mít v `data/racice-kronika.js` vymyšlenou „úřední“ listinu z roku 1958 (`listina: { nazev, hlavicka, cj, datum,
+odstavce, podpisy, razitko, skvrny, kopyto }`, popis polí je v `js/listiny.js`). Vykresluje se jako text v HTML a CSS
+(písmo psacího stroje Special Elite), takže jde zvětšit a snadno upravit. Objeví se v kronice u kapitoly jako vlepený papír,
+klepnutím se otevře přes celou obrazovku, a při bouchnutí razítka hra oznámí, že přibyla. Podpisy jsou nečitelné klikyháky,
+žádná jména. Zatím má listinu hospoda (protokol okresního hygienika).
+
 ## Struktura
 
 ```
 index.html              obrazovky (úvod, mapa s radarem, listy stanoviště/kroniky/nastavení)
 css/app.css             vzhled (světlé kontrastní téma pro čitelnost na slunci)
 js/app.js               herní logika, radar, simulace, kronika, TTS
+js/listiny.js           dobové listiny v kronice
 js/kronika.js           razítka, „Kde je koza?“, společná fotka, pohlednice
 
 js/odesilani.js         odesílání hodnocení, návrhů a statistik s frontou pro offline

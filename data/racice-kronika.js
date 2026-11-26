@@ -16,6 +16,29 @@
   if (!OBEC) return;
   var K = {
     1: {
+      // dobová listina do kroniky (js/listiny.js); vymyšlená, bez jmen
+      listina: {
+        nazev: "Protokol okresního hygienika",
+        typ: "protokol",
+        hlavicka: ["OKRESNÍ HYGIENICKÁ STANICE VE VYŠKOVĚ", "PROTOKOL O MIMOŘÁDNÉ KONTROLE", "provozovny společného stravování"],
+        cj: "Č. j. Hyg-1958/0711-K",
+        datum: "Račice, 11. července 1958",
+        odstavce: [
+          { nadpis: "Provozovna", text: "hostinec, Račice č. 37" },
+          { nadpis: "Podnět", text: "hromadná nevolnost strávníků po obědě (uzená krkovice, bramborová kaše, okurkový salát)." },
+          { nadpis: "Zjištěno", body: [
+            "Kaše má hořkou chuť. Původ: kozí mléko z vlastního chovu hostinského.",
+            "Koza dle výpovědi „~~sežrala~~ spásla kopřivy u plotu“. Výslech kozy proveden, bez výsledku.",
+            "Krkovice bez závad."
+          ] },
+          { nadpis: "Opatření", text: "kuchyně uzavřena do odvolání. Schůze a slavnosti v sále se nedoporučují." },
+          { nadpis: "Zajištěné vzorky", text: "krkovice 4 plátky, salát okurkový 1 porce (ešus). _Vzorky se nevracejí._" }
+        ],
+        podpisy: ["Hostinský", "Okresní hygienik"],
+        razitko: ["OKRESNÍ", "HYGIENICKÁ", "STANICE", "VYŠKOV"],
+        skvrny: [[58, 62, 34, 17], [10, 40, 13, 8]],
+        kopyto: true
+      },
       koza: { jenKlik: [20, 55, 166, 142], hlaska: "Tak to jsem já, koza hostinského. Za všechno můžou kopřivy, ne já! Na dalších zastávkách se ti schovám do kresby. Najdeš mě?" }
     },
     2: {
@@ -44,6 +67,7 @@
     var k = K[b.id]; if (!k) return;
     b.razitko = "img/racice/razitko-" + b.id + ".svg";
     if (k.koza) b.koza = k.koza;
+    if (k.listina) b.listina = k.listina;
   });
   OBEC.pohlednice = {
     pozdrav: "Pozdrav z Račic-Pístovic",

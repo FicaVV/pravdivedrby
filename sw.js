@@ -1,8 +1,8 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.6.5";
+const VERSION = "pd-0.6.6";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/config.js", "js/odesilani.js", "js/app.js", "data/racice.js", "audio/audio.js",
-  "js/kronika.js", "data/racice-kronika.js",
+  "js/listiny.js", "js/kronika.js", "data/racice-kronika.js",
   "data/racice-mapa.js", "js/kreslena-mapa.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
