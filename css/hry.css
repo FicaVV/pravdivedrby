@@ -28,6 +28,10 @@
 @keyframes hs-jet { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 @keyframes hs-fade { 0% { opacity: 0; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
 
+.hs-level { transition: y .3s, height .3s; }
+.hs-gauge.low .hs-level { fill: #c2341e; animation: hs-low .6s ease-in-out infinite alternate; }
+@keyframes hs-low { to { opacity: .45; } }
+
 /* školka */
 .ks-top { transition: opacity 1.2s ease-in; }
 .ks-top.pryc { opacity: 0; }
@@ -35,15 +39,27 @@
 .ks-spark path { stroke: var(--ink); }
 @keyframes ks-spark { 0% { opacity: 0; transform: scale(.3); } 30% { opacity: 1; } 100% { opacity: 0; } }
 
+.ks-kid-in { transform: translateY(42px); transition: transform .35s cubic-bezier(.3, 1.4, .5, 1); }
+.ks-kid.up .ks-kid-in { transform: none; }
+.ks-arm { transform-box: view-box; transform-origin: 5px -13px; }
+.ks-kid.throw .ks-arm { animation: ks-throw .45s ease-out; }
+.ks-fly { opacity: 0; pointer-events: none; }
+.ks-splat { transition: opacity .4s; }
+.ks-splat.pryc { opacity: 0; }
+@keyframes ks-throw { 0% { transform: rotate(40deg); } 40% { transform: rotate(-50deg); } 100% { transform: none; } }
+
 /* kříž */
 .sv-flame, .sv-glow { opacity: 0; transition: opacity .8s; }
 .sv-fl { transform-box: fill-box; transform-origin: 50% 100%; animation: hs-flick .7s ease-in-out infinite alternate; }
 .lit .sv-flame, .lit .sv-glow { opacity: 1; }
-.sv-match { opacity: 0; transition: opacity .2s; }
-.sv-mf { opacity: 0; }
-.holding .sv-match, .holding .sv-mf { opacity: 1; }
-.lit .sv-match, .lit .sv-ring { opacity: 0; transition: opacity .6s; }
-.sv-ring { opacity: .9; }
+.sv-match { opacity: 0; pointer-events: none; }
+.sv-mf { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; }
+.burning .sv-mf { opacity: 1; }
+.lit .sv-match { opacity: 0; transition: opacity .6s; }
+.sv-wind { opacity: 0; transition: opacity .3s; }
+.sv-wind.warn { opacity: .35; }
+.sv-wind.on { opacity: 1; animation: sv-wind .5s linear infinite; }
+@keyframes sv-wind { from { transform: translateX(-6px); } to { transform: translateX(6px); } }
 
 /* stadion */
 .am-horn { transform-box: view-box; transform-origin: 0 0; transition: transform .45s cubic-bezier(.3, 1.6, .5, 1); }
@@ -124,3 +140,21 @@
 /* část stanoviště, která se odemkne po dohrání minihry */
 .po-hre { display: flex; flex-direction: column; gap: inherit; }
 .po-hre[hidden] { display: none; }
+
+/* úřad: hlavolam s dětmi */
+.vy-kid { transition: transform .25s ease-out; cursor: pointer; }
+.vy-kid.lift { transition: none; filter: drop-shadow(0 3px 2px rgba(22, 19, 15, .35)); }
+.vy-kid.sel > rect:first-child { opacity: 1; }
+.vy-kid.sel { filter: drop-shadow(0 0 2.5px #1f3f8f); }
+.vy-kid.bad { animation: vy-bad .5s ease-in-out 3; }
+.vy-rej { opacity: 0; pointer-events: none; }
+.vy-rej.on { animation: vy-rej 1.6s ease-out; }
+@keyframes vy-bad { 50% { filter: drop-shadow(0 0 3px #c2341e); transform-origin: center; } }
+@keyframes vy-rej { 0% { opacity: 0; } 12% { opacity: .95; } 75% { opacity: .95; } 100% { opacity: 0; } }
+.vy-tools { display: flex; flex-direction: column; gap: 10px; }
+.vy-rules { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 1.35; }
+.vy-rules li { padding: 2px 6px; border-radius: 6px; }
+.vy-rules li.bad { background: #f6dcd6; color: #8c1f10; font-weight: 700; }
+.vy-rules li.zrus { text-decoration: line-through; color: var(--muted); }
+.vy-rules li.zrus::after { content: " Zrušeno sloučením obcí."; text-decoration: none; display: inline-block; margin-left: 4px; color: #c2341e; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .vy-kid { transition: none; } .vy-kid.bad { animation: none; filter: drop-shadow(0 0 3px #c2341e); } }

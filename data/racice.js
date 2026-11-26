@@ -45,7 +45,7 @@ window.PD_OBCE.push({
         // skutečné zamečení: „Single Goat Bleating 2x“ od Kinoton, Freesound, CC0 (viz audio/racice/LICENSE.md)
         meceni: ["audio/racice/koza-1.mp3", "audio/racice/koza-2.mp3"],
         nadpis: "Pomoz koze od bolesti",
-        zadani: "Koze po kopřivách nateklo vemeno a bolí ji. Podoj ji do vědra: osmkrát klepni na vemeno.",
+        zadani: "Koze po kopřivách nateklo vemeno a bolí ji. Podoj ji do vědra: klepej vždycky na ten struk, který svítí žlutě. Když se spleteš, koza ucukne a kus mléka vyšplíchne.",
         hotovo: "Koze se ulevilo a vědro je plné. Jenže mléko je hořké… a teď už víš, kam se to vědro nakonec dostalo."
       },
     },
@@ -65,7 +65,7 @@ window.PD_OBCE.push({
       hra: {
         typ: "haseni",
         nadpis: "Uhas klubovnu pivem",
-        zadani: "Chlapi se vsadili, že vychlazená desítka hasí stejně dobře jako žízeň. Klubovna hoří! Klepej na plameny a stříkej na ně pivo z hadice.",
+        zadani: "Chlapi se vsadili, že vychlazená desítka hasí stejně dobře jako žízeň. Klubovna hoří! Klepej na plameny a stříkej na ně pivo z hadice. Pozor: neuhašený plamen přeskočí na vedlejší okno a piva v sudu moc není.",
         hotovo: "Uhašeno! Sud je prázdný, klubovna ohořelá a sázka nerozhodnutá. Rok opravy chlapi vytesali do zdi, tak se po něm venku rozhlédni.",
         zvuk: "audio/racice/hadice.mp3"
       }
@@ -89,7 +89,7 @@ window.PD_OBCE.push({
       hra: {
         typ: "kase",
         nadpis: "Umyj a přemaluj školku",
-        zadani: "Teď jsi malíř na lešení ty. Přejížděj prstem po školce: setřeš kaši a rovnou natřeš zdi na žluto. A nápis? Ten ti rodiče diktují zdola, tak dobře poslouchej.",
+        zadani: "Teď jsi malíř na lešení ty. Přejížděj prstem po školce: setřeš kaši a rovnou natřeš zdi na žluto. Jenže ten kluk v období vzdoru ještě nedopil svůj vztek: když vykoukne s kýblem, klepni na něj, ať dá chvíli pokoj. Nové fleky kaše musíš setřít znovu.",
         hotovo: "Hotovo! Školka je žlutá jako kaše a na štítu svítí „NAŠÍ MLÁDEŽI“. Zní to skoro stejně, ne? Rodiče mávli rukou a nápis tam vydržel dodnes.",
         zvuk: "audio/racice/umyvani.mp3"
       }
@@ -110,7 +110,7 @@ window.PD_OBCE.push({
         typ: "svicka",
         pred: true,
         nadpis: "Zapal svíčku",
-        zadani: "U kříže se nejdřív zapaluje svíčka. Polož prst na knot a chvíli ho podrž, než se chytí.",
+        zadani: "U kříže se nejdřív zapaluje svíčka. Polož prst na obrázek, tím vezmeš sirku. Švihni s ní přes hnědé škrtátko na krabičce a hořící ji dones ke knotu. Když se zvedne vítr, schovej sirku do skleničky.",
         hotovo: "Svíčka hoří. Teď si v klidu pusť modlitbu.",
         zvuk: "audio/racice/sirka.mp3"
       },
@@ -214,7 +214,7 @@ window.PD_OBCE.push({
       hra: {
         typ: "vynos",
         nadpis: "Projdi úřední kolečko",
-        zadani: "Nejdřív rozvez kočárky do jeslí v Račicích a v Pístovicích (táhni je, nebo klepni na jesle). Až nebude kam, obtáhni prstem jednu hranici kolem obou obcí. Nakonec výnos orazítkuj a podepiš.",
+        zadani: "Rozděl děti do jeslí a školek podle pravidel národního výboru. Klepni na dítě a pak na budovu (nebo ho tam přetáhni). Až budou všichni rozdělení, předlož to komisi. Pak přijde hranice obce, razítko a podpis.",
         hotovo: "Úředně potvrzeno a podepsáno. Od roku 1960 jsou Račice a Pístovice jedna obec."
       },
       konec: true
