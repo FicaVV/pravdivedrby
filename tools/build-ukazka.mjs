@@ -11,7 +11,7 @@ for (const f of readdirSync(new URL("../img/racice/", import.meta.url))) {
 const markup = html.split("<!--APP-->")[1].split("<!--/APP-->")[0];
 const out = `<title>Pravdivé drby</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Bricolage+Grotesque:wght@700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Fraunces:opsz,wght@9..144,800;9..144,900&family=Caveat:wght@600;700&display=swap">
 <style>
 ${r("vendor/leaflet/leaflet.css")}
 ${r("css/app.css")}
@@ -22,6 +22,8 @@ ${markup}
 <script>window.PD_ARTIFACT = true; window.PD_NO_TILES = true; window.PD_IMG = ${JSON.stringify(img)};</script>
 <script>
 ${r("data/racice.js")}
+${r("data/racice-mapa.js")}
+${r("js/kreslena-mapa.js")}
 </script>
 <script>
 ${r("js/hry.js")}
