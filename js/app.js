@@ -14,7 +14,7 @@
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* soukromé okno apod. */ }
   }
-  var state = Object.assign({ idx: 0, done: {}, sim: IN_ARTIFACT, edit: false, coords: {}, rating: 0, navrhy: [], finished: false, mapFull: false }, load() || {});
+  var state = Object.assign({ idx: 0, done: {}, sim: IN_ARTIFACT, edit: false, coords: {}, rating: 0, navrhy: [], finished: false, mapFull: false, test: false }, load() || {});
   if (IN_ARTIFACT) state.sim = true;
 
   // přenést ručně doladěné souřadnice
@@ -191,6 +191,7 @@
   }
   function refreshPins() {
     $("#edit-bar").hidden = !state.edit;
+    renderTest();
     if (!map) return;
     if (kreslenaMapa) kreslenaMapa.update(state);
     OBEC.body.forEach(function (b, i) {
@@ -204,10 +205,27 @@
       if (state.edit || (schematic && i === state.idx)) m.bindTooltip(b.id + " " + b.nazev, { permanent: true, direction: "right", offset: [18, 0] });
     });
   }
+  // ---------- testovací režim: skok na libovolné stanoviště ----------
+  function jumpTo(i) {
+    var b = OBEC.body[i];
+    if (!state.done[b.id]) { state.idx = i; lastAuto = i; save(); refreshPins(); update(); }
+    if (map) map.panTo(b.pozice);
+    closeSheet("chronicle"); openStop(i);
+  }
+  function renderTest() {
+    var panel = $("#test-panel"), box = $("#test-btns");
+    panel.hidden = !state.test;
+    box.innerHTML = "";
+    if (!state.test) return;
+    OBEC.body.forEach(function (b, i) {
+      box.appendChild(el("button", { class: "test-btn" + (state.done[b.id] ? " done" : "") + (i === state.idx ? " cur" : ""), type: "button", text: String(b.id), "aria-label": b.id + ". " + b.nazev, onclick: function () { jumpTo(i); } }));
+    });
+  }
   function onPinClick(i) {
     var b = OBEC.body[i];
     if (state.edit) { toast("Je zapnutý Režim úprav bodů, značky se teď jen přetahují. Vypneš ho nahoře tlačítkem Hotovo.", 4000); return; }
-    if (state.done[b.id]) openStop(i);
+    if (state.test) jumpTo(i);
+    else if (state.done[b.id]) openStop(i);
     else if (i === state.idx) toast("Sem míříš: " + b.nazev);
     else toast(b.id + ". " + b.nazev + " – na řadu přijde později");
   }
@@ -662,8 +680,10 @@
     var hraJeUkol = !!hra && !b.otazka && !b.konec, pred = !!hra && !!b.hra.pred;
     var poHre = el("div", { class: "po-hre" }), dalsi = el("div");
     if (hra && !rec && (pred || !hraJeUkol)) poHre.hidden = true;
-    function odemkni() {
-      if (hraJeUkol) { markDone(b, { ok: true }); dalsi.appendChild(nextButton(b, i, true)); }
+    var odemceno = false;
+    function odemkni(skip) {
+      if (odemceno) return; odemceno = true;
+      if (hraJeUkol) { markDone(b, skip ? { ok: true, skip: true } : { ok: true }); dalsi.appendChild(nextButton(b, i, true)); }
       // kresba „před“ (školka s kaší) se po splnění vymění za dnešní podobu
       var im = ilu.predtim && body.querySelector(".ilu-hlavni .ilu-img");
       if (im) setTimeout(function () { im.src = (window.PD_IMG && window.PD_IMG[ilu.obrazek]) || ilu.obrazek; }, 2400);
@@ -675,9 +695,17 @@
       var wrap = el("div", { class: "hra-wrap" });
       var znovu = el("button", { class: "btn btn-small hra-znovu", type: "button", html: ICO_ZNOVU + "Zahrát si znovu" });
       wrap.appendChild(znovu);
-      var cur = hra(b, !!rec, function () { odemkni(); znovu.hidden = false; });
+      var cur = hra(b, !!rec, function () { odemkni(); znovu.hidden = false; skip.hidden = true; });
       wrap.insertBefore(cur, znovu);
       znovu.hidden = !rec;
+      // Přeskočit úkol: v testovacím režimu hned, jinak až po minutě a půl hraní (kdyby to venku nešlo).
+      var skip = el("button", { class: "btn btn-small btn-ghost hra-preskocit", type: "button", text: state.test ? "Přeskočit úkol" : "Nejde to? Přeskočit úkol", hidden: "" });
+      skip.addEventListener("click", function () { skip.hidden = true; znovu.hidden = false; odemkni(true); });
+      wrap.appendChild(skip);
+      if (!rec) {
+        if (state.test) skip.hidden = false;
+        else setTimeout(function () { if (!odemceno && wrap.isConnected) skip.hidden = false; }, 90000);
+      }
       znovu.addEventListener("click", function () {
         var n = hra(b, false, function () { znovu.hidden = false; });
         wrap.replaceChild(n, cur); cur = n; znovu.hidden = true;
@@ -1234,6 +1262,10 @@
     body.appendChild(el("div", { class: "setting" }, [
       el("div", {}, [el("strong", { text: "Režim úprav bodů" }), el("p", { text: "Pro autory trasy. Značky na mapě jdou přetáhnout na správné místo. Souřadnice si pak zkopírujte níže." })]),
       sw("set-edit", state.edit, function (v) { state.edit = v; save(); refreshPins(); if (v) { closeSheet("settings"); show("play"); toast("Přetáhni značky na správná místa"); } })
+    ]));
+    body.appendChild(el("div", { class: "setting" }, [
+      el("div", {}, [el("strong", { text: "Testovací režim" }), el("p", { text: "Pro ladění. Pod mapou přibudou čísla stanovišť a klepnutím na číslo nebo na značku v mapě se stanoviště hned otevře, bez chůze. U každého úkolu je tlačítko Přeskočit úkol." })]),
+      sw("set-test", state.test, function (v) { state.test = v; save(); renderTest(); toast(v ? "Testovací režim zapnutý" : "Testovací režim vypnutý"); })
     ]));
     var pre = el("pre", { class: "coords", id: "coords-out" });
     body.appendChild(el("h3", { text: "Souřadnice stanovišť" }));

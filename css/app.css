@@ -239,6 +239,14 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 
 .sim-row { display: flex; gap: 8px; }
 .sim-row .btn { flex: 1; border-color: var(--sky); color: var(--sky); }
+.test-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.test-row[hidden] { display: none; }
+.test-lbl { font-size: 13px; font-weight: 700; color: #c2341e; text-transform: uppercase; letter-spacing: .06em; }
+.test-btns { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; width: 100%; }
+.test-btn { min-width: 0; min-height: 40px; padding: 0; border-radius: 12px; border: 2px dashed #c2341e; background: var(--paper, #fffdf7); color: var(--ink); font: 700 16px/1 inherit; font-family: inherit; }
+.test-btn.done { background: var(--accent); border-style: solid; border-color: var(--ink); }
+.test-btn.cur { box-shadow: 0 0 0 3px var(--sky); }
+#play.map-full .test-row { display: none; }
 
 /* značky na mapě */
 .pin {
@@ -547,6 +555,8 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
 .hra-wrap { display: flex; flex-direction: column; gap: 10px; }
 .hra-znovu { align-self: center; display: inline-flex; align-items: center; gap: 6px; }
 .hra-znovu[hidden] { display: none; }
+.hra-preskocit { align-self: center; }
+.hra-preskocit[hidden] { display: none; }
 
 /* ---------- kronika: razítka, kozy, fotky ---------- */
 .razitka-rada { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
