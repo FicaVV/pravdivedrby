@@ -651,7 +651,7 @@
     var story = el("div", { class: "story" });
     b.text.forEach(function (t, i) {
       story.appendChild(el("p", { text: t }));
-      (ilu.mezi || []).forEach(function (m) { if (m.po === i) story.appendChild(kresbaIlu(m.src, m.popis, "ilu ilu-mezi")); });
+      (ilu.mezi || []).forEach(function (m) { if (m.po === i) story.appendChild(obrazekKresby(m.src, m.popis, "ilu ilu-mezi")); });
     });
     body.appendChild(story);
 
@@ -694,7 +694,7 @@
     sheet.appendChild(body);
   }
   // Kresba tužkou (img/<obec>/*.svg). V jednosouborové ukázce jsou kresby vložené jako data URI v PD_IMG.
-  function kresbaIlu(src, popis, cls) {
+  function obrazekKresby(src, popis, cls) {
     var url = (window.PD_IMG && window.PD_IMG[src]) || src;
     return el("figure", { class: cls }, [el("img", { src: url, alt: popis || "", loading: "lazy", decoding: "async" })]);
   }
