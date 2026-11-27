@@ -238,7 +238,7 @@ se schematickou mapou a zapnutou simulací). Slouží pro rychlý náhled v proh
 
 ## Kresby stanovišť
 
-Stanoviště mají kresby tužkou se žlutou pastelkou (`img/racice/*.svg`). V `data/racice.js` je u bodu
+Stanoviště mají kresby tužkou se žlutou pastelkou (`img/racice/*.svg`) a s akcenty v hasičské červené a modré (hadice, přilby, dveře, voda, kýbl). Nápisy jsou vždy černé. Akcenty přidává `python3 tools/barvy-kreseb.py` (po přegenerování kresby ho spusťte znovu). Obrázek pivovodu v zápisu 2 kreslí `tools/pivovod-kresba.py` (varianta `d`). V `data/racice.js` je u bodu
 `ilustrace: { obrazek, popis, mezi: [{ po, src, popis }] }`: `obrazek` je široká kresba pod nadpisem
 a zároveň „vlepená fotka“ v kronice po dopsání kapitoly, `mezi` jsou menší kresby vložené za odstavec
 s indexem `po` (0 = za první odstavec). Nová kresba se musí přidat i do seznamu v `sw.js`, aby fungovala offline.

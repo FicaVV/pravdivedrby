@@ -53,7 +53,7 @@ window.PD_OBCE.push({
     {
       id: 2,
       nazev: "Hasičská zbrojnice",
-      ilustrace: { obrazek: "img/racice/2-zbrojnice.svg", popis: "Hasičská zbrojnice napojená hadicí na pivní sud", mezi: [{ po: 0, src: "img/racice/2-pullitr.svg", popis: "Půllitr napojený na hasičskou hadici" }] },
+      ilustrace: { obrazek: "img/racice/2-zbrojnice.svg", popis: "Hasičská zbrojnice napojená hadicí na pivní sud", mezi: [{ po: 0, src: "img/racice/2-pivovod.svg", popis: "Pivovod: hadice ze sudu v hostinci přes necky s ledem až k hasičovi s půllitrem" }] },
       adresa: "Račice 296",
       pozice: [49.277029, 16.871080], // RÚIAN, čp. 296 (sídlo SDH Račice)
       priblizne: false,
