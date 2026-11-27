@@ -121,7 +121,7 @@
       rose.addTo(map);
       var kartus = L.control({ position: "topleft" });
       kartus.onAdd = function () {
-        return el("div", { class: "pd-kartus", "aria-hidden": "true" }, [el("small", { text: "Neoficiální mapa" }), el("strong", { text: OBEC.nazev })]);
+        return el("div", { class: "pd-kartus", "aria-hidden": "true" }, [el("small", { text: "Mapa výpravy" }), el("strong", { text: OBEC.nazev })]);
       };
       kartus.addTo(map);
     }
@@ -546,7 +546,7 @@
     o = o || {};
     var bg = o.bg, gap = (o.gap || 0) * 1000;
     if (playing) { var same = btn === ttsBtn; stopSpeak(); if (same) return; }
-    ttsBtn = btn; gen++;
+    ttsBtn = btn; gen++; onEndCb = o.onEnd || null;
     var rec = state.voice === REC || state.voice === "" ? recordingsFor(segs) : null;
     if (!rec && !hasTTS) return;
     var my = gen, delay = bg ? (bg.uvod || 0) * 1000 : 0;
@@ -620,7 +620,12 @@
     };
     next();
   }
-  function done(my) { if (my !== gen) return; playing = false; if (player) { player.pause(); player = null; } stopBg(); setTtsBtn(false); }
+  // dočteno až do konce (ne zastaveno): zavolat o.onEnd (kříž: zapsat kapitolu po modlitbě)
+  var onEndCb = null;
+  function done(my) {
+    if (my !== gen) return; playing = false; if (player) { player.pause(); player = null; } stopBg(); setTtsBtn(false);
+    var cb = onEndCb; onEndCb = null; if (cb) cb();
+  }
   function stopSpeak() {
     gen++;
     if (hasTTS) window.speechSynthesis.cancel();
@@ -662,7 +667,7 @@
     body.appendChild(el("div", {}, [num, el("h2", { class: "stop-title", text: b.nazev })]));
     var ilu = b.ilustrace || {};
     if (ilu.obrazek) {
-      var kozaInfo = b.koza ? K.kozaRadek(b) : null;
+      var kozaInfo = b.koza && OBEC.hledatKozu ? K.kozaRadek(b) : null;
       body.appendChild(K.kresba(b, true, "ilu ilu-hlavni", function () { if (kozaInfo) kozaInfo.paint(); }));
       if (kozaInfo) body.appendChild(kozaInfo.el);
     }
@@ -680,15 +685,28 @@
     var hraJeUkol = !!hra && !b.otazka && !b.konec, pred = !!hra && !!b.hra.pred;
     var poHre = el("div", { class: "po-hre" }), dalsi = el("div");
     if (hra && !rec && (pred || !hraJeUkol)) poHre.hidden = true;
-    var odemceno = false;
+    var odemceno = false, preskoceno = false;
+    // Kříž (hra.pred s modlitbou): po zapálení svíčky se odemkne modlitba, kapitola se zapíše
+    // (a bouchne razítko) až po jejím dočtení nebo po klepnutí na „Amen“.
+    var cekaNaModlitbu = hraJeUkol && pred && !!b.modlitba && !rec;
+    var zapsano = false;
+    function zapis() {
+      if (zapsano) return; zapsano = true;
+      markDone(b, preskoceno ? { ok: true, skip: true } : { ok: true });
+      if (!dalsi.firstChild) dalsi.appendChild(nextButton(b, i, true));
+      if (amen) amen.hidden = true;
+      setTimeout(function () { dalsi.scrollIntoView({ behavior: "smooth", block: "center" }); }, 900);
+    }
+    var amen = null;
     function odemkni(skip) {
-      if (odemceno) return; odemceno = true;
-      if (hraJeUkol) { markDone(b, skip ? { ok: true, skip: true } : { ok: true }); dalsi.appendChild(nextButton(b, i, true)); }
+      if (odemceno) return; odemceno = true; preskoceno = !!skip;
+      if (hraJeUkol && !cekaNaModlitbu) { markDone(b, skip ? { ok: true, skip: true } : { ok: true }); dalsi.appendChild(nextButton(b, i, true)); }
       // kresba „před“ (školka s kaší) se po splnění vymění za dnešní podobu
       var im = ilu.predtim && body.querySelector(".ilu-hlavni .ilu-img");
       if (im) setTimeout(function () { im.src = (window.PD_IMG && window.PD_IMG[ilu.obrazek]) || ilu.obrazek; }, 2400);
       poHre.hidden = false;
-      setTimeout(function () { (hraJeUkol ? dalsi : poHre).scrollIntoView({ behavior: "smooth", block: hraJeUkol ? "center" : "start" }); }, 900);
+      var kam = hraJeUkol && !cekaNaModlitbu ? dalsi : poHre;
+      setTimeout(function () { kam.scrollIntoView({ behavior: "smooth", block: kam === dalsi ? "center" : "start" }); }, 900);
     }
     // Hra jde zahrát znovu (i po splnění); opakování už nic nezapisuje, jen se hraje pro radost.
     function hraBlok() {
@@ -699,9 +717,10 @@
       wrap.insertBefore(cur, znovu);
       znovu.hidden = !rec;
       // Přeskočit úkol: v testovacím režimu hned, jinak až po minutě a půl hraní (kdyby to venku nešlo).
+      // Tlačítko je NAD hrou: plocha hry v telefonu zachytává tah prstem, takže pod ni se nedalo doscrollovat.
       var skip = el("button", { class: "btn btn-small btn-ghost hra-preskocit", type: "button", text: state.test ? "Přeskočit úkol" : "Nejde to? Přeskočit úkol", hidden: "" });
       skip.addEventListener("click", function () { skip.hidden = true; znovu.hidden = false; odemkni(true); });
-      wrap.appendChild(skip);
+      wrap.insertBefore(skip, cur);
       if (!rec) {
         if (state.test) skip.hidden = false;
         else setTimeout(function () { if (!odemceno && wrap.isConnected) skip.hidden = false; }, 90000);
@@ -718,8 +737,13 @@
     if (b.modlitba) {
       var pr = el("div", { class: "prayer" });
       pr.innerHTML = b.modlitba.concat(b.modlitbaKonec || []).map(function (sl) { return "<p>" + [].concat(sl).map(esc).join("<br>") + "</p>"; }).join("");
-      media.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return prayerSegs(b); }, true, { bg: b.podklad, gap: 1.4 })]));
+      media.appendChild(el("div", { class: "tts-row" }, [ttsButton("▶ Přehrát nahrávku modlitby", function () { return prayerSegs(b); }, true,
+        { bg: b.podklad, gap: 1.4, onEnd: function () { if (cekaNaModlitbu && odemceno) zapis(); } })]));
       media.appendChild(pr);
+      if (cekaNaModlitbu) {
+        amen = el("button", { class: "btn btn-primary btn-block", type: "button", text: "Amen. Zapsat do kroniky", onclick: function () { stopSpeak(); zapis(); } });
+        media.appendChild(el("div", { class: "tts-row" }, [amen]));
+      }
     }
     if (b.hymna) media.appendChild(hymnBox(b.hymna, !b.otazka || !!rec));
     if (hra && !pred) body.appendChild(hraBlok());
@@ -817,7 +841,7 @@
       return '<g class="dj-stream ' + cls + '"><path stroke="' + ink + '" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".5"/>' +
         '<path stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></g>';
     }
-    return '<svg class="dj-svg" viewBox="56 36 144 108" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Strakatá koza s nateklým vemenem a vědro pod ní">' +
+    return '<svg class="dj-svg" viewBox="14 14 172 129" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Strakatá koza s nateklým vemenem a vědro pod ní">' +
       '<defs>' +
       '<filter id="' + P + 'w1"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="1.4"/></filter>' +
       '<filter id="' + P + 'w2"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="1.8"/></filter>' +
@@ -859,7 +883,7 @@
       stream("dj-l") + stream("dj-r") +
       '<g class="dj-splash" fill="#fff" stroke="' + ink + '" stroke-width=".5"><circle r="1.1"/><circle r=".9"/><circle r=".8"/></g>' +
       // zamečení u hlavy
-      '<g transform="translate(58 20)"><g class="dj-mee"><path d="M6 30 C6 20 46 20 46 30 C46 39 34 39 30 39 L32 47 L23 39 C14 39 6 38 6 30Z" fill="#fff" stroke="' + ink + '" stroke-width="1.2" filter="url(#' + P + 'w1)"/>' +
+      '<g transform="translate(66 0)"><g class="dj-mee"><path d="M6 30 C6 20 46 20 46 30 C46 39 34 39 30 39 L32 47 L23 39 C14 39 6 38 6 30Z" fill="#fff" stroke="' + ink + '" stroke-width="1.2" filter="url(#' + P + 'w1)"/>' +
         '<text x="26" y="33.5" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="10" fill="' + ink + '">Méé!</text></g></g>' +
       '</svg>';
   }
@@ -1092,7 +1116,7 @@
   var ICO_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   function openChronicle() {
     var sheet = $("#chronicle"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;
-    sheet.appendChild(sheetHead("Neoficiální kronika", function () { closeSheet("chronicle"); }));
+    sheet.appendChild(sheetHead("Kronika obce", function () { closeSheet("chronicle"); }));
     var body = el("div", { class: "sheet-body chronicle" });
     var nxt = current();
     body.appendChild(el("h2", { class: "obec-title", text: OBEC.nazev }));
@@ -1101,7 +1125,7 @@
     body.appendChild(pl);
     body.appendChild(el("p", { class: "ch-meta", text: "Dopsáno " + doneCount() + " z " + OBEC.body.length + " kapitol" }));
     body.appendChild(K.razitkaRada());
-    body.appendChild(K.kozyRadek());
+    var kozy = K.kozyRadek(); if (kozy) body.appendChild(kozy);
     var all = [], ttsSlot = el("div", { class: "tts-row" });
     body.appendChild(ttsSlot);
     var locked = el("div", { class: "ch-locked" });

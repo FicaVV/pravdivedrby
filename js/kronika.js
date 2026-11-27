@@ -10,6 +10,8 @@
   function init(ctx) {
     var OBEC = ctx.OBEC, state = ctx.state, save = ctx.save, el = ctx.el, toast = ctx.toast, vibrate = ctx.vibrate;
     var KOZA = "img/racice/koza-schovana.svg";
+    // Hledání schované kozy v kresbách stanovišť je vypnuté (rušilo nad příběhem); kód zůstává, kdyby se vracelo.
+    var HLEDAT_KOZU = !!OBEC.hledatKozu;
     if (!state.kozy) state.kozy = {};
     var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -18,7 +20,7 @@
     function boxStyle(r) { // r = [x0, y0, x1, y1] v jednotkách kresby 200 × 150
       return "left:" + pct(r[0] / 2) + ";top:" + pct(r[1] / 1.5) + ";width:" + pct((r[2] - r[0]) / 2) + ";height:" + pct((r[3] - r[1]) / 1.5);
     }
-    function kozBody() { return OBEC.body.filter(function (b) { return b.koza; }); }
+    function kozBody() { return HLEDAT_KOZU ? OBEC.body.filter(function (b) { return b.koza; }) : []; }
     function kozNalezeno() { return kozBody().filter(function (b) { return state.kozy[b.id]; }).length; }
 
     // ---------- „Kde je koza?“ ----------
@@ -61,7 +63,7 @@
       var src = hra && ilu.predtim && !state.done[b.id] ? ilu.predtim : ilu.obrazek;
       var stage = el("div", { class: "ilu-stage" }, [el("img", { class: "ilu-img", src: url(src), alt: ilu.popis || "", decoding: "async" })]);
       var fig = el("figure", { class: cls }, [stage]);
-      var k = b.koza;
+      var k = HLEDAT_KOZU && b.koza;
       if (!k) return fig;
       var vrstva = kozaVrstva(k); if (vrstva) stage.appendChild(vrstva);
       var hit = kozaHit(k);
@@ -184,6 +186,7 @@
       return wrap;
     }
     function kozyRadek() {
+      if (!HLEDAT_KOZU) return null;
       var n = kozNalezeno(), all = kozBody().length;
       return el("p", { class: "koza-souhrn" }, [
         el("span", { class: "koza-hlava", "aria-hidden": "true" }, [el("img", { src: url(KOZA), alt: "" })]),
@@ -298,7 +301,7 @@
           g.strokeStyle = "rgba(47,44,40,.35)"; g.lineWidth = 2; g.strokeRect(fx, fy, fw, fh);
           // popisek polaroidu
           g.fillStyle = "#2f2c28"; g.textAlign = "center"; g.textBaseline = "alphabetic";
-          g.font = "800 40px " + FD; fitText(g, tym || "Neoficiální kronikáři", 0, 278, 520);
+          g.font = "800 40px " + FD; fitText(g, tym || "Hraví kronikáři", 0, 278, 520);
           g.font = "400 28px " + FB; g.fillStyle = "#554c40"; g.fillText(CZ_DATE(new Date(state.konecAt || Date.now())), 0, 324);
           g.restore();
           // lepicí pásky (žlutá průsvitná)
@@ -323,7 +326,7 @@
           });
           var ty = y0 + 3 * (ch + gy) + 52;
           g.textAlign = "center"; g.fillStyle = "#2f2c28"; g.font = "800 44px " + FD;
-          fitText(g, tym || "Neoficiální kronikáři", x0 + cw + gx / 2, ty, 2 * cw + gx);
+          fitText(g, tym || "Hraví kronikáři", x0 + cw + gx / 2, ty, 2 * cw + gx);
           g.font = "400 28px " + FB; g.fillStyle = "#554c40"; g.textAlign = "center";
           g.fillText("Kronika dopsána " + CZ_DATE(new Date(state.konecAt || Date.now())), x0 + cw + gx / 2, ty + 42);
         }
@@ -340,7 +343,7 @@
         g.fillStyle = "#f5c400"; g.fillRect(X - 6, 205, nw + 12, 40);
         g.fillStyle = "#16130f"; fitText(g, nazev, X, 240, 640, "left");
         g.font = "400 30px " + FB; g.fillStyle = "#554c40";
-        fitText(g, P.podtitul || "Neoficiální kronika obce", X, 300, 640, "left");
+        fitText(g, P.podtitul || "Kronika obce", X, 300, 640, "left");
 
         // razítka 4 × 2
         var sz = 140, gap = 22, top = 350;
@@ -358,7 +361,7 @@
         g.fillText("Kapitol dopsáno: " + hotove.length + " z " + OBEC.body.length, X, y);
         var nk = kozNalezeno(), ak = kozBody().length;
         g.font = "400 30px " + FB; g.fillStyle = "#2f2c28";
-        g.fillText(nk ? "Kozu jsme našli " + nk + "× z " + ak + "." : "Kozu jsme hledali, ale ona nás našla první.", X, y + 48);
+        if (ak) g.fillText(nk ? "Kozu jsme našli " + nk + "× z " + ak + "." : "Kozu jsme hledali, ale ona nás našla první.", X, y + 48);
         if (podpis) {
           g.font = "400 24px " + FB; g.fillStyle = "#554c40"; g.fillText("Podpis kronikáře:", X, y + 100);
           var ph = 90, pw = Math.min(360, podpis.width * ph / podpis.height);
@@ -473,7 +476,7 @@
       share.addEventListener("click", function () {
         if (!blob) return;
         var file = new File([blob], "pohlednice-" + OBEC.id + ".jpg", { type: "image/jpeg" });
-        var data = { files: [file], title: "Hravý kronikář", text: "Dopsali jsme neoficiální kroniku obce " + OBEC.nazev + "! https://" + ((OBEC.pohlednice || {}).adresa || location.host) };
+        var data = { files: [file], title: "Hravý kronikář", text: "Dopsali jsme kroniku obce " + OBEC.nazev + "! https://" + ((OBEC.pohlednice || {}).adresa || location.host) };
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           navigator.share(data).catch(function (e) { if (e && e.name !== "AbortError") toast("Sdílení se nepovedlo, zkus Uložit obrázek"); });
         } else { dl.click(); toast("Tenhle prohlížeč sdílení neumí, pohlednice se uloží"); }

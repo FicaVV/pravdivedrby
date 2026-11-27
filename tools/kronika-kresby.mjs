@@ -60,7 +60,7 @@ for (const [n, ico] of Object.entries(ICONS)) {
 <circle cx="60" cy="60" r="56" fill="none" stroke="${INK}" stroke-width="3.6"/>
 <circle cx="60" cy="60" r="49" fill="none" stroke="${INK}" stroke-width="1.6"/>
 <text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="12" letter-spacing="1.5" fill="${INK}"><textPath href="#${id}-a" startOffset="50%" text-anchor="middle">ZAPSÁNO · ${n}</textPath></text>
-<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="${INK}"><textPath href="#${id}-b" startOffset="50%" text-anchor="middle">NEOFICIÁLNĚ</textPath></text>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="${INK}"><textPath href="#${id}-b" startOffset="50%" text-anchor="middle">DO KRONIKY</textPath></text>
 <g transform="translate(27 33) scale(.55)" fill="none" stroke="${INK}" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">${icon}</g>
 </g>
 </g>

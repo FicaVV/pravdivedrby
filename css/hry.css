@@ -78,7 +78,7 @@
 /* sochy: skládání boty */
 .gm-pc { cursor: grab; }
 .gm-pc.on { cursor: default; }
-.gm-pc.lift { cursor: grabbing; filter: drop-shadow(0 3px 2px rgba(22, 19, 15, .35)); }
+.gm-pc.lift { cursor: grabbing; opacity: .92; }
 .gm-pc.back { animation: gm-back .3s ease-out; }
 .gm-cut { transition: opacity .6s; }
 .gm-pc.on .gm-cut { opacity: .5; }
@@ -86,8 +86,12 @@
 @keyframes gm-back { 30% { opacity: .4; } }
 
 /* sokolovna: tachometr a medaile */
-.kr-tacho { touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; margin-top: -4px; }
-.kr-tacho svg { display: block; width: 100%; max-width: 300px; margin: 0 auto; }
+/* tachometr přímo v obrázku vpravo dole; klepe se kamkoli do obrázku */
+.kr-tacho { position: absolute; right: 2%; bottom: 2%; width: 42%; pointer-events: none; user-select: none; -webkit-user-select: none;
+  background: rgba(247, 244, 236, .92); border: 1.5px solid var(--ink, #16130f); border-radius: 12px; padding: 4px 4px 0; }
+.kr-tacho svg { display: block; width: 100%; }
+.hr-kruhy .hr-stage { transition: box-shadow .12s; }
+.hr-kruhy .hr-stage.kr-in { box-shadow: inset 0 0 0 5px #2f9e44; }
 .kr-tacho.in .kr-zone { stroke: #2f9e44; }
 .kr-tacho.miss { animation: kr-miss .3s ease-out; }
 .kr-name { opacity: 0; }
@@ -163,6 +167,18 @@
 .vy-ham { transform-box: fill-box; transform-origin: 100% 100%; transform: rotate(40deg); }
 .vy-ham.hit { animation: vy-ham .26s ease-in; }
 .vy-ham-pos.gone { display: none; }
+/* síla úderu u hraničních kamenů: jen při přiblížení na kámen */
+.vy-power { opacity: 0; transition: opacity .25s; pointer-events: none; }
+.vy-zoom .vy-power { opacity: 1; }
+.vy-pw-ok .vy-pw-top { fill: #2f9e44; }
+.vy-title { transition: opacity .3s; }
+.vy-zoom .vy-title { opacity: 0; }
+.vy-crumbs { opacity: 0; }
+.vy-st.drt .vy-crumbs { animation: vy-drt .5s ease-out; }
+.vy-st.set .vy-grass, .vy-st.todo .vy-grass, .vy-st.todo .vy-dirt { opacity: .5; }
+.vy-line-go { animation: vy-dash 1s linear infinite; }
+@keyframes vy-dash { to { stroke-dashoffset: -12; } }
+@keyframes vy-drt { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-3px); } }
 .vy-bum { opacity: 0; pointer-events: none; }
 .vy-bum.on { animation: vy-float .7s ease-out; }
 @keyframes vy-ring { 50% { transform: scale(1.15); } }

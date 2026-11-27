@@ -101,7 +101,7 @@ Počítadlo je odhad z naší strany; skutečnou spotřebu ukazuje Google Cloud 
 ## Minihra u hospody (dojení kozy)
 
 Bod má jako úkol `hra: { typ: "dojeni", klepnuti, nadpis, zadani, hotovo, meceni: [mp3…] }`.
-Koza je `img/racice/1-dojeni-koza.svg`, vemeno, vědro a mléko kreslí a animuje `js/app.js`.
+Koza je `img/racice/1-dojeni-koza.svg` (celá, hlavou k hráči; hlavu zepředu dokreslil `python3 tools/koza-hlava.py`), vemeno, vědro a mléko kreslí a animuje `js/app.js`.
 Při každém klepnutí koza zamečí: náhodně jedna z nahrávek v `meceni`, pokaždé trochu jinou výškou.
 Nahrávky kozy jsou CC0 od uživatele Kinoton z Freesound, přehled licencí je v `audio/racice/LICENSE.md`.
 
@@ -113,14 +113,14 @@ Ostatní minihry jsou v `js/hry.js` (styly v `css/hry.css`), bod je zapne přes 
 |---|---|---|---|
 | Hasičárna | `haseni` | klepáním stříká pivo z hadice na 6 plamenů | `audio/racice/hadice.mp3` (úryvek na každé stříknutí) |
 | Školka | `kase` | prstem stírá kaši z bílé školky a natírá ji na žluto, nápis NA KAŠI ZÁLEŽÍ se mění na NAŠÍ MLÁDEŽI | `audio/racice/umyvani.mp3` (hraje, dokud se prst hýbe) |
-| Kříž | `svicka` (`pred: true`) | podrží prst na knotu, svíčka se zapálí, pak se odemkne modlitba | `audio/racice/sirka.mp3` (škrtnutí sirky) |
+| Kříž | `svicka` (`pred: true`) | škrtne sirkou a zapálí svíčku, pak se odemkne modlitba; kapitola se zapíše a razítko bouchne až po dočtení modlitby (nebo po „Amen. Zapsat do kroniky“) | `audio/racice/sirka.mp3` (škrtnutí sirky) |
 | Stadion | `amplion` | tahem prstu nahoru hází kameny na 3 ampliony, každý zásah hymnu ztiší a rozladí | `audio/racice/hymna-kdo-je-tady-doma.mp3` (ve smyčce, dokud nejsou ampliony zmlklé) |
-| Sochy | `gumaky` | držením prstu lije sádru do 2 forem z gumáků (pustit u rysky, sádra chvilku dotéká), pak odlitky přetáhne na sochu | syntetizovaný |
-| Sokolovna | `kruhy` (`sekund`) | klepnutím vlevo/vpravo vyjede soused nebo babička a gymnastu sfoukne zpátky do klidu; na straně, kam se houpe, hlava vykukuje jako nápověda | syntetizovaný |
-| Úřad | `vynos` | 3 kroky: rozveze kočárky do jeslí v Račicích a Pístovicích (oboje se zaplní), obtáhne jednu hranici kolem obou obcí, orazítkuje a podepíše výnos | syntetizovaný |
+| Sochy | `gumaky` | přetahuje kusy rozbitého odlitku na obrys boty; kus stačí pustit zhruba na místo (tolerance `SNAP`) | syntetizovaný |
+| Sokolovna | `kruhy` | v rohu obrázku kmitá ručička tachometru, klepnutí do obrázku ve chvíli, kdy je v zeleném (obrázek se orámuje zeleně), = další prvek sestavy; klepnutí platí i chvilku po výjezdu ze zeleného a po dvou chybách se pole rozšíří | syntetizovaný |
+| Úřad | `vynos` | kamera najede na každý ze 7 hraničních kamenů, klepnutím ve chvíli, kdy je síla úderu v zeleném, kámen zatluče (ve žlutém zajede méně); hranice se dotahuje mezi kameny, pak orazítkuje a podepíše výnos | syntetizovaný |
 
 Minihra je úkolem stanoviště: po dohrání se kapitola zapíše do kroniky a bouchne razítko. Otázky s možnostmi
-hra už nemá (kód je pořád umí přes `otazka`, `moznosti`, `answer`, `napoveda`). Pod dohranou hrou je
+hra už nemá (kód je pořád umí přes `otazka`, `moznosti`, `answer`, `napoveda`). V testovacím režimu je nad hrou tlačítko **Přeskočit úkol** (testovací režim se ukládá v každém zařízení zvlášť, v telefonu ho zapněte v Nastavení). Pod dohranou hrou je
 **Zahrát si znovu**: hra se rozehraje od začátku, ale nic nového se nezapisuje.
 
 Zvuk `hra.zvuk` je MP3, které se načte do Web Audia (jde pak přehrávat úryvky a přes sebe). Musí být v `SHELL`
@@ -250,7 +250,7 @@ Logika je v `js/kronika.js`, nastavení stanovišť v `data/racice-kronika.js` (
 - **Razítka.** Po dokončení stanoviště se přes obrazovku „bouchne“ razítko (animace, zvuk složený ve WebAudio, vibrace)
   s názvem místa. Zůstane 6,5 s (klepnutím zmizí dřív) a objeví se v kronice v řadě razítek a u kapitoly. Kresby `img/racice/razitko-1…8.svg` (tužka + žlutá) vyrábí
   `node tools/kronika-kresby.mjs`; ikony jsou převzaté z návrhů razítek.
-- **Kde je koza?** V hlavní kresbě každého stanoviště je schovaná strakatá koza (`img/racice/koza-schovana.svg`,
+- **Kde je koza?** (teď vypnuté, zapíná se `hledatKozu: true` u obce v `data/racice.js`) V hlavní kresbě každého stanoviště je schovaná strakatá koza (`img/racice/koza-schovana.svg`,
   vyrábí ji stejný skript z kozy na dojení). Klepnutím ji hráč najde, koza zamečí a v bublině něco utrousí.
   Pozice je v `koza: { x, y, s, otoc, orez, hlaska }` v jednotkách kresby 200 × 150; `orez` je výřez, mimo který
   je koza „za“ něčím (sudem, rámem okna, rohem budovy). Když už koza v kresbě je, stačí `jenKlik: [x0, y0, x1, y1]`.
