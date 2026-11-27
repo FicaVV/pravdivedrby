@@ -12,7 +12,7 @@
 <circle cx="60" cy="60" r="56" fill="none" stroke="#2f2c28" stroke-width="3.6"/>
 <circle cx="60" cy="60" r="49" fill="none" stroke="#2f2c28" stroke-width="1.6"/>
 <text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="12" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz1-a" startOffset="50%" text-anchor="middle">ZAPSÁNO · 1</textPath></text>
-<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz1-b" startOffset="50%" text-anchor="middle">NEOFICIÁLNĚ</textPath></text>
+<text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz1-b" startOffset="50%" text-anchor="middle">DO KRONIKY</textPath></text>
 <g transform="translate(27 33) scale(.55)" fill="none" stroke="#2f2c28" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 80 L106 80"/><path d="M22 80 L22 42 L48 22 L74 42 L74 80"/><path d="M18 45 L48 20 L78 45"/><rect x="40" y="56" width="16" height="24" rx="1" fill="#f5c400"/><path d="M53 68 L54 68"/><rect x="27" y="48" width="10" height="10"/><path d="M32 48 V58 M27 53 H37"/><rect x="59" y="48" width="10" height="10"/><path d="M64 48 V58 M59 53 H69"/><path d="M74 50 L88 50 M80 50 V54 M86 50 V54"/><rect x="76" y="54" width="14" height="14" rx="2" fill="#f5c400"/><path d="M80 58 V65 H85 V58 M85 60 H87 V63 H85"/><path d="M92 80 V64 M100 80 V64 M106 80 V64 M90 69 H108 M90 75 H108"/><path d="M96 80 C95 75 93 73 91 72 M96 80 C97 76 99 74 101 73 M96 76 C95 72 96 70 97 68"/></g>
 </g>
 </g>

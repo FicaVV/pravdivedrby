@@ -387,11 +387,11 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .dj-splash.go { animation: dj-splash .5s ease-out .12s; }
 /* klepací plocha přes vemeno (aspoň 44 px i na úzkém displeji) */
 .dj-tap {
-  position: absolute; top: 50%; width: 15%; height: 44%; min-width: 56px; min-height: 64px;
+  position: absolute; top: 60%; width: 12.6%; height: 36%; min-width: 52px; min-height: 64px;
   border: 0; border-radius: 50%; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
-.dj-tl { left: 40.6%; border-radius: 50% 0 0 50%; }
-.dj-tr { left: 55.6%; border-radius: 0 50% 50% 0; }
+.dj-tl { left: 58.3%; border-radius: 50% 0 0 50%; }
+.dj-tr { left: 70.9%; border-radius: 0 50% 50% 0; }
 .dj-hl { opacity: 0; transition: opacity .15s; }
 .dj-hl.on { opacity: 1; animation: dj-hl .7s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
 .dj-bucket.rock { animation: dj-rock .55s ease-in-out; }

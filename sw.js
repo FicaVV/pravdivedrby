@@ -1,5 +1,5 @@
 /* Service worker: aplikace funguje offline, prohlédnuté mapové dlaždice se ukládají. */
-const VERSION = "pd-0.6.6";
+const VERSION = "pd-0.6.7";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/config.js", "js/odesilani.js", "js/app.js", "data/racice.js", "audio/audio.js",
   "js/listiny.js", "js/kronika.js", "data/racice-kronika.js",

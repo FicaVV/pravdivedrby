@@ -71,7 +71,7 @@
   });
   OBEC.pohlednice = {
     pozdrav: "Pozdrav z Račic-Pístovic",
-    podtitul: "Neoficiální kronika obce, dopsaná vlastní rukou",
+    podtitul: "Kronika obce, dopsaná vlastní rukou",
     adresa: "ficavv.github.io/pravdivedrby"
   };
 })();

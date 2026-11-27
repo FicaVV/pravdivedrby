@@ -194,7 +194,7 @@ window.PD_OBCE.push({
       hra: {
         typ: "kruhy",
         nadpis: "Zacvič sestavu na kruzích",
-        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Pomoz mu zacvičit celou sestavu. Pod obrázkem kmitá ručička tachometru: klepni přesně ve chvíli, kdy je v zeleném poli, a Hudec předvede další prvek. Zelené pole se pokaždé posune a zúží.",
+        zadani: "Alois Hudec vyhrál olympiádu na kruzích. Pomoz mu zacvičit celou sestavu. V rohu obrázku kmitá ručička: klepni kamkoli do obrázku ve chvíli, kdy je v zeleném poli (obrázek se zeleně orámuje), a Hudec předvede další prvek. Zelené pole se pokaždé posune.",
         hotovo: "Celá sestava a čistý seskok. Stejně jako v Berlíně v roce 1936: zlatá medaile pro Aloise Hudce. A louky za vsí se plní stany."
       }
     },
@@ -214,7 +214,7 @@ window.PD_OBCE.push({
       hra: {
         typ: "vynos",
         nadpis: "Projdi úřední kolečko",
-        zadani: "Fronta maminek před jeslemi nemá konce. Dítě se veze na jeřábu: klepni, a pustíš ho na hromadu na střeše jeslí. Čím přesněji ho položíš na to horní, tím rychleji hromada roste (přesná trefa jsou dvojčata). Až jesle prasknou, zatluč hraniční kameny nové obce a výnos orazítkuj a podepiš.",
+        zadani: "Jedny jesle na tolik dětí nestačí, obce se musí spojit. Zatluč hraniční kameny nové společné obce: vedle kamene kmitá síla úderu, klepni do obrázku, když je v zeleném. Pak výnos o sloučení orazítkuj a podepiš.",
         hotovo: "Úředně potvrzeno a podepsáno. Od roku 1960 jsou Račice a Pístovice jedna obec."
       },
       konec: true
