@@ -70,7 +70,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
   display: flex; flex-direction: column; gap: 22px;
 }
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand .logo { width: 118px; height: 104px; flex: none; }
+.brand .logo { width: 108px; height: 128px; flex: none; }
 .brand-text { min-width: 0; }
 .brand h1 { font-size: clamp(36px, 11.2vw, 52px); font-weight: 900; letter-spacing: -.01em; line-height: 1.04; }
 .brand h1 span { background: linear-gradient(transparent 58%, var(--accent) 58%, var(--accent) 92%, transparent 92%); }
