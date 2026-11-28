@@ -43,7 +43,7 @@
     '<path d="M51 8 C50 4 47 2 45 3 M55 8 C56 4 59 3 60 5" fill="none"/>' +
     '<path d="M57 19 C57 23 55 25 53 25" fill="none"/>' +
     '<circle cx="55" cy="13" r="1.1" fill="#2f2c28"/>' +
-    '<path d="M28 31 C28 34 32 34 32 31" fill="#f5c400"/></g></svg>';
+    '<path d="M28 31 C28 34 32 34 32 31" fill="#eeb33b"/></g></svg>';
 
   function vytvor(map, M, OBEC, opts) {
     opts = opts || {};
@@ -116,7 +116,7 @@
     var trasa = L.layerGroup();
     var nohy = (M.trasa || []).map(function (g) {
       var ll = dec(g);
-      var zluta = L.polyline(ll, { renderer: rTrasa, interactive: false, color: "#f5c400", weight: 10, opacity: .85, lineCap: "round", lineJoin: "round" });
+      var zluta = L.polyline(ll, { renderer: rTrasa, interactive: false, color: "#eeb33b", weight: 10, opacity: .85, lineCap: "round", lineJoin: "round" });
       var cara = L.polyline(ll, { renderer: rTrasa, interactive: false, color: "#16130f", weight: 3, lineCap: "round", lineJoin: "round" });
       trasa.addLayer(zluta); trasa.addLayer(cara);
       return { z: zluta, c: cara };

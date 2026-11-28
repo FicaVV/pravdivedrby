@@ -9,11 +9,13 @@
   --muted: #554c40;
   --line: #ddd6c8;        /* zamčené / neaktivní */
   --line-soft: #e9e3d6;
-  --accent: #f5c400;      /* hotovo, zvýraznění */
-  --accent-deep: #d9ad00;
+  --accent: #eeb33b;      /* hotovo, zvýraznění */
+  --accent-deep: #d39a22;
   --hot: #c2341e;         /* „hoří“, razítka */
   --field: #16130f;       /* splněno = inkoust */
-  --field-soft: #fff3bf;
+  --field-soft: #fbebc8;
+  --done: #5d8a3c;        /* splněno: zelená vesnice a trávy */
+  --done-soft: #e1ecd2;
   --warn: #c2341e;
   --sky: #1f5fbf;         /* hráč */
   --stroke: 2.5px;
@@ -69,9 +71,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex; flex-direction: column; gap: 22px;
 }
-.brand { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .brand .logo { width: 108px; height: 128px; flex: none; }
-.brand-text { min-width: 0; }
+.brand-text { flex: 1; min-width: 0; }
+.brand-sub { flex-basis: 100%; margin: 2px 0 0; font-size: 17px; line-height: 1.4; color: var(--muted); }
 .brand h1 { font-size: clamp(36px, 11.2vw, 52px); font-weight: 900; letter-spacing: -.01em; line-height: 1.04; }
 .brand h1 span { background: linear-gradient(transparent 58%, var(--accent) 58%, var(--accent) 92%, transparent 92%); }
 .brand .brand-lead { margin: 8px 0 0; font-family: var(--font-display); font-weight: 900; font-size: 18px; line-height: 1.15; color: var(--ink); }
@@ -231,7 +234,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .test-lbl { font-size: 13px; font-weight: 700; color: #c2341e; text-transform: uppercase; letter-spacing: .06em; }
 .test-btns { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; width: 100%; }
 .test-btn { min-width: 0; min-height: 40px; padding: 0; border-radius: 12px; border: 2px dashed #c2341e; background: var(--paper, #fffdf7); color: var(--ink); font: 700 16px/1 inherit; font-family: inherit; }
-.test-btn.done { background: var(--accent); border-style: solid; border-color: var(--ink); }
+.test-btn.done { background: var(--done-soft); border-style: solid; border-color: var(--ink); }
 .test-btn.cur { box-shadow: 0 0 0 3px var(--sky); }
 #play.map-full .test-row { display: none; }
 
@@ -240,8 +243,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
   width: 34px; height: 34px; border-radius: 50%; border: var(--stroke) solid var(--ink); background: var(--surface);
   display: grid; place-items: center; font-weight: 900; font-family: var(--font-display); font-size: 15px; color: var(--ink);
 }
-.pin.done { background: var(--ink); color: var(--accent); }
-.pin.current { background: var(--accent); width: 42px; height: 42px; font-size: 19px; border-width: 3px; box-shadow: 0 0 0 8px rgba(245,196,0,.45); }
+.pin.done { background: var(--done); color: #fff; }
+.pin.current { background: var(--accent); width: 42px; height: 42px; font-size: 19px; border-width: 3px; box-shadow: 0 0 0 8px rgba(238,179,59,.45); }
 .pin.draggable { outline: 3px dashed var(--sky); outline-offset: 2px; }
 .me { width: 20px; height: 20px; border-radius: 50%; background: var(--sky); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--sky); }
 .me.sim { background: #fff; border-color: var(--sky); }
@@ -334,12 +337,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .opt.verse { font-family: var(--font-body); font-weight: 700; font-size: 17px; line-height: 1.4; padding: 14px; }
 .opt.wrong { background: #f3d3cc; border-color: var(--hot); text-decoration: line-through; text-decoration-thickness: 2px; }
 .opt.wrong .letter { border-color: var(--hot); color: var(--hot); }
-.opt.right { background: var(--accent); border-color: var(--accent); }
-.opt.right .letter { background: var(--ink); border-color: var(--ink); color: var(--accent); }
+.opt.right { background: var(--done-soft); border-color: var(--done); }
+.opt.right .letter { background: var(--done); border-color: var(--done); color: #fff; }
 .opt:disabled { cursor: default; }
 .opt:disabled:not(.right):not(.wrong) { opacity: .55; }
 .feedback { border-radius: 14px; padding: 12px 14px; font-size: 17px; color: var(--ink); }
-.feedback.ok { background: var(--accent); }
+.feedback.ok { background: var(--done-soft); }
 .feedback.no { background: #f3d3cc; }
 .feedback.info { background: var(--field-soft); }
 .hint { background: var(--field-soft); color: var(--ink); border-radius: 14px; padding: 12px 14px; }
@@ -412,14 +415,14 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 }
 
 /* ---------- kronika ---------- */
-/* hotové kapitoly žlutě, další na řadě bíle s obrysem, zamčené šedě */
+/* hotové kapitoly zeleně, další na řadě bíle s obrysem, zamčené šedě */
 .chronicle .obec-title { font-size: clamp(32px, 9vw, 40px); line-height: 1; }
 .chronicle .ch-meta { margin: -8px 0 0; font-weight: 700; font-size: 15px; }
 .ch-card { border: var(--stroke) solid var(--ink); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
 .ch-card h3 { font-size: 20px; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
 .ch-card h3 svg { flex: none; width: 26px; height: 26px; }
 .ch-card p { margin: 0; font-size: 17px; line-height: 1.55; }
-.ch-card.done { background: var(--accent); }
+.ch-card.done { background: var(--done-soft); }
 .ch-card.next { background: var(--surface); flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
 .ch-card.next small { font-size: 13px; font-weight: 700; display: block; }
 .ch-locked { background: var(--line-soft); border-radius: var(--r); padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; color: var(--muted); }
@@ -427,7 +430,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.
 .ch-locked svg { width: 18px; height: 18px; flex: none; }
 .progress-line { display: flex; gap: 4px; }
 .progress-line i { flex: 1; height: 12px; border-radius: 6px; background: var(--line); }
-.progress-line i.on { background: var(--accent); box-shadow: inset 0 0 0 2px var(--ink); }
+.progress-line i.on { background: var(--done); box-shadow: inset 0 0 0 2px var(--ink); }
 .progress-line i.next { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
 
 /* ---------- finále ---------- */
@@ -494,7 +497,7 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
 .koza-hit:focus-visible { outline: 3px solid var(--sky); }
 .koza-krouzek { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .koza-krouzek ellipse { fill: none; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .7s ease; }
-.koza-krouzek ellipse:first-child { stroke: #f5c400; stroke-width: 3.2; opacity: .9; }
+.koza-krouzek ellipse:first-child { stroke: #eeb33b; stroke-width: 3.2; opacity: .9; }
 .koza-krouzek ellipse:last-child { stroke: var(--ink); stroke-width: 1; transition-delay: .15s; }
 .nalezena .koza-krouzek ellipse { stroke-dashoffset: 0; }
 .hned .koza-krouzek ellipse { transition: none; }
@@ -655,7 +658,7 @@ pre.coords { background: var(--surface); border: 1px solid var(--line); border-r
 .pd-stitek figcaption { font-family: Caveat, cursive; font-weight: 700; font-size: 16px; line-height: 1.1; color: var(--ink); }
 .pd-stitek.hotovo::before {
   content: ""; position: absolute; left: 50%; top: -7px; width: 34px; height: 12px; transform: translateX(-50%) rotate(-3deg);
-  background: rgba(245,196,0,.85);
+  background: rgba(238,179,59,.85);
 }
 .pd-stitek-nic {
   display: grid; place-items: center; height: 48px; background: #faf6ee;

@@ -142,7 +142,7 @@
 .vy-meter { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 10px; font-weight: 700; font-size: 15px; }
 .vy-meter[hidden] { display: none; }
 .vy-m-bar { height: 16px; border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; background: #fffdf7; }
-.vy-m-bar i { display: block; height: 100%; width: 0; background: #f5c400; transition: width .3s, background .3s; }
+.vy-m-bar i { display: block; height: 100%; width: 0; background: #eeb33b; transition: width .3s, background .3s; }
 .vy-meter.over .vy-m-bar i { background: #c2341e; }
 .vy-m-txt { grid-column: 1 / -1; color: var(--muted); font-size: 14px; }
 .vy-meter.over .vy-m-txt { color: #8c1f10; }

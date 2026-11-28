@@ -340,7 +340,7 @@
         // název obce se zvýrazňovačem
         g.font = "900 84px " + FD;
         var nazev = m ? m[2] : pozdrav, nw = Math.min(g.measureText(nazev).width, 640);
-        g.fillStyle = "#f5c400"; g.fillRect(X - 6, 205, nw + 12, 40);
+        g.fillStyle = "#eeb33b"; g.fillRect(X - 6, 205, nw + 12, 40);
         g.fillStyle = "#16130f"; fitText(g, nazev, X, 240, 640, "left");
         g.font = "400 30px " + FB; g.fillStyle = "#554c40";
         fitText(g, P.podtitul || "Kronika obce", X, 300, 640, "left");
@@ -385,7 +385,7 @@
     }
     function paska(g, x, y, deg) {
       g.save(); g.translate(x, y); g.rotate(deg * Math.PI / 180);
-      g.fillStyle = "rgba(245,196,0,.55)"; g.fillRect(-80, -22, 160, 44);
+      g.fillStyle = "rgba(238,179,59,.55)"; g.fillRect(-80, -22, 160, 44);
       hatch(g, -80, -22, 160, 44, "rgba(240,184,0,.6)", 7, 2);
       g.restore();
     }

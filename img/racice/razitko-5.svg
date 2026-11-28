@@ -13,7 +13,7 @@
 <circle cx="60" cy="60" r="49" fill="none" stroke="#2f2c28" stroke-width="1.6"/>
 <text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="12" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz5-a" startOffset="50%" text-anchor="middle">ZAPSÁNO · 5</textPath></text>
 <text font-family="Fraunces, Georgia, 'Times New Roman', serif" font-weight="900" font-size="9.5" letter-spacing="1.5" fill="#2f2c28"><textPath href="#rz5-b" startOffset="50%" text-anchor="middle">DO KRONIKY</textPath></text>
-<g transform="translate(27 33) scale(.55)" fill="none" stroke="#2f2c28" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 82 H114"/><path d="M14 82 V24 H84 V82" stroke-width="3"/><path d="M14 24 L24 34 H74 L84 24 M24 34 V82 M74 34 V82"/><path d="M34 34 V82 M44 34 V82 M54 34 V82 M64 34 V82 M24 46 H74 M24 58 H74 M24 70 H74" stroke-width="1.2"/><circle cx="98" cy="72" r="9" fill="#f5c400"/><path d="M98 67 L102 70 L100 75 H96 L94 70Z" fill="#2f2c28" stroke-width="1"/><path d="M98 63 V67 M102 70 L106 69 M100 75 L102 79 M96 75 L93 79 M94 70 L90 68" stroke-width="1.4"/></g>
+<g transform="translate(27 33) scale(.55)" fill="none" stroke="#2f2c28" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 82 H114"/><path d="M14 82 V24 H84 V82" stroke-width="3"/><path d="M14 24 L24 34 H74 L84 24 M24 34 V82 M74 34 V82"/><path d="M34 34 V82 M44 34 V82 M54 34 V82 M64 34 V82 M24 46 H74 M24 58 H74 M24 70 H74" stroke-width="1.2"/><circle cx="98" cy="72" r="9" fill="#eeb33b"/><path d="M98 67 L102 70 L100 75 H96 L94 70Z" fill="#2f2c28" stroke-width="1"/><path d="M98 63 V67 M102 70 L106 69 M100 75 L102 79 M96 75 L93 79 M94 70 L90 68" stroke-width="1.4"/></g>
 </g>
 </g>
 </svg>
