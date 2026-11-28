@@ -855,8 +855,8 @@
           '<path d="' + teatL + ' Z" fill="#f6e2da"/>' + line(teatL, 2.4) +
           '<path d="' + teatR + ' Z" fill="#f6e2da"/>' + line(teatR, 2.4) +
           // který struk je na řadě: žlutý kroužek kolem něj
-          '<g class="dj-hl dj-hl-l"><ellipse cx="101.5" cy="97" rx="13" ry="15" fill="#f5c400" opacity=".6"/><ellipse cx="101.5" cy="97" rx="13" ry="15" fill="none" stroke="' + ink + '" stroke-width="2" stroke-dasharray="3 2.5"/></g>' +
-          '<g class="dj-hl dj-hl-r"><ellipse cx="122.5" cy="97" rx="13" ry="15" fill="#f5c400" opacity=".6"/><ellipse cx="122.5" cy="97" rx="13" ry="15" fill="none" stroke="' + ink + '" stroke-width="2" stroke-dasharray="3 2.5"/></g>' +
+          '<g class="dj-hl dj-hl-l"><ellipse cx="101.5" cy="97" rx="13" ry="15" fill="#eeb33b" opacity=".6"/><ellipse cx="101.5" cy="97" rx="13" ry="15" fill="none" stroke="' + ink + '" stroke-width="2" stroke-dasharray="3 2.5"/></g>' +
+          '<g class="dj-hl dj-hl-r"><ellipse cx="122.5" cy="97" rx="13" ry="15" fill="#eeb33b" opacity=".6"/><ellipse cx="122.5" cy="97" rx="13" ry="15" fill="none" stroke="' + ink + '" stroke-width="2" stroke-dasharray="3 2.5"/></g>' +
           '<path d="' + udder + '" fill="#f6e2da"/>' +
           '<path class="dj-sore" d="' + udder + '" fill="url(#' + P + 'red)" opacity=".55"/>' +
           line(udder.replace(/ Z$/, ""), 2.6) + line("M112 70 C111 78 112 84 113 90", 1) +
@@ -1108,7 +1108,7 @@
 
   // ---------- kronika ----------
   var ICO_ZNOVU = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
-  var ICO_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#16130f"/><path d="M7 12l3.5 3.5L17 9" fill="none" stroke="#f5c400" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICO_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#16130f"/><path d="M7 12l3.5 3.5L17 9" fill="none" stroke="#eeb33b" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ICO_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   function openChronicle() {
     var sheet = $("#chronicle"); sheet.innerHTML = ""; sheet.hidden = false; sheet.scrollTop = 0;

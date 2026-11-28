@@ -225,12 +225,12 @@
           '<g class="hs-fl" style="animation-delay:-' + (k * 0.17).toFixed(2) + 's">' +
             '<path d="' + flame + '" fill="#f6dcc9"/><path d="' + flame + '" fill="url(#' + P + 'red)" opacity=".9"/>' +
             ln(P, flame, 1.1) +
-            '<path d="' + core + '" fill="#f5c400"/>' + ln(P, core, 0.7) +
+            '<path d="' + core + '" fill="#eeb33b"/>' + ln(P, core, 0.7) +
           '</g></g>';
       }).join("") +
       // proud piva a pěna
       '<g class="hs-beer"><path class="hs-jet" pathLength="100" stroke="#c99400" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-        '<path class="hs-jet" pathLength="100" stroke="#f5c400" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>' +
+        '<path class="hs-jet" pathLength="100" stroke="#eeb33b" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>' +
       '<g class="hs-foam" fill="#fffdf7" stroke="' + INK + '" stroke-width=".5"><circle r="2.2"/><circle r="1.8"/><circle r="1.6"/><circle r="1.3"/></g>' +
       '</svg>';
     var g = shell(b, hotovo, { svg: svg, tip: "Klepej na plameny", label: "Hořící zbrojnice" });
@@ -247,7 +247,7 @@
     var gauge = document.createElementNS("http://www.w3.org/2000/svg", "g");
     gauge.setAttribute("class", "hs-gauge");
     gauge.innerHTML = '<rect x="154" y="44" width="10" height="34" rx="2" fill="#fffdf7"/>' +
-      '<rect class="hs-level" x="154" y="44" width="10" height="34" rx="2" fill="#f5c400"/>' +
+      '<rect class="hs-level" x="154" y="44" width="10" height="34" rx="2" fill="#eeb33b"/>' +
       ln(P, "M154 44 H164 V78 H154 Z", 1.1) +
       '<text x="159" y="85" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5.4" fill="' + INK + '">PIVO</text>';
     g.svg.appendChild(gauge);
@@ -573,7 +573,7 @@
       ln(P, "M130 104 C130 101 131 99 130 97", 1.1) +
       // plamen svíčky
       '<g class="sv-flame" transform="translate(130 97)"><g class="sv-fl"><path d="' + flame + '" fill="#ffe9a0"/>' + ln(P, flame, 1.1) +
-        '<path d="' + core + '" fill="#f5c400"/></g></g>' +
+        '<path d="' + core + '" fill="#eeb33b"/></g></g>' +
       // krabička sirek se škrtátkem
       '<g class="sv-box">' + shape(P, "M150 120 H192 V140 H150 Z", "#e9e5db", 1.4) +
         '<path d="M150 114 H192 V120 H150 Z" fill="#8a5a3a"/>' + ln(P, "M150 114 H192 V120 H150 Z", 1.1) +
@@ -888,7 +888,7 @@
       '<path d="' + bootOut + '" fill="#e9e5db"/>' +
       '<path d="M134 16 L132 100 C132 108 140 116 152 119 C168 123 182 128 186 136 L186 141 H150 C140 138 132 128 128 112 L126 16 Z" fill="url(#' + P + 'xx)" opacity=".35"/>' +
       // horní lem, žlutý pruh, poutko
-      '<path d="M103 15 C103 21 149 21 149 15 L149 24 C149 29 103 29 103 24 Z" fill="#f5c400"/>' +
+      '<path d="M103 15 C103 21 149 21 149 15 L149 24 C149 29 103 29 103 24 Z" fill="#eeb33b"/>' +
       ln(P, "M103 15 C103 21 149 21 149 15 M103 24 C103 29 149 29 149 24", 1.1) +
       ln(P, "M103 15 C103 9 149 9 149 15", 1.2) + '<path d="M106 13.5 C112 11 140 11 146 13.5" fill="none" stroke="#8a847a" stroke-width=".8"/>' +
       ln(P, "M110 30 V40 M110 40 C112 43 115 43 117 40 V30", 0.9) +
@@ -1067,7 +1067,7 @@
       '<circle class="kr-head" r="6.6" fill="#fffdf7" stroke="' + INK + '" stroke-width="1.5" filter="url(#' + P + 'w1)"/>' +
       '<circle class="kr-ring kr-r0" r="5.6" fill="none" stroke="' + INK + '" stroke-width="2.2" filter="url(#' + P + 'w1)"/>' +
       '<circle class="kr-ring kr-r1" r="5.6" fill="none" stroke="' + INK + '" stroke-width="2.2" filter="url(#' + P + 'w1)"/>' +
-      '<g class="kr-name"><rect x="40" y="10" width="120" height="16" rx="8" fill="' + INK + '"/><text x="100" y="21.4" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="8.4" fill="#f5c400"></text></g>' +
+      '<g class="kr-name"><rect x="40" y="10" width="120" height="16" rx="8" fill="' + INK + '"/><text x="100" y="21.4" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="8.4" fill="#eeb33b"></text></g>' +
       // stupeň vítězů a zlatá medaile (Berlín 1936)
       '<g class="kr-medal">' +
         '<rect width="200" height="150" fill="#f7f4ec" opacity=".96"/>' +
@@ -1085,11 +1085,11 @@
         ln(P, "M97.6 55.6 C99.2 57 100.8 57 102.4 55.6", 0.8) +
         // medaile na stuze
         '<g class="kr-gold">' + ln(P, "M96 62 L100 72 L104 62", 1.2, "", "#c2341e") +
-          '<circle cx="100" cy="75" r="4.6" fill="#f5c400" stroke="' + INK + '" stroke-width="1.1"/><text x="100" y="77" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="4.6" fill="' + INK + '">1</text></g>' +
+          '<circle cx="100" cy="75" r="4.6" fill="#eeb33b" stroke="' + INK + '" stroke-width="1.1"/><text x="100" y="77" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="4.6" fill="' + INK + '">1</text></g>' +
         '<text x="100" y="40" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="900" font-size="7.5" fill="#c2341e">ZLATO: ALOIS HUDEC</text>' +
         // konfety
-        '<g class="kr-konf"><rect x="40" y="50" width="3" height="5" fill="#f5c400" transform="rotate(20 41 52)"/><rect x="152" y="58" width="3" height="5" fill="#c2341e" transform="rotate(-25 153 60)"/>' +
-          '<rect x="62" y="74" width="3" height="5" fill="#9fc3ee" transform="rotate(40 63 76)"/><rect x="136" y="82" width="3" height="5" fill="#f5c400" transform="rotate(-10 137 84)"/>' +
+        '<g class="kr-konf"><rect x="40" y="50" width="3" height="5" fill="#eeb33b" transform="rotate(20 41 52)"/><rect x="152" y="58" width="3" height="5" fill="#c2341e" transform="rotate(-25 153 60)"/>' +
+          '<rect x="62" y="74" width="3" height="5" fill="#9fc3ee" transform="rotate(40 63 76)"/><rect x="136" y="82" width="3" height="5" fill="#eeb33b" transform="rotate(-10 137 84)"/>' +
           '<rect x="28" y="92" width="3" height="5" fill="#c2341e"/><rect x="170" y="96" width="3" height="5" fill="#9fc3ee" transform="rotate(30 171 98)"/></g>' +
       '</g>' +
       '</svg>';
@@ -1230,7 +1230,7 @@
       var r = rng(v.n * 97), h = "";
       for (var i = 0; i < v.n; i++) {
         var ang = i / v.n * Math.PI * 2 + r(), d = 4 + r() * 12, x = v.x + Math.cos(ang) * d * 1.3, y = v.y + Math.sin(ang) * d * 0.8;
-        h += shape(P, "M" + f1(x - 3) + " " + f1(y - 2.5) + " H" + f1(x + 3) + " V" + f1(y + 2.5) + " H" + f1(x - 3) + " Z", i % 3 ? "#e9e5db" : "#f5c400", 0.9);
+        h += shape(P, "M" + f1(x - 3) + " " + f1(y - 2.5) + " H" + f1(x + 3) + " V" + f1(y + 2.5) + " H" + f1(x - 3) + " Z", i % 3 ? "#e9e5db" : "#eeb33b", 0.9);
         h += ln(P, "M" + f1(x - 3.6) + " " + f1(y - 2.3) + " L" + f1(x) + " " + f1(y - 5) + " L" + f1(x + 3.6) + " " + f1(y - 2.3), 0.8);
       }
       return h;
@@ -1245,7 +1245,7 @@
       return STONES.map(function (s, i) {
         return '<g class="vy-st" data-i="' + i + '" transform="translate(' + s[0] + ' ' + s[1] + ')">' +
           '<g class="vy-flag">' + ln(P, "M0 0 V-12", 1) + '<path d="M0 -12 L6 -10 L0 -8 Z" fill="#c2341e"/></g>' +
-          '<ellipse class="vy-ring" cx="0" cy="-3" rx="11" ry="11" fill="none" stroke="#f5c400" stroke-width="2.2"/>' +
+          '<ellipse class="vy-ring" cx="0" cy="-3" rx="11" ry="11" fill="none" stroke="#eeb33b" stroke-width="2.2"/>' +
           '<path class="vy-grass" d="M-9 0 l1.4 -3 l.8 3 M-6.5 0 l1 -2.2 l.6 2.2 M6 0 l1 -2.6 l.8 2.6 M8.6 0 l.8 -2 l.6 2" fill="none" stroke="#6b8f3a" stroke-width=".6" stroke-linecap="round"/>' +
           '<g clip-path="url(#' + P + 'kc)"><g class="vy-stone">' +
             shape(P, "M-4.5 0 L-3.8 -14 Q0 -16.5 3.8 -14 L4.5 0 Z", "#d6d1c6", 1.1) +
@@ -1292,7 +1292,7 @@
         '<rect x="170" y="22" width="24" height="112" rx="5" fill="#fffdf7" fill-opacity=".9" stroke="' + INK + '" stroke-width="1"/>' +
         '<text x="182" y="31" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-weight="700" font-size="5.4" fill="' + INK + '">SÍLA</text>' +
         '<rect x="176" y="36" width="12" height="92" rx="2" fill="#e9e5db"/>' +
-        '<rect x="176" y="' + f1(36 + 92 * 0.5 - 92 * 0.3) + '" width="12" height="' + f1(92 * 0.3) + '" fill="#f5c400"/>' +
+        '<rect x="176" y="' + f1(36 + 92 * 0.5 - 92 * 0.3) + '" width="12" height="' + f1(92 * 0.3) + '" fill="#eeb33b"/>' +
         '<rect class="vy-pw-top" x="176" y="36" width="12" height="' + f1(92 * 0.2) + '" rx="2" fill="#5cb85c"/>' +
         '<rect x="176" y="36" width="12" height="92" rx="2" fill="none" stroke="' + INK + '" stroke-width="1.1"/>' +
         '<g class="vy-pw-m"><path d="M171 0 L176 -3 V3 Z M193 0 L188 -3 V3 Z" fill="' + INK + '"/><rect x="175" y="-1" width="14" height="2" fill="' + INK + '"/></g>' +
