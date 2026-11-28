@@ -73,10 +73,6 @@
     var n = doneCount();
     $("#btn-start").textContent = state.finished ? "Přečíst dopsanou kroniku" : n ? "Pokračovat (" + n + "/" + OBEC.body.length + ")" : "Vyrazit na náves";
     $("#btn-reset").hidden = !n;
-    // poprvé: návod rozbalený nahoře; kdo už hrál, má nahoře okruh a návod sbalený
-    var back = n > 0 || state.finished;
-    $("#home").classList.toggle("returning", back);
-    if (back) $("#how").removeAttribute("open");
     $("#reset-confirm").hidden = true;
   }
 
